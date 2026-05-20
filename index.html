@@ -166,86 +166,127 @@
 
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        [span_19](start_span)[span_20](start_span)// System Architectural Core Configurations[span_19](end_span)[span_20](end_span)
-        const CONFIG = {
-            watchlistSymbols: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'],
-            fearGreedEndpoint: 'https://api.alternative.me/fng/?limit=1',
-            binanceWSBase: 'wss://stream.binance.com:9443/ws'
+        // System System Level Settings Configurations
+        const SYSTEM_CONFIG = {
+            assets: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'],
+            sentimentFeed: 'https://api.alternative.me/fng/?limit=1', // Fixed to secure HTTPS
+            streamEndpoint: 'wss://stream.binance.com:9443/ws'
         };
 
-        // Reactive Application State Encapsulation
-        let state = {
+        // Linearized Decoupled Local UI Rendering Cache
+        let InternalRenderCache = {
+            isDirty: false,
             activeAsset: 'BTCUSDT',
-            marketData: {},
-            tvWidgetInstance: null,
-            journalEntries: []
+            fngData: { val: '--', text: 'FETCHING...' },
+            tickerState: {},
+            signalMetrics: { score: 50, bias: 'CALCULATING', momentum: 50, volatility: 50 },
+            ledger: []
         };
+
+        // TradingView Workspace Reference Context Holder
+        let PrimaryChartInstance = null;
 
         /**
-         * Initialize App Modules on DOM Completion
+         * System Core Lifecycle Entry Hook
          */
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
-            initializeWatchlistState();
-            injectTradingViewWidget(state.activeAsset);
-            connectBinanceWebSocketEngine();
-            fetchFearAndGreedMetric();
-            loadLocalJournalData();
-            setupRiskCalculatorListeners();
+            bootstrapWatchlistTemplate();
+            
+            // Safe initialization fallback wrapper
+            setTimeout(() => {
+                mountTradingViewIframe(InternalRenderCache.activeAsset);
+            }, 500);
+
+            initializeMultiplexStreamPipeline();
+            pullFearGreedMetrics();
+            syncLocalDataStorage();
+            mountInteractiveEventHandlers();
+            
+            // Launch High-Performance Render Loop Core
+            executeHardwareSyncLoop();
         });
 
         /**
          * Bootstrap Watchlist Elements into DOM
          */
-        function initializeWatchlistState() {
-            const container = document.getElementById('watchlist-container');
-            container.innerHTML = '';
-            
-            CONFIG.watchlistSymbols.forEach(symbol => {
-                state.marketData[symbol] = { price: 0.0, change: 0.0 };
+        function bootstrapWatchlistTemplate() {
+            const target = document.getElementById('watchlist-target-node');
+            if(!target) return;
+            target.innerHTML = '';
+
+            SYSTEM_CONFIG.assets.forEach(symbol => {
+                InternalRenderCache.tickerState[symbol] = { price: 0.0, change: 0.0, prevPrice: 0.0 };
                 
-                const item = document.createElement('div');
-                item.id = `watchlist-row-${symbol}`;
-                item.className = `px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-800/20 transition-all ${state.activeAsset === symbol ? 'bg-indigo-600/10 border-l-2 border-indigo-500' : ''}`;
-                item.onclick = () => selectActiveAsset(symbol);
+                const element = document.createElement('div');
+                element.id = `asset-row-${symbol}`;
+                element.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-transparent ${InternalRenderCache.activeAsset === symbol ? 'bg-indigo-600/5 border-l-indigo-500 active-glow' : ''}`;
+                element.onclick = () => performAssetContextShift(symbol);
                 
-                item.innerHTML = `
+                element.innerHTML = `
                     <div>
-                        <h4 class="text-xs font-bold text-slate-100 tracking-tight">${symbol}</h4>
-                        <span class="text-[10px] uppercase text-slate-400 font-medium">Binance Spot</span>
+                        <h4 class="text-xs font-bold text-slate-200 tracking-wider mono">${symbol}</h4>
+                        <div class="flex items-center space-x-1.5 mt-0.5">
+                            <span class="text-[8px] font-bold text-slate-500 tracking-wide uppercase">SPOT BINANCE</span>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs font-bold text-slate-200 mono" id="price-val-${symbol}">--</p>
-                        <p class="text-[10px] font-medium mono mt-0.5" id="change-val-${symbol}">--</p>
+                        <p class="text-xs font-bold text-slate-100 mono" id="dom-price-${symbol}">--</p>
+                        <p class="text-[9px] font-medium mono mt-0.5 text-slate-500" id="dom-change-${symbol}">0.00%</p>
                     </div>
                 `;
-                container.appendChild(item);
+                target.appendChild(element);
             });
         }
 
         /**
-         * Update Focused Market Asset and Component Views
+         * Orchestrate Client Context Shifting Logic
          */
-        function selectActiveAsset(symbol) {
-            if (state.activeAsset === symbol) return;
+        function performAssetContextShift(symbol) {
+            if (InternalRenderCache.activeAsset === symbol) return;
+
+            const structuralOldRow = document.getElementById(`asset-row-${InternalRenderCache.activeAsset}`);
+            if(structuralOldRow) structuralOldRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-transparent`;
+
+            InternalRenderCache.activeAsset = symbol;
             
-            // Toggle active tracking classes
-            document.getElementById(`watchlist-row-${state.activeAsset}`)?.classList.remove('bg-indigo-600/10', 'border-l-2', 'border-indigo-500');
-            state.activeAsset = symbol;
-            document.getElementById(`watchlist-row-${symbol}`)?.classList.add('bg-indigo-600/10', 'border-l-2', 'border-indigo-500');
-            
-            injectTradingViewWidget(symbol);
-            recalculateRiskSizingMetrics();
+            const structuralNewRow = document.getElementById(`asset-row-${symbol}`);
+            if(structuralNewRow) structuralNewRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-indigo-500 active-glow`;
+
+            // Dynamic check for widget safety
+            if (PrimaryChartInstance && typeof PrimaryChartInstance.setSymbol === 'function') {
+                try {
+                    PrimaryChartInstance.setSymbol(`BINANCE:${symbol}`, "60");
+                } catch(e) {
+                    mountTradingViewIframe(symbol);
+                }
+            } else {
+                mountTradingViewIframe(symbol);
+            }
+
+            const livePrice = InternalRenderCache.tickerState[symbol]?.price || 0;
+            if(livePrice > 0) {
+                document.getElementById('risk-input-stop').value = (livePrice * 0.98).toFixed(2);
+                document.getElementById('risk-input-take').value = (livePrice * 1.04).toFixed(2);
+            }
+
+            InternalRenderCache.isDirty = true;
         }
 
         /**
-         * Instantiate and Mount TradingView Core Iframe Component
+         * Secure Safe Initialization of Widget Wrapper Framework
          */
-        function injectTradingViewWidget(symbol) {
-            [span_21](start_span)// Clean up old widget instance to clear memory[span_21](end_span)
-            document.getElementById('tv-chart-widget-target').innerHTML = '';
+        function mountTradingViewIframe(symbol) {
+            const container = document.getElementById('tradingview-canvas-target');
+            if(!container) return;
+            container.innerHTML = '';
             
-            state.tvWidgetInstance = new TradingView.widget({
+            if(typeof TradingView === 'undefined') {
+                container.innerHTML = `<div class="p-6 text-xs text-slate-500 mono uppercase tracking-wider">TradingView Library Timeout</div>`;
+                return;
+            }
+
+            PrimaryChartInstance = new TradingView.widget({
                 "autosize": true,
                 "symbol": `BINANCE:${symbol}`,
                 "interval": "60",
@@ -256,230 +297,286 @@
                 "enable_publishing": false,
                 "hide_side_toolbar": true,
                 "allow_symbol_change": false,
-                "container_id": "tv-chart-widget-target",
+                "container_id": "tradingview-canvas-target",
                 "studies": [
                     "RSI@tv-basicstudies",
-                    "MASimple@tv-basicstudies"
+                    "VWAP@tv-basicstudies"
                 ]
             });
         }
 
         /**
-         * Manage Stateful Async Streaming via Binance WebSocket
+         * State Multiplexing WebSocket Network Loop
          */
-        function connectBinanceWebSocketEngine() {
-            const socket = new WebSocket(CONFIG.binanceWSBase);
-            
-            socket.onopen = () => {
-                const streams = CONFIG.watchlistSymbols.map(s => `${s.toLowerCase()}@ticker`);
-                socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 1 }));
-                document.getElementById('connection-status').innerText = "LIVE STREAM";
-            };
+        function initializeMultiplexStreamPipeline() {
+            try {
+                const socket = new WebSocket(SYSTEM_CONFIG.streamEndpoint);
 
-            socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                // Listen for structural market stream packet matches
-                if (msg.e === "24hrTicker") {
-                    const symbol = msg.s;
-                    const price = parseFloat(msg.c);
-                    const change = parseFloat(msg.P);
-                    
-                    state.marketData[symbol] = { price, change };
-                    updateWatchlistDOMNode(symbol, price, change);
-                    
-                    if (symbol === state.activeAsset) {
-                        processAlgorithmicSignal(price, change);
+                socket.onopen = () => {
+                    const streamIdentifiers = SYSTEM_CONFIG.assets.map(asset => `${asset.toLowerCase()}@ticker`);
+                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streamIdentifiers, id: 101 }));
+                };
+
+                socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    if (message.e === "24hrTicker") {
+                        const symbol = message.s;
+                        const price = parseFloat(message.c);
+                        const change = parseFloat(message.P);
+
+                        const assetPointer = InternalRenderCache.tickerState[symbol];
+                        if (assetPointer) {
+                            assetPointer.prevPrice = assetPointer.price;
+                            assetPointer.price = price;
+                            assetPointer.change = change;
+                            InternalRenderCache.isDirty = true;
+                        }
+
+                        if (symbol === InternalRenderCache.activeAsset) {
+                            evaluateAlgorithmicEngineSignals(price, change);
+                        }
                     }
-                }
-            };
+                };
 
-            socket.onerror = () => {
-                document.getElementById('connection-status').innerText = "STREAM CORRUPTED";
-            };
-
-            socket.onclose = () => {
-                document.getElementById('connection-status').innerText = "RECONNECTING...";
-                setTimeout(connectBinanceWebSocketEngine, 5000);
-            };
-        }
-
-        /**
-         * Perform real-time updates on active UI components
-         */
-        function updateWatchlistDOMNode(symbol, price, change) {
-            const priceEl = document.getElementById(`price-val-${symbol}`);
-            const changeEl = document.getElementById(`change-val-${symbol}`);
-            if (!priceEl || !changeEl) return;
-
-            priceEl.innerText = price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-            changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
-            
-            if (change >= 0) {
-                changeEl.className = "text-[10px] font-bold text-emerald-400 mono mt-0.5";
-            } else {
-                changeEl.className = "text-[10px] font-bold text-rose-400 mono mt-0.5";
+                socket.onclose = () => {
+                    setTimeout(initializeMultiplexStreamPipeline, 5000);
+                };
+            } catch(e) {
+                console.error("WS Engine Error", e);
             }
         }
 
         /**
-         * [span_22](start_span)[span_23](start_span)Process mathematical indicators on live token changes[span_22](end_span)[span_23](end_span)
+         * Advanced Rule Confluence Diagnostic Processor Module
          */
-        function processAlgorithmicSignal(price, change) {
-            let baselineScore = 50; 
-            
-            [span_24](start_span)[span_25](start_span)// Rules-based calculation mapping rolling variance[span_24](end_span)[span_25](end_span)
-            if (change > 1.5) baselineScore += 15;
-            if (change > 4.0) baselineScore += 20;
-            if (change < -1.5) baselineScore -= 15;
-            if (change < -4.0) baselineScore -= 20;
+        function evaluateAlgorithmicEngineSignals(price, change) {
+            let baseScore = 50; 
+            let momentumWeight = Math.max(-100, Math.min(100, change * 20));
+            let historicalFngFactor = parseInt(InternalRenderCache.fngData.val) || 50;
+            let sentimentDeficit = (50 - historicalFngFactor) * 1.5;
 
-            const biasLabel = document.getElementById('signal-bias');
-            const scoreLabel = document.getElementById('signal-score');
-            
-            scoreLabel.innerText = `${baselineScore}%`;
-            
-            if (baselineScore > 60) {
-                biasLabel.innerText = "ACCUMULATION BIAS";
-                biasLabel.className = "text-lg font-bold text-emerald-400 tracking-tight mt-0.5";
-            } else if (baselineScore < 40) {
-                biasLabel.innerText = "DISTRIBUTION BIAS";
-                biasLabel.className = "text-lg font-bold text-rose-400 tracking-tight mt-0.5";
+            let finalConfluenceScore = baseScore + (momentumWeight * 0.25) + (sentimentDeficit * 0.15);
+            finalConfluenceScore = Math.max(5, Math.min(95, finalConfluenceScore));
+
+            InternalRenderCache.signalMetrics.score = Math.round(finalConfluenceScore);
+            InternalRenderCache.signalMetrics.momentum = Math.round((momentumWeight + 100) / 2);
+            InternalRenderCache.signalMetrics.volatility = Math.round((sentimentDeficit + 100) / 2);
+
+            if (finalConfluenceScore >= 58) {
+                InternalRenderCache.signalMetrics.bias = finalConfluenceScore > 72 ? 'STRONG EXPANSION' : 'ACCUMULATION ZONE';
+            } else if (finalConfluenceScore <= 42) {
+                InternalRenderCache.signalMetrics.bias = finalConfluenceScore < 28 ? 'AGGRESSIVE LIQUIDATION' : 'DISTRIBUTION ZONE';
             } else {
-                biasLabel.innerText = "COMPRESSION NEUTRAL";
-                biasLabel.className = "text-lg font-bold text-slate-400 tracking-tight mt-0.5";
+                InternalRenderCache.signalMetrics.bias = 'COMPRESSION NEUTRAL';
             }
+            InternalRenderCache.isDirty = true;
         }
 
         /**
-         * Fetch Sentiment Indexes from Public API Enclaves
+         * Async REST Client Data Request Module
          */
-        function fetchFearAndGreedMetric() {
-            fetch(CONFIG.fearGreedEndpoint)
+        function pullFearGreedMetrics() {
+            fetch(SYSTEM_CONFIG.sentimentFeed)
                 .then(res => res.json())
                 .then(data => {
-                    const fng = data.data[0];
-                    document.getElementById('fng-value').innerText = fng.value;
-                    document.getElementById('fng-label').innerText = fng.value_classification;
-                    
-                    const valNum = parseInt(fng.value);
-                    const valContainer = document.getElementById('fng-value');
-                    if(valNum > 60) valContainer.className = "text-2xl font-bold mono tracking-tight text-emerald-400";
-                    else if(valNum < 40) valContainer.className = "text-2xl font-bold mono tracking-tight text-rose-400";
-                    else valContainer.className = "text-2xl font-bold mono tracking-tight text-amber-400";
+                    if(data && data.data && data.data[0]) {
+                        const metrics = data.data[0];
+                        InternalRenderCache.fngData.val = metrics.value;
+                        InternalRenderCache.fngData.text = metrics.value_classification;
+                        InternalRenderCache.isDirty = true;
+                    }
                 })
                 .catch(() => {
-                    document.getElementById('fng-label').innerText = "Data Offline";
+                    InternalRenderCache.fngData.text = "OFFLINE LINK";
                 });
         }
 
         /**
-         * [span_26](start_span)[span_27](start_span)Quantitative Position Risk Calculation Logic[span_26](end_span)[span_27](end_span)
+         * Reactive Hardware V-Sync Frame Optimization Engine Loop
          */
-        function setupRiskCalculatorListeners() {
-            ['calc-equity', 'calc-risk', 'calc-stop', 'calc-take'].forEach(id => {
-                document.getElementById(id).addEventListener('input', recalculateRiskSizingMetrics);
-            });
-            document.getElementById('btn-log-trade').addEventListener('click', appendEntryToLedger);
-            document.getElementById('btn-clear-journal').addEventListener('click', flushLocalJournalStore);
-        }
+        let lastLoggedFrameTimestamp = performance.now();
+        let activeRenderCounter = 0;
 
-        function recalculateRiskSizingMetrics() {
-            const equity = parseFloat(document.getElementById('calc-equity').value) || 0;
-            const riskPct = parseFloat(document.getElementById('calc-risk').value) || 0;
-            const stopPrice = parseFloat(document.getElementById('calc-stop').value) || 0;
-            const takeProfit = parseFloat(document.getElementById('calc-take').value) || 0;
+        function executeHardwareSyncLoop() {
+            activeRenderCounter++;
+            const now = performance.now();
             
-            const currentAssetPrice = state.marketData[state.activeAsset]?.price || 0;
-            
-            if (equity <= 0 || riskPct <= 0 || currentAssetPrice <= 0 || stopPrice === currentAssetPrice) {
-                document.getElementById('out-position-size').innerText = "--";
-                document.getElementById('out-rr-ratio').innerText = "--";
-                return;
+            if (now >= lastLoggedFrameTimestamp + 1000) {
+                const fpsLabel = document.getElementById('fps-counter');
+                if(fpsLabel) fpsLabel.innerText = `${activeRenderCounter} FPS`;
+                activeRenderCounter = 0;
+                lastLoggedFrameTimestamp = now;
             }
 
-            [span_28](start_span)// Capital at risk calculation[span_28](end_span)
-            const cashRiskAmount = equity * (riskPct / 100);
-            const riskPerUnit = Math.abs(currentAssetPrice - stopPrice);
-            
-            [span_29](start_span)// Standard portfolio risk sizing formula[span_29](end_span)
-            const componentUnits = cashRiskAmount / riskPerUnit;
-            const absoluteCapitalAllocation = componentUnits * currentAssetPrice;
-            
-            const profitPerUnit = Math.abs(takeProfit - currentAssetPrice);
-            const riskRewardRatio = profitPerUnit / riskPerUnit;
-
-            document.getElementById('out-position-size').innerText = `$${absoluteCapitalAllocation.toLocaleString(undefined, {maximumFractionDigits: 2})} (${componentUnits.toFixed(2)} Units)`;
-            document.getElementById('out-rr-ratio').innerText = `1 : ${riskRewardRatio.toFixed(2)}`;
+            if (InternalRenderCache.isDirty) {
+                flushCacheUpdatesToDOM();
+                InternalRenderCache.isDirty = false;
+            }
+            requestAnimationFrame(executeHardwareSyncLoop);
         }
 
         /**
-         * [span_30](start_span)State Storage Ledger Management Engine[span_30](end_span)
+         * Single Layout Engine Pass for DOM Batching
          */
-        function appendEntryToLedger() {
-            const equity = parseFloat(document.getElementById('calc-equity').value) || 0;
-            const riskPct = parseFloat(document.getElementById('calc-risk').value) || 0;
-            const currentPrice = state.marketData[state.activeAsset]?.price || 0;
-            const stopPrice = parseFloat(document.getElementById('calc-stop').value) || 0;
-            const takeProfit = parseFloat(document.getElementById('calc-take').value) || 0;
+        function flushCacheUpdatesToDOM() {
+            SYSTEM_CONFIG.assets.forEach(symbol => {
+                const metrics = InternalRenderCache.tickerState[symbol];
+                const pNode = document.getElementById(`dom-price-${symbol}`);
+                const cNode = document.getElementById(`dom-change-${symbol}`);
 
-            if(currentPrice <= 0) return;
+                if (pNode && metrics.price > 0) {
+                    pNode.innerText = metrics.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    if (metrics.price > metrics.prevPrice) {
+                        pNode.className = "text-xs font-bold text-emerald-400 mono animate-pulse";
+                    } else if (metrics.price < metrics.prevPrice) {
+                        pNode.className = "text-xs font-bold text-rose-400 mono animate-pulse";
+                    } else {
+                        pNode.className = "text-xs font-bold text-slate-100 mono";
+                    }
+                }
 
-            const allocationText = document.getElementById('out-position-size').innerText;
+                if (cNode && metrics.price > 0) {
+                    cNode.innerText = `${metrics.change >= 0 ? '+' : ''}${metrics.change.toFixed(2)}%`;
+                    cNode.className = `text-[9px] font-bold mono mt-0.5 ${metrics.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                }
+            });
 
-            const entry = {
-                asset: state.activeAsset,
-                allocation: allocationText,
-                stop: `$${stopPrice}`,
-                take: `$${takeProfit}`,
-                timestamp: new Date().toLocaleTimeString()
-            };
+            const fngValNode = document.getElementById('fng-index-val');
+            const fngClassNode = document.getElementById('fng-classification');
+            if(fngValNode) fngValNode.innerText = InternalRenderCache.fngData.val;
+            if(fngClassNode) fngClassNode.innerText = InternalRenderCache.fngData.text.toUpperCase();
 
-            state.journalEntries.unshift(entry);
-            saveJournalToLocalStorage();
-            renderJournalDOMTable();
+            const metricsPack = InternalRenderCache.signalMetrics;
+            const biasNode = document.getElementById('engine-bias-output');
+            const scoreNode = document.getElementById('engine-score-output');
+
+            if (scoreNode) scoreNode.innerText = `${metricsPack.score}%`;
+            if (biasNode) {
+                biasNode.innerText = metricsPack.bias;
+                if(metricsPack.score >= 58) biasNode.className = "text-xs font-bold mt-1 text-emerald-400 tracking-wide uppercase";
+                else if(metricsPack.score <= 42) biasNode.className = "text-xs font-bold mt-1 text-rose-400 tracking-wide uppercase";
+                else biasNode.className = "text-xs font-bold mt-1 text-slate-400 tracking-wide uppercase";
+            }
+
+            const momTrack = document.getElementById('factor-track-momentum');
+            const momBar = document.getElementById('bar-track-momentum');
+            const volTrack = document.getElementById('factor-track-volatility');
+            const volBar = document.getElementById('bar-track-volatility');
+
+            if(momTrack) momTrack.innerText = `${metricsPack.momentum}%`;
+            if(momBar) momBar.style.width = `${metricsPack.momentum}%`;
+            if(volTrack) volTrack.innerText = `${metricsPack.volatility}%`;
+            if(volBar) volBar.style.width = `${metricsPack.volatility}%`;
+
+            processRiskCalculationsEngine();
         }
 
-        function renderJournalDOMTable() {
-            const tbody = document.getElementById('journal-table-body');
-            tbody.innerHTML = '';
+        /**
+         * Quantitative Risk Processing Math Engine
+         */
+        function processRiskCalculationsEngine() {
+            const equity = parseFloat(document.getElementById('risk-input-equity').value) || 0;
+            const riskPct = parseFloat(document.getElementById('risk-input-pct').value) || 0;
+            const stopPrice = parseFloat(document.getElementById('risk-input-stop').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('risk-input-take').value) || 0;
 
-            if (state.journalEntries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500 italic uppercase text-[10px] tracking-wide">No active setups committed to ledger</td></tr>`;
+            const activePrice = InternalRenderCache.tickerState[InternalRenderCache.activeAsset]?.price || 0;
+
+            if (equity <= 0 || riskPct <= 0 || activePrice <= 0 || stopPrice === activePrice) {
+                document.getElementById('calc-output-size').innerText = "--";
+                document.getElementById('calc-output-rr').innerText = "--";
                 return;
             }
 
-            state.journalEntries.forEach(item => {
+            const totalCashRiskValue = equity * (riskPct / 100);
+            const directionalPriceDistance = Math.abs(activePrice - stopPrice);
+            const totalPositionAllocationUnits = totalCashRiskValue / directionalPriceDistance;
+            const absoluteNotionalCapitalAllocation = totalPositionAllocationUnits * activePrice;
+
+            const rewardDistance = Math.abs(takeProfit - activePrice);
+            const rewardToRiskRatioResult = rewardDistance / directionalPriceDistance;
+
+            document.getElementById('calc-output-size').innerText = `$${absoluteNotionalCapitalAllocation.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${totalPositionAllocationUnits.toFixed(2)} Units)`;
+            document.getElementById('calc-output-rr').innerText = `1 : ${rewardToRiskRatioResult.toFixed(2)}`;
+        }
+
+        /**
+         * Wire input elements into listener loops
+         */
+        function mountInteractiveEventHandlers() {
+            ['risk-input-equity', 'risk-input-pct', 'risk-input-stop', 'risk-input-take'].forEach(id => {
+                const node = document.getElementById(id);
+                if(node) node.addEventListener('input', () => { InternalRenderCache.isDirty = true; });
+            });
+
+            document.getElementById('calc-commit-trigger').addEventListener('click', commitCalculatedSetupToLedger);
+            document.getElementById('ledger-flush-trigger').addEventListener('click', purgeLocalStorageStateStore);
+        }
+
+        function commitCalculatedSetupToLedger() {
+            const stopPrice = parseFloat(document.getElementById('risk-input-stop').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('risk-input-take').value) || 0;
+            const sizeStringText = document.getElementById('calc-output-size').innerText;
+
+            if (sizeStringText === "--") return;
+
+            const documentLogRecord = {
+                asset: InternalRenderCache.activeAsset,
+                allocation: sizeStringText,
+                stop: `$${stopPrice.toLocaleString()}`,
+                take: `$${takeProfit.toLocaleString()}`,
+                time: new Date().toLocaleTimeString()
+            };
+
+            InternalRenderCache.ledger.unshift(documentLogRecord);
+            writeLedgerToStorage();
+            renderLedgerTableDOM();
+        }
+
+        function renderLedgerTableDOM() {
+            const container = document.getElementById('ledger-rows-target');
+            if(!container) return;
+            container.innerHTML = '';
+
+            if (InternalRenderCache.ledger.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No transaction configurations saved in sandbox database</td></tr>`;
+                return;
+            }
+
+            InternalRenderCache.ledger.forEach(entry => {
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-800/30 hover:bg-slate-900/10";
+                tr.className = "border-b border-slate-900/40 hover:bg-slate-900/5 transition-all";
                 tr.innerHTML = `
-                    <td class="py-2.5 px-4 font-bold text-slate-100">${item.asset}</td>
-                    <td class="py-2.5 px-4 font-medium text-slate-300">${item.allocation}</td>
-                    <td class="py-2.5 px-4 font-medium text-rose-400">${item.stop}</td>
-                    <td class="py-2.5 px-4 font-medium text-emerald-400">${item.take}</td>
-                    <td class="py-2.5 px-4 text-slate-500 text-right">${item.timestamp}</td>
+                    <td class="py-3 px-4 font-bold text-slate-100 tracking-wider">${entry.asset}</td>
+                    <td class="py-3 px-4 font-medium text-slate-300">${entry.allocation}</td>
+                    <td class="py-3 px-4 font-bold text-rose-400">${entry.stop}</td>
+                    <td class="py-3 px-4 font-bold text-emerald-400">${entry.take}</td>
+                    <td class="py-3 px-4 text-slate-500 text-right text-[10px]">${entry.time}</td>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(tr);
             });
         }
 
-        function saveJournalToLocalStorage() {
-            localStorage.setItem('edge_quant_journal', JSON.stringify(state.journalEntries));
+        function writeLedgerToStorage() {
+            localStorage.setItem('edge_v2_ledger_datastore', JSON.stringify(InternalRenderCache.ledger));
         }
 
-        function loadLocalJournalData() {
-            const stored = localStorage.getItem('edge_quant_journal');
-            if (stored) {
-                try { state.journalEntries = JSON.parse(stored); } catch(e) { state.journalEntries = []; }
-                renderJournalDOMTable();
-            } else {
-                renderJournalDOMTable();
+        function syncLocalDataStorage() {
+            const rawStore = localStorage.getItem('edge_v2_ledger_datastore');
+            if (rawStore) {
+                try { 
+                    InternalRenderCache.ledger = JSON.parse(rawStore); 
+                } catch(e) { 
+                    InternalRenderCache.ledger = []; 
+                }
             }
+            renderLedgerTableDOM();
         }
 
-        function flushLocalJournalStore() {
-            state.journalEntries = [];
-            saveJournalToLocalStorage();
-            renderJournalDOMTable();
+        function purgeLocalStorageStateStore() {
+            InternalRenderCache.ledger = [];
+            writeLedgerToStorage();
+            renderLedgerTableDOM();
         }
     </script>
 </body>
