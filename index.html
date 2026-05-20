@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght=400;500;700&family=Plus+Jakarta+Sans:wght=400;600;700&display=swap');
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -107,7 +107,7 @@
                     </div>
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
                         <span class="text-slate-500">REGIME TIME DURATION</span>
-                        <span class="text-right font-bold text-slate-300 animate-pulse" id="ui-metric-persistence">--</span>
+                        <span class="text-right font-bold text-slate-300" id="ui-metric-persistence">--</span>
                     </div>
                     <div class="grid grid-cols-2 p-2">
                         <span class="text-slate-500">TACTICAL VERDICT</span>
@@ -215,7 +215,6 @@
             fngEndpoint: 'https://api.alternative.me/fng/?limit=1'
         };
 
-        // Complete Isolated App State Memory Store
         let AppState = {
             activeAsset: 'BTC-USDT',
             tickerCache: {},
@@ -227,7 +226,6 @@
             fngText: 'NEUTRAL'
         };
 
-        // Static DOM Element Cache Register (Fixes issue 6 optimization bottlenecks)
         let DOM = {
             telemetryRenderState: null,
             telemetryLoopRate: null,
@@ -253,78 +251,6 @@
 
         let ActiveChartWidget = null;
 
-        // Priority 2 optimization: Isolated Transport Engine Manager
-        const SocketTransportManager = {
-            instance: null,
-            heartbeatIntervalId: null,
-            reconnectTimeoutId: null,
-            reconnectAttemptsCount: 0,
-
-            initializeConnection: function() {
-                this.destroyActiveSocket();
-                
-                this.instance = new WebSocket(CONFIG.wsEndpoint);
-
-                this.instance.onopen = () => {
-                    this.reconnectAttemptsCount = 0;
-                    const args = CONFIG.assets.map(a => ({ channel: "tickers", instId: a }));
-                    this.instance.send(JSON.stringify({ op: "subscribe", args: args }));
-                    
-                    // Activate heartbeat frame ping loops
-                    this.heartbeatIntervalId = setInterval(() => {
-                        if(this.instance.readyState === WebSocket.OPEN) {
-                            this.instance.send("ping");
-                        }
-                    }, 20000);
-                };
-
-                this.instance.onmessage = (event) => {
-                    if (event.data === "pong") return;
-                    
-                    try {
-                        const packet = JSON.parse(event.data);
-                        if (packet && packet.data && packet.data[0]) {
-                            processIncomingTransportTick(packet.data[0]);
-                        }
-                    } catch(e) {}
-                };
-
-                this.instance.onclose = () => {
-                    this.scheduleReconnectionLoop();
-                };
-
-                this.instance.onerror = () => {
-                    this.instance.close();
-                };
-            },
-
-            scheduleReconnectionLoop: function() {
-                clearInterval(this.heartbeatIntervalId);
-                clearTimeout(this.reconnectTimeoutId);
-                
-                // Exponential Backoff algorithm configuration
-                const coolDownIntervalWindow = Math.min(30000, Math.pow(2, this.reconnectAttemptsCount) * 2000);
-                this.reconnectAttemptsCount++;
-
-                this.reconnectTimeoutId = setTimeout(() => {
-                    this.initializeConnection();
-                }, coolDownIntervalWindow);
-            },
-
-            destroyActiveSocket: function() {
-                clearInterval(this.heartbeatIntervalId);
-                if (this.instance) {
-                    // Detach listener event callbacks before purging instance allocation to eliminate closures
-                    this.instance.onopen = null;
-                    this.instance.onmessage = null;
-                    this.instance.onclose = null;
-                    this.instance.onerror = null;
-                    try { this.instance.close(); } catch(e) {}
-                    this.instance = null;
-                }
-            }
-        };
-
         function fetchWithTimeout(url, options = {}, timeout = 5000) {
             return Promise.race([
                 fetch(url, options),
@@ -332,9 +258,6 @@
             ]);
         }
 
-        /**
-         * Core System Initialization Bootstrap Hook
-         */
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
             cacheStaticDOMReferences();
@@ -349,7 +272,7 @@
             pullFearGreedMetrics();
             syncLocalDataStorage();
             mountInteractiveControlHooks();
-            launchLoopTelemetryCounter();
+            executeHardwareSyncTimer();
         });
 
         function cacheStaticDOMReferences() {
@@ -379,7 +302,6 @@
             node.innerHTML = '';
 
             CONFIG.assets.forEach(symbol => {
-                // Instantiating structural statistical matrix registers into cache profiles
                 AppState.tickerCache[symbol] = { 
                     price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0,
                     atr14Mean: 0.0, atr14StdDev: 1.0, currentTrueRange: 0.0, lastTickDirection: 0 
@@ -402,7 +324,6 @@
                 `;
                 node.appendChild(element);
                 
-                // Map elements into static fast cache targets
                 DOM.priceNodes[symbol] = document.getElementById(`price-node-${symbol}`);
                 DOM.changeNodes[symbol] = document.getElementById(`change-node-${symbol}`);
             });
@@ -429,7 +350,6 @@
             const container = document.getElementById('tradingview-canvas-target');
             if(!container) return;
 
-            // Memory leak control architecture fix 3: clear instance from memory before destroying the iframe DOM node
             if (ActiveChartWidget && typeof ActiveChartWidget.remove === 'function') {
                 try { ActiveChartWidget.remove(); } catch(e) {}
                 ActiveChartWidget = null;
@@ -453,9 +373,6 @@
             });
         }
 
-        /**
-         * Robust Priority 1 Update: True Mathematical ATR and Standard Deviation Baseline Mapping
-         */
         function seedHistoricalKLines() {
             CONFIG.assets.forEach(symbol => {
                 fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/history-candles?instId=${symbol}&bar=1H&limit=30`)
@@ -464,24 +381,17 @@
                         if(pack && pack.data && pack.data.length >= 15) {
                             let calculatedTrueRangeArray = [];
                             
-                            // OKX candles arrive sorted from newest to oldest in array sequence
                             for(let i = 0; i < pack.data.length - 1; i++) {
                                 const high = parseFloat(pack.data[i][2]);
                                 const low = parseFloat(pack.data[i][3]);
                                 const prevClose = parseFloat(pack.data[i+1][4]);
                                 
-                                [span_2](start_span)// True Range math logic[span_2](end_span)
                                 const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
                                 calculatedTrueRangeArray.push(tr);
                             }
 
-                            // Pull standard 14-period slice bounds
                             const standardTrueRangeSlice = calculatedTrueRangeArray.slice(0, 14);
-                            
-                            // Calculate sample Mean (μ)
                             const meanAtr = standardTrueRangeSlice.reduce((a, b) => a + b, 0) / 14;
-                            
-                            // Calculate sample Standard Deviation (σ)
                             const sumOfSquaredDeviations = standardTrueRangeSlice.map(tr => Math.pow(tr - meanAtr, 2)).reduce((a, b) => a + b, 0);
                             const stdDevAtr = Math.sqrt(sumOfSquaredDeviations / 13) || 1.0;
 
@@ -500,6 +410,69 @@
             });
         }
 
+        const SocketTransportManager = {
+            instance: null,
+            heartbeatIntervalId: null,
+            reconnectTimeoutId: null,
+            reconnectAttemptsCount: 0,
+
+            initializeConnection: function() {
+                this.destroyActiveSocket();
+                
+                this.instance = new WebSocket(CONFIG.wsEndpoint);
+
+                this.instance.onopen = () => {
+                    this.reconnectAttemptsCount = 0;
+                    const args = CONFIG.assets.map(a => ({ channel: "tickers", instId: a }));
+                    this.instance.send(JSON.stringify({ op: "subscribe", args: args }));
+                    
+                    this.heartbeatIntervalId = setInterval(() => {
+                        if(this.instance.readyState === WebSocket.OPEN) {
+                            this.instance.send("ping");
+                        }
+                    }, 20000);
+                };
+
+                this.instance.onmessage = (event) => {
+                    if (event.data === "pong") return;
+                    
+                    try {
+                        const packet = JSON.parse(event.data);
+                        if (packet && packet.data && packet.data[0]) {
+                            processIncomingTransportTick(packet.data[0]);
+                        }
+                    } catch(e) {}
+                };
+
+                this.instance.onclose = () => { this.scheduleReconnectionLoop(); };
+                this.instance.onerror = () => { this.instance.close(); };
+            },
+
+            scheduleReconnectionLoop: function() {
+                clearInterval(this.heartbeatIntervalId);
+                clearTimeout(this.reconnectTimeoutId);
+                
+                const coolDownIntervalWindow = Math.min(30000, Math.pow(2, this.reconnectAttemptsCount) * 2000);
+                this.reconnectAttemptsCount++;
+
+                this.reconnectTimeoutId = setTimeout(() => {
+                    this.initializeConnection();
+                }, coolDownIntervalWindow);
+            },
+
+            destroyActiveSocket: function() {
+                clearInterval(this.heartbeatIntervalId);
+                if (this.instance) {
+                    this.instance.onopen = null;
+                    this.instance.onmessage = null;
+                    this.instance.onclose = null;
+                    this.instance.onerror = null;
+                    try { this.instance.close(); } catch(e) {}
+                    this.instance = null;
+                }
+            }
+        };
+
         function processIncomingTransportTick(raw) {
             const symbol = raw.instId;
             const cache = AppState.tickerCache[symbol];
@@ -509,11 +482,11 @@
             cache.price = parseFloat(raw.last);
             
             const open24h = parseFloat(raw.open24h);
-            cache.change = open open24h > 0 ? ((cache.price - open24h) / open24h) * 100 : 0.0;
+            // BUGFIX: Stripped out broken duplicated conditional token text
+            cache.change = open24h > 0 ? ((cache.price - open24h) / open24h) * 100 : 0.0;
             cache.high = parseFloat(raw.high24h);
             cache.low = parseFloat(raw.low24h);
             
-            [span_3](start_span)// Map true range tracking arrays inside real-time ticking loops[span_3](end_span)
             const trackingCloseReference = cache.prevPrice > 0 ? cache.prevPrice : cache.price;
             cache.currentTrueRange = Math.max(cache.high - cache.low, Math.abs(cache.high - trackingCloseReference), Math.abs(cache.low - trackingCloseReference));
 
@@ -523,24 +496,18 @@
             AppState.isDirty = true;
         }
 
-        /**
-         * Upgraded Priority 1: Probability Volatility Distance Z-Score Engine
-         */
         function processAdaptiveStateEngine(ticker) {
             if(!ticker || ticker.price === 0) return;
 
             const mean = ticker.atr14Mean || (ticker.price * 0.02);
             const deviation = ticker.atr14StdDev || 1.0;
-            
-            // Pristine Gaussian standard normal score computation
             const computedProbabilityZScore = (ticker.currentTrueRange - mean) / deviation;
 
             let currentDetectedRegime = 'STABLE DRIFT';
             let operationalVerdict = 'OBSERVE REGIME';
             let dynamicScoringWeights = 50; 
 
-            // Hardened boundary definitions using clear statistical variance points
-            if (computedProbabilityZScore > 1.645) { // 90% single-tailed alpha confidence boundary
+            if (computedProbabilityZScore > 1.645) {
                 if (ticker.change > 1.5) {
                     currentDetectedRegime = 'BREAKOUT EXPANSION';
                     operationalVerdict = 'LONG MOMENTUM';
@@ -550,10 +517,10 @@
                     operationalVerdict = 'CAPITULATION RUN';
                     dynamicScoringWeights -= 25;
                 }
-            } else if (computedProbabilityZScore < -0.84) { // Bottom quartile compression tracking
+            } else if (computedProbabilityZScore < -0.84) {
                 currentDetectedRegime = 'COMPRESSION SQUEEZE';
                 operationalVerdict = 'ACCUMULATION PROFILE';
-                dynamicScoringWeights += 10; // Fixed issue 4: compression weights now actively adjust
+                dynamicScoringWeights += 10;
             } else {
                 if(Math.abs(ticker.change) < 0.5) {
                     currentDetectedRegime = 'CHOP MATRIX';
@@ -562,7 +529,6 @@
                 }
             }
 
-            // Fixed issue 7: time-persistence tracking using millisecond delta calculations
             if (AppState.activeMetrics.regime !== currentDetectedRegime) {
                 AppState.activeMetrics.regime = currentDetectedRegime;
                 AppState.activeMetrics.persistenceStart = Date.now();
@@ -591,7 +557,7 @@
                         AppState.isDirty = true;
                         scheduleThrottledRenderPass();
                     }
-                }).catch(err => {
+                }).catch(() => {
                     AppState.fngText = "OFFLINE CONTEXT (CORS)";
                     AppState.isDirty = true;
                     scheduleThrottledRenderPass();
@@ -601,7 +567,6 @@
         function scheduleThrottledRenderPass() {
             if (AppState.renderLock || !AppState.isDirty) return;
             AppState.renderLock = true;
-            
             DOM.telemetryRenderState.innerText = "SYNC";
 
             setTimeout(() => {
@@ -613,7 +578,6 @@
         }
 
         function flushCacheUpdatesToDOMView() {
-            // 1. Repaint Watchlist Elements from fast local element cache (Stripped getElementById)
             CONFIG.assets.forEach(symbol => {
                 const node = AppState.tickerCache[symbol];
                 const pEl = DOM.priceNodes[symbol];
@@ -633,7 +597,6 @@
                 }
             });
 
-            // 2. Repaint Global Metrics
             DOM.uiFngVal.innerText = AppState.fngValue;
             DOM.uiFngText.innerText = AppState.fngText;
 
@@ -643,7 +606,6 @@
             DOM.uiMetricRegime.innerText = metrics.regime;
             DOM.uiMetricZScore.innerText = metrics.zscore.toFixed(3);
             
-            // Calculate actual time duration in seconds/minutes (Fix 7)
             const durationInSeconds = Math.floor((Date.now() - metrics.persistenceStart) / 1000);
             DOM.uiMetricPersistence.innerText = `${durationInSeconds} SECONDS LIVE`;
             
@@ -707,7 +669,6 @@
             loopCounter++;
             const clockNow = performance.now();
             if(clockNow >= lastLoggedSecond + 1000) {
-                // Fixed issue 5: Explicitly relabeled to display internal clock execution loops accurately
                 if(DOM.telemetryLoopRate) DOM.telemetryLoopRate.innerText = `${loopCounter} CLK_HZ`;
                 loopCounter = 0;
                 lastLoggedSecond = clockNow;
