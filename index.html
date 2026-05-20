@@ -2,161 +2,210 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EDGE // Quant Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>EDGE // Institutional Quant Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #090a0f;
+            background-color: #05060a;
+            letter-spacing: -0.01em;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .glass {
-            background: rgba(13, 15, 24, 0.75);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        
+        /* High-End Tech Glassmorphism Palette */
+        .panel-surface {
+            background: rgba(10, 12, 22, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
-        /* Custom scrollbar handling for mobile charts */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        
+        .active-glow {
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.15);
+            border-color: rgba(99, 102, 241, 0.35) !important;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen pb-12 select-none overflow-x-hidden">
+<body class="text-slate-200 flex flex-col justify-between antialiased">
 
-    <header class="w-full border-b border-slate-800/60 bg-[#0d0f18]/80 sticky top-0 z-50 backdrop-blur-md px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                <i data-lucide="activity" class="h-4 w-4 text-white"></i>
+    <header class="w-full border-b border-slate-900 bg-[#07080d]/90 sticky top-0 z-50 backdrop-blur-md px-4 py-3 flex items-center justify-between safe-top">
+        <div class="flex items-center space-x-2.5">
+            <div class="h-7 w-7 rounded bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                <i data-lucide="terminal" class="h-3.5 w-3.5 text-white"></i>
             </div>
             <div>
-                <h1 class="text-md font-bold tracking-tight text-white flex items-center">
-                    EDGE <span class="text-[10px] text-indigo-400 ml-1.5 px-1.5 py-0.5 rounded border border-indigo-500/20 bg-indigo-500/5 mono font-normal">QUANT</span>
+                <h1 class="text-sm font-bold tracking-wider text-white flex items-center mono">
+                    EDGE<span class="text-indigo-400 font-normal mx-1">//</span>SYSTEM-OS
                 </h1>
             </div>
         </div>
-        <div class="flex items-center space-x-4">
-            <div class="flex items-center space-x-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-full">
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/20 px-2 py-0.5 rounded mono" id="fps-counter">
+                60 FPS
+            </div>
+            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-full">
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="mono" id="connection-status">LIVE STREAM</span>
+                <span class="mono">CORE_STREAM</span>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-3 pt-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <main class="flex-1 w-full max-w-7xl mx-auto px-3 pt-3 grid grid-cols-1 lg:grid-cols-12 gap-3 mb-6">
         
-        <section class="lg:col-span-4 space-y-4">
-            <div class="glass rounded-xl p-4 flex items-center justify-between shadow-xl">
+        <section class="lg:col-span-4 space-y-3 flex flex-col">
+            
+            <div class="panel-surface rounded-lg p-3.5 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="p-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                        <i data-lucide="gauge" class="h-5 w-5 text-amber-400"></i>
+                    <div class="p-2 rounded bg-slate-900 border border-slate-800">
+                        <i data-lucide="compass" class="h-4 w-4 text-slate-400"></i>
                     </div>
                     <div>
-                        <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Market Sentiment</p>
-                        <h3 class="text-sm font-bold text-slate-100" id="fng-label">Loading Index...</h3>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Macro Fear & Greed</p>
+                        <h3 class="text-xs font-bold text-slate-200 mt-0.5" id="fng-classification">CONNECTING...</h3>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-2xl font-bold mono tracking-tight text-amber-400" id="fng-value">--</span>
+                    <span class="text-xl font-bold mono tracking-tight text-slate-400" id="fng-index-val">--</span>
                 </div>
             </div>
 
-            <div class="glass rounded-xl overflow-hidden shadow-xl flex flex-col">
-                <div class="px-4 py-3 border-b border-slate-800/60 bg-slate-900/20 flex items-center justify-between">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
-                        <i data-lucide="layers" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i> Core Watchlist
-                    </h2>
-                    <span class="text-[10px] mono text-slate-400">WS Tickers</span>
+            <div class="panel-surface rounded-lg flex flex-col flex-1 min-h-[220px]">
+                <div class="px-3.5 py-2.5 border-b border-slate-900 bg-slate-950/40 flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
+                        <i data-lucide="activity" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Quant Asset Matrix
+                    </span>
+                    <span class="text-[9px] mono text-slate-500">REAL-TIME MULTIPLEX</span>
                 </div>
-                <div class="divide-y divide-slate-800/40 max-h-[380px] overflow-y-auto" id="watchlist-container">
+                <div class="divide-y divide-slate-900 overflow-y-auto flex-1" id="watchlist-target-node">
                     </div>
             </div>
 
-            <div class="glass rounded-xl p-4 space-y-3 shadow-xl">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
-                    <i data-lucide="cpu" class="h-4 w-4 mr-2 text-indigo-400"></i> Local Execution Signal
-                </h2>
-                <div class="bg-slate-950/40 border border-slate-800/60 rounded-lg p-3.5 flex items-center justify-between">
+            <div class="panel-surface rounded-lg p-3.5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
+                        <i data-lucide="shield-alert" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Operational Edge Diagnostic
+                    </span>
+                    <span class="text-[9px] mono text-emerald-400 bg-emerald-500/5 px-1 rounded border border-emerald-500/10">V2 CORE</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-slate-950/60 border border-slate-900 rounded p-2.5">
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Directional Bias</p>
+                        <h4 class="text-xs font-bold mt-1 tracking-wide uppercase text-slate-300" id="engine-bias-output">COMPUTING...</h4>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-900 rounded p-2.5">
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Confidence Vector</p>
+                        <h4 class="text-xs font-bold mt-1 mono text-slate-300" id="engine-score-output">--%</h4>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-1">
                     <div>
-                        <p class="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Statistical Directional Bias</p>
-                        <h4 class="text-lg font-bold tracking-tight mt-0.5" id="signal-bias">NEUTRAL</h4>
+                        <div class="flex justify-between text-[9px] text-slate-400 mono mb-1">
+                            <span>MOMENTUM CONFLUENCE</span>
+                            <span id="factor-track-momentum">--</span>
+                        </div>
+                        <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+                            <div id="bar-track-momentum" class="h-full bg-indigo-500 transition-all duration-300" style="width: 50%"></div>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Confidence Engine</p>
-                        <span class="text-lg font-bold mono" id="signal-score">50%</span>
+                    <div>
+                        <div class="flex justify-between text-[9px] text-slate-400 mono mb-1">
+                            <span>VOLATILITY DISTANCE (VWAP)</span>
+                            <span id="factor-track-volatility">--</span>
+                        </div>
+                        <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+                            <div id="bar-track-volatility" class="h-full bg-sky-500 transition-all duration-300" style="width: 50%"></div>
+                        </div>
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-400 leading-relaxed italic border-l-2 border-slate-700 pl-2.5">
-                    *[span_17](start_span)[span_18](start_span)Automated rule metrics are calculated locally inside the browser memory framework by parsing real-time rolling volatility changes and momentum parameters[span_17](end_span)[span_18](end_span).
-                </p>
             </div>
         </section>
 
-        <section class="lg:col-span-8 space-y-4">
-            <div class="glass rounded-xl overflow-hidden shadow-xl h-[340px] md:h-[450px] relative w-full">
-                <div id="tv-chart-widget-target" class="w-full h-full"></div>
+        <section class="lg:col-span-8 space-y-3 flex flex-col">
+            
+            <div class="panel-surface rounded-lg overflow-hidden h-[300px] md:h-[420px] relative w-full shadow-2xl">
+                <div id="tradingview-canvas-target" class="w-full h-full"></div>
             </div>
 
-            <div class="glass rounded-xl p-4 shadow-xl">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4 flex items-center">
-                    <i data-lucide="calculator" class="h-4 w-4 mr-2 text-indigo-400"></i> Capital Allocation & Risk Management Engine
-                </h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Total Account Equity ($)</label>
-                        <input type="number" id="calc-equity" value="10000" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Risk Parameter (%)</label>
-                        <input type="number" id="calc-risk" value="1" step="0.25" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Invalidation Setup Price ($)</label>
-                        <input type="number" id="calc-stop" value="95" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Target Profit Target ($)</label>
-                        <input type="number" id="calc-take" value="115" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
-                    </div>
+            <div class="panel-surface rounded-lg p-3.5">
+                <div class="flex items-center space-x-2 mb-3">
+                    <i data-lucide="scale" class="h-3.5 w-3.5 text-indigo-400"></i>
+                    <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Risk Allocation & Position Size Framework</h2>
                 </div>
                 
-                <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800/60">
-                    <div class="bg-indigo-500/5 border border-indigo-500/10 rounded p-2.5 text-center">
-                        <span class="text-[10px] uppercase text-indigo-400 font-medium block">Position Size Allocation</span>
-                        <span class="text-sm font-bold text-white mono mt-0.5 block" id="out-position-size">--</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Account Portfolio Equity ($)</label>
+                        <input type="number" id="risk-input-equity" value="10000" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
                     </div>
-                    <div class="bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 text-center">
-                        <span class="text-[10px] uppercase text-emerald-400 font-medium block">Asymmetric Risk Reward Ratio</span>
-                        <span class="text-sm font-bold text-white mono mt-0.5 block" id="out-rr-ratio">--</span>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Max Risk Target (%)</label>
+                        <input type="number" id="risk-input-pct" value="1.0" step="0.25" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
                     </div>
-                    <button id="btn-log-trade" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 px-4 rounded shadow-md transition-all flex items-center justify-center cursor-pointer space-x-2">
-                        <i data-lucide="plus-circle" class="h-3.5 w-3.5"></i>
-                        <span>Commit Setup to Terminal Journal</span>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Invalidation Stop Price ($)</label>
+                        <input type="number" id="risk-input-stop" value="60000" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Profit Target Objective ($)</label>
+                        <input type="number" id="risk-input-take" value="72000" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
+                    </div>
+                </div>
+
+                <div class="mt-3.5 pt-3.5 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5">
+                    <div class="grid grid-cols-2 gap-2 flex-1">
+                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-3 py-1.5 text-center sm:text-left">
+                            <span class="text-[8px] uppercase text-indigo-400 font-bold block tracking-wider">Position Allocation Size</span>
+                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="calc-output-size">--</span>
+                        </div>
+                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-3 py-1.5 text-center sm:text-left">
+                            <span class="text-[8px] uppercase text-emerald-400 font-bold block tracking-wider">Risk Reward Premium</span>
+                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="calc-output-rr">--</span>
+                        </div>
+                    </div>
+                    <button id="calc-commit-trigger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-4 rounded transition-all flex items-center justify-center cursor-pointer space-x-1.5 shrink-0 shadow-lg shadow-indigo-600/10">
+                        <i data-lucide="database" class="h-3.5 w-3.5"></i>
+                        <span>Commit Setup to System Log</span>
                     </button>
                 </div>
             </div>
 
-            <div class="glass rounded-xl overflow-hidden shadow-xl flex flex-col">
-                <div class="px-4 py-3 border-b border-slate-800/60 bg-slate-900/20 flex items-center justify-between">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
-                        <i data-lucide="book-open" class="h-4 w-4 mr-2 text-indigo-400"></i> Active Terminal Position Journal
-                    </h2>
-                    <button id="btn-clear-journal" class="text-[10px] text-rose-400 font-medium hover:underline tracking-wide bg-transparent cursor-pointer border-none">Flush Saved Entries</button>
+            <div class="panel-surface rounded-lg flex flex-col overflow-hidden">
+                <div class="px-3.5 py-2.5 border-b border-slate-900 bg-slate-950/40 flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
+                        <i data-lucide="folder-heart" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Account Matrix Ledger Logs
+                    </span>
+                    <button id="ledger-flush-trigger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Purge Store</button>
                 </div>
-                <div class="p-0 overflow-x-auto w-full">
-                    <table class="w-full text-left border-collapse min-w-[500px]">
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left border-collapse min-w-[560px]">
                         <thead>
-                            <tr class="border-b border-slate-800/80 bg-slate-950/20 text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                                <th class="py-2 px-4">Market Asset</th>
-                                <th class="py-2 px-4">Allocated Capital</th>
-                                <th class="py-2 px-4">Invalidation Level</th>
-                                <th class="py-2 px-4">Profit Target</th>
-                                <th class="py-2 px-4 text-right">Timestamp</th>
+                            <tr class="border-b border-slate-900 bg-slate-950/30 text-[9px] uppercase tracking-wider text-slate-500 font-bold">
+                                <th class="py-2 px-4">Market Symbol</th>
+                                <th class="py-2 px-4">Allocation Metric</th>
+                                <th class="py-2 px-4">Invalidation Trigger</th>
+                                <th class="py-2 px-4">Take Profit Objective</th>
+                                <th class="py-2 px-4 text-right">System Time</th>
                             </tr>
                         </thead>
-                        <tbody id="journal-table-body" class="divide-y divide-slate-800/40 text-xs text-slate-300 mono">
+                        <tbody id="ledger-rows-target" class="divide-y divide-slate-900 text-xs text-slate-300 mono">
                             </tbody>
                     </table>
                 </div>
@@ -166,14 +215,14 @@
 
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // System System Level Settings Configurations
+        // System Settings Configurations
         const SYSTEM_CONFIG = {
             assets: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'],
-            sentimentFeed: 'https://api.alternative.me/fng/?limit=1', // Fixed to secure HTTPS
+            sentimentFeed: 'https://api.alternative.me/fng/?limit=1',
             streamEndpoint: 'wss://stream.binance.com:9443/ws'
         };
 
-        // Linearized Decoupled Local UI Rendering Cache
+        // UI Cache
         let InternalRenderCache = {
             isDirty: false,
             activeAsset: 'BTCUSDT',
@@ -183,33 +232,26 @@
             ledger: []
         };
 
-        // TradingView Workspace Reference Context Holder
         let PrimaryChartInstance = null;
 
         /**
-         * System Core Lifecycle Entry Hook
+         * Core Hook Entry Execution
          */
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
             bootstrapWatchlistTemplate();
             
-            // Safe initialization fallback wrapper
             setTimeout(() => {
                 mountTradingViewIframe(InternalRenderCache.activeAsset);
-            }, 500);
+            }, 400);
 
             initializeMultiplexStreamPipeline();
             pullFearGreedMetrics();
             syncLocalDataStorage();
             mountInteractiveEventHandlers();
-            
-            // Launch High-Performance Render Loop Core
             executeHardwareSyncLoop();
         });
 
-        /**
-         * Bootstrap Watchlist Elements into DOM
-         */
         function bootstrapWatchlistTemplate() {
             const target = document.getElementById('watchlist-target-node');
             if(!target) return;
@@ -239,21 +281,17 @@
             });
         }
 
-        /**
-         * Orchestrate Client Context Shifting Logic
-         */
         function performAssetContextShift(symbol) {
             if (InternalRenderCache.activeAsset === symbol) return;
 
-            const structuralOldRow = document.getElementById(`asset-row-${InternalRenderCache.activeAsset}`);
-            if(structuralOldRow) structuralOldRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-transparent`;
+            const oldRow = document.getElementById(`asset-row-${InternalRenderCache.activeAsset}`);
+            if(oldRow) oldRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-transparent`;
 
             InternalRenderCache.activeAsset = symbol;
             
-            const structuralNewRow = document.getElementById(`asset-row-${symbol}`);
-            if(structuralNewRow) structuralNewRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-indigo-500 active-glow`;
+            const newRow = document.getElementById(`asset-row-${symbol}`);
+            if(newRow) newRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-indigo-500 active-glow`;
 
-            // Dynamic check for widget safety
             if (PrimaryChartInstance && typeof PrimaryChartInstance.setSymbol === 'function') {
                 try {
                     PrimaryChartInstance.setSymbol(`BINANCE:${symbol}`, "60");
@@ -269,20 +307,16 @@
                 document.getElementById('risk-input-stop').value = (livePrice * 0.98).toFixed(2);
                 document.getElementById('risk-input-take').value = (livePrice * 1.04).toFixed(2);
             }
-
             InternalRenderCache.isDirty = true;
         }
 
-        /**
-         * Secure Safe Initialization of Widget Wrapper Framework
-         */
         function mountTradingViewIframe(symbol) {
             const container = document.getElementById('tradingview-canvas-target');
             if(!container) return;
             container.innerHTML = '';
             
             if(typeof TradingView === 'undefined') {
-                container.innerHTML = `<div class="p-6 text-xs text-slate-500 mono uppercase tracking-wider">TradingView Library Timeout</div>`;
+                container.innerHTML = `<div class="p-6 text-xs text-slate-500 mono uppercase tracking-wider">TradingView Library Latency...</div>`;
                 return;
             }
 
@@ -298,23 +332,17 @@
                 "hide_side_toolbar": true,
                 "allow_symbol_change": false,
                 "container_id": "tradingview-canvas-target",
-                "studies": [
-                    "RSI@tv-basicstudies",
-                    "VWAP@tv-basicstudies"
-                ]
+                "studies": ["RSI@tv-basicstudies", "VWAP@tv-basicstudies"]
             });
         }
 
-        /**
-         * State Multiplexing WebSocket Network Loop
-         */
         function initializeMultiplexStreamPipeline() {
             try {
                 const socket = new WebSocket(SYSTEM_CONFIG.streamEndpoint);
 
                 socket.onopen = () => {
-                    const streamIdentifiers = SYSTEM_CONFIG.assets.map(asset => `${asset.toLowerCase()}@ticker`);
-                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streamIdentifiers, id: 101 }));
+                    const streams = SYSTEM_CONFIG.assets.map(asset => `${asset.toLowerCase()}@ticker`);
+                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 101 }));
                 };
 
                 socket.onmessage = (event) => {
@@ -324,65 +352,58 @@
                         const price = parseFloat(message.c);
                         const change = parseFloat(message.P);
 
-                        const assetPointer = InternalRenderCache.tickerState[symbol];
-                        if (assetPointer) {
-                            assetPointer.prevPrice = assetPointer.price;
-                            assetPointer.price = price;
-                            assetPointer.change = change;
+                        const asset = InternalRenderCache.tickerState[symbol];
+                        if (asset) {
+                            asset.prevPrice = asset.price;
+                            asset.price = price;
+                            asset.change = change;
                             InternalRenderCache.isDirty = true;
                         }
 
                         if (symbol === InternalRenderCache.activeAsset) {
-                            evaluateAlgorithmicEngineSignals(price, change);
+                            evaluateSignals(price, change);
                         }
                     }
                 };
 
                 socket.onclose = () => {
-                    setTimeout(initializeMultiplexStreamPipeline, 5000);
+                    setTimeout(initializeMultiplexStreamPipeline, 4000);
                 };
             } catch(e) {
-                console.error("WS Engine Error", e);
+                console.error("WS Boot Error", e);
             }
         }
 
-        /**
-         * Advanced Rule Confluence Diagnostic Processor Module
-         */
-        function evaluateAlgorithmicEngineSignals(price, change) {
-            let baseScore = 50; 
-            let momentumWeight = Math.max(-100, Math.min(100, change * 20));
-            let historicalFngFactor = parseInt(InternalRenderCache.fngData.val) || 50;
-            let sentimentDeficit = (50 - historicalFngFactor) * 1.5;
+        function evaluateSignals(price, change) {
+            let score = 50; 
+            let mom = Math.max(-100, Math.min(100, change * 20));
+            let fng = parseInt(InternalRenderCache.fngData.val) || 50;
+            let sentiment = (50 - fng) * 1.5;
 
-            let finalConfluenceScore = baseScore + (momentumWeight * 0.25) + (sentimentDeficit * 0.15);
-            finalConfluenceScore = Math.max(5, Math.min(95, finalConfluenceScore));
+            let finalScore = score + (mom * 0.25) + (sentiment * 0.15);
+            finalScore = Math.max(5, Math.min(95, finalScore));
 
-            InternalRenderCache.signalMetrics.score = Math.round(finalConfluenceScore);
-            InternalRenderCache.signalMetrics.momentum = Math.round((momentumWeight + 100) / 2);
-            InternalRenderCache.signalMetrics.volatility = Math.round((sentimentDeficit + 100) / 2);
+            InternalRenderCache.signalMetrics.score = Math.round(finalScore);
+            InternalRenderCache.signalMetrics.momentum = Math.round((mom + 100) / 2);
+            InternalRenderCache.signalMetrics.volatility = Math.round((sentiment + 100) / 2);
 
-            if (finalConfluenceScore >= 58) {
-                InternalRenderCache.signalMetrics.bias = finalConfluenceScore > 72 ? 'STRONG EXPANSION' : 'ACCUMULATION ZONE';
-            } else if (finalConfluenceScore <= 42) {
-                InternalRenderCache.signalMetrics.bias = finalConfluenceScore < 28 ? 'AGGRESSIVE LIQUIDATION' : 'DISTRIBUTION ZONE';
+            if (finalScore >= 58) {
+                InternalRenderCache.signalMetrics.bias = finalScore > 72 ? 'STRONG EXPANSION' : 'ACCUMULATION ZONE';
+            } else if (finalScore <= 42) {
+                InternalRenderCache.signalMetrics.bias = finalScore < 28 ? 'AGGRESSIVE LIQUIDATION' : 'DISTRIBUTION ZONE';
             } else {
                 InternalRenderCache.signalMetrics.bias = 'COMPRESSION NEUTRAL';
             }
             InternalRenderCache.isDirty = true;
         }
 
-        /**
-         * Async REST Client Data Request Module
-         */
         function pullFearGreedMetrics() {
             fetch(SYSTEM_CONFIG.sentimentFeed)
                 .then(res => res.json())
                 .then(data => {
-                    if(data && data.data && data.data[0]) {
-                        const metrics = data.data[0];
-                        InternalRenderCache.fngData.val = metrics.value;
-                        InternalRenderCache.fngData.text = metrics.value_classification;
+                    if(data?.data?.[0]) {
+                        InternalRenderCache.fngData.val = data.data[0].value;
+                        InternalRenderCache.fngData.text = data.data[0].value_classification;
                         InternalRenderCache.isDirty = true;
                     }
                 })
@@ -391,155 +412,128 @@
                 });
         }
 
-        /**
-         * Reactive Hardware V-Sync Frame Optimization Engine Loop
-         */
-        let lastLoggedFrameTimestamp = performance.now();
-        let activeRenderCounter = 0;
+        let lastFrameTime = performance.now();
+        let frames = 0;
 
         function executeHardwareSyncLoop() {
-            activeRenderCounter++;
+            frames++;
             const now = performance.now();
             
-            if (now >= lastLoggedFrameTimestamp + 1000) {
-                const fpsLabel = document.getElementById('fps-counter');
-                if(fpsLabel) fpsLabel.innerText = `${activeRenderCounter} FPS`;
-                activeRenderCounter = 0;
-                lastLoggedFrameTimestamp = now;
+            if (now >= lastFrameTime + 1000) {
+                const fps = document.getElementById('fps-counter');
+                if(fps) fps.innerText = `${frames} FPS`;
+                frames = 0;
+                lastFrameTime = now;
             }
 
             if (InternalRenderCache.isDirty) {
-                flushCacheUpdatesToDOM();
+                flushUpdates();
                 InternalRenderCache.isDirty = false;
             }
             requestAnimationFrame(executeHardwareSyncLoop);
         }
 
-        /**
-         * Single Layout Engine Pass for DOM Batching
-         */
-        function flushCacheUpdatesToDOM() {
+        function flushUpdates() {
             SYSTEM_CONFIG.assets.forEach(symbol => {
-                const metrics = InternalRenderCache.tickerState[symbol];
+                const data = InternalRenderCache.tickerState[symbol];
                 const pNode = document.getElementById(`dom-price-${symbol}`);
                 const cNode = document.getElementById(`dom-change-${symbol}`);
 
-                if (pNode && metrics.price > 0) {
-                    pNode.innerText = metrics.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    if (metrics.price > metrics.prevPrice) {
-                        pNode.className = "text-xs font-bold text-emerald-400 mono animate-pulse";
-                    } else if (metrics.price < metrics.prevPrice) {
-                        pNode.className = "text-xs font-bold text-rose-400 mono animate-pulse";
-                    } else {
-                        pNode.className = "text-xs font-bold text-slate-100 mono";
-                    }
+                if (pNode && data.price > 0) {
+                    pNode.innerText = data.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    pNode.className = `text-xs font-bold mono ${data.price > data.prevPrice ? 'text-emerald-400' : data.price < data.prevPrice ? 'text-rose-400' : 'text-slate-100'}`;
                 }
 
-                if (cNode && metrics.price > 0) {
-                    cNode.innerText = `${metrics.change >= 0 ? '+' : ''}${metrics.change.toFixed(2)}%`;
-                    cNode.className = `text-[9px] font-bold mono mt-0.5 ${metrics.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                if (cNode && data.price > 0) {
+                    cNode.innerText = `${data.change >= 0 ? '+' : ''}${data.change.toFixed(2)}%`;
+                    cNode.className = `text-[9px] font-bold mono mt-0.5 ${data.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
                 }
             });
 
-            const fngValNode = document.getElementById('fng-index-val');
-            const fngClassNode = document.getElementById('fng-classification');
-            if(fngValNode) fngValNode.innerText = InternalRenderCache.fngData.val;
-            if(fngClassNode) fngClassNode.innerText = InternalRenderCache.fngData.text.toUpperCase();
+            const fngV = document.getElementById('fng-index-val');
+            const fngC = document.getElementById('fng-classification');
+            if(fngV) fngV.innerText = InternalRenderCache.fngData.val;
+            if(fngC) fngC.innerText = InternalRenderCache.fngData.text.toUpperCase();
 
-            const metricsPack = InternalRenderCache.signalMetrics;
-            const biasNode = document.getElementById('engine-bias-output');
-            const scoreNode = document.getElementById('engine-score-output');
+            const sig = InternalRenderCache.signalMetrics;
+            const bNode = document.getElementById('engine-bias-output');
+            const sNode = document.getElementById('engine-score-output');
 
-            if (scoreNode) scoreNode.innerText = `${metricsPack.score}%`;
-            if (biasNode) {
-                biasNode.innerText = metricsPack.bias;
-                if(metricsPack.score >= 58) biasNode.className = "text-xs font-bold mt-1 text-emerald-400 tracking-wide uppercase";
-                else if(metricsPack.score <= 42) biasNode.className = "text-xs font-bold mt-1 text-rose-400 tracking-wide uppercase";
-                else biasNode.className = "text-xs font-bold mt-1 text-slate-400 tracking-wide uppercase";
+            if (sNode) sNode.innerText = `${sig.score}%`;
+            if (bNode) {
+                bNode.innerText = sig.bias;
+                bNode.className = `text-xs font-bold mt-1 tracking-wide uppercase ${sig.score >= 58 ? 'text-emerald-400' : sig.score <= 42 ? 'text-rose-400' : 'text-slate-400'}`;
             }
 
-            const momTrack = document.getElementById('factor-track-momentum');
-            const momBar = document.getElementById('bar-track-momentum');
-            const volTrack = document.getElementById('factor-track-volatility');
-            const volBar = document.getElementById('bar-track-volatility');
+            const mMom = document.getElementById('factor-track-momentum');
+            const bMom = document.getElementById('bar-track-momentum');
+            const mVol = document.getElementById('factor-track-volatility');
+            const bVol = document.getElementById('bar-track-volatility');
 
-            if(momTrack) momTrack.innerText = `${metricsPack.momentum}%`;
-            if(momBar) momBar.style.width = `${metricsPack.momentum}%`;
-            if(volTrack) volTrack.innerText = `${metricsPack.volatility}%`;
-            if(volBar) volBar.style.width = `${metricsPack.volatility}%`;
+            if(mMom) mMom.innerText = `${sig.momentum}%`;
+            if(bMom) bMom.style.width = `${sig.momentum}%`;
+            if(mVol) mVol.innerText = `${sig.volatility}%`;
+            if(bVol) bVol.style.width = `${sig.volatility}%`;
 
-            processRiskCalculationsEngine();
+            processRiskMath();
         }
 
-        /**
-         * Quantitative Risk Processing Math Engine
-         */
-        function processRiskCalculationsEngine() {
+        function processRiskMath() {
             const equity = parseFloat(document.getElementById('risk-input-equity').value) || 0;
             const riskPct = parseFloat(document.getElementById('risk-input-pct').value) || 0;
             const stopPrice = parseFloat(document.getElementById('risk-input-stop').value) || 0;
             const takeProfit = parseFloat(document.getElementById('risk-input-take').value) || 0;
+            const price = InternalRenderCache.tickerState[InternalRenderCache.activeAsset]?.price || 0;
 
-            const activePrice = InternalRenderCache.tickerState[InternalRenderCache.activeAsset]?.price || 0;
-
-            if (equity <= 0 || riskPct <= 0 || activePrice <= 0 || stopPrice === activePrice) {
+            if (equity <= 0 || riskPct <= 0 || price <= 0 || stopPrice === price) {
                 document.getElementById('calc-output-size').innerText = "--";
                 document.getElementById('calc-output-rr').innerText = "--";
                 return;
             }
 
-            const totalCashRiskValue = equity * (riskPct / 100);
-            const directionalPriceDistance = Math.abs(activePrice - stopPrice);
-            const totalPositionAllocationUnits = totalCashRiskValue / directionalPriceDistance;
-            const absoluteNotionalCapitalAllocation = totalPositionAllocationUnits * activePrice;
+            const cashRisk = equity * (riskPct / 100);
+            const dist = Math.abs(price - stopPrice);
+            const units = cashRisk / dist;
+            const allocation = units * price;
+            const rr = Math.abs(takeProfit - price) / dist;
 
-            const rewardDistance = Math.abs(takeProfit - activePrice);
-            const rewardToRiskRatioResult = rewardDistance / directionalPriceDistance;
-
-            document.getElementById('calc-output-size').innerText = `$${absoluteNotionalCapitalAllocation.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${totalPositionAllocationUnits.toFixed(2)} Units)`;
-            document.getElementById('calc-output-rr').innerText = `1 : ${rewardToRiskRatioResult.toFixed(2)}`;
+            document.getElementById('calc-output-size').innerText = `$${allocation.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${units.toFixed(2)} Units)`;
+            document.getElementById('calc-output-rr').innerText = `1 : ${rr.toFixed(2)}`;
         }
 
-        /**
-         * Wire input elements into listener loops
-         */
         function mountInteractiveEventHandlers() {
             ['risk-input-equity', 'risk-input-pct', 'risk-input-stop', 'risk-input-take'].forEach(id => {
-                const node = document.getElementById(id);
-                if(node) node.addEventListener('input', () => { InternalRenderCache.isDirty = true; });
+                document.getElementById(id)?.addEventListener('input', () => { InternalRenderCache.isDirty = true; });
             });
-
-            document.getElementById('calc-commit-trigger').addEventListener('click', commitCalculatedSetupToLedger);
-            document.getElementById('ledger-flush-trigger').addEventListener('click', purgeLocalStorageStateStore);
+            document.getElementById('calc-commit-trigger')?.addEventListener('click', commitSetup);
+            document.getElementById('ledger-flush-trigger')?.addEventListener('click', clearLog);
         }
 
-        function commitCalculatedSetupToLedger() {
-            const stopPrice = parseFloat(document.getElementById('risk-input-stop').value) || 0;
-            const takeProfit = parseFloat(document.getElementById('risk-input-take').value) || 0;
-            const sizeStringText = document.getElementById('calc-output-size').innerText;
+        function commitSetup() {
+            const stop = parseFloat(document.getElementById('risk-input-stop').value) || 0;
+            const take = parseFloat(document.getElementById('risk-input-take').value) || 0;
+            const size = document.getElementById('calc-output-size').innerText;
 
-            if (sizeStringText === "--") return;
+            if (size === "--") return;
 
-            const documentLogRecord = {
+            InternalRenderCache.ledger.unshift({
                 asset: InternalRenderCache.activeAsset,
-                allocation: sizeStringText,
-                stop: `$${stopPrice.toLocaleString()}`,
-                take: `$${takeProfit.toLocaleString()}`,
+                allocation: size,
+                stop: `$${stop.toLocaleString()}`,
+                take: `$${take.toLocaleString()}`,
                 time: new Date().toLocaleTimeString()
-            };
-
-            InternalRenderCache.ledger.unshift(documentLogRecord);
-            writeLedgerToStorage();
-            renderLedgerTableDOM();
+            });
+            localStorage.setItem('edge_v2_ledger_datastore', JSON.stringify(InternalRenderCache.ledger));
+            renderLedger();
         }
 
-        function renderLedgerTableDOM() {
+        function renderLedger() {
             const container = document.getElementById('ledger-rows-target');
             if(!container) return;
             container.innerHTML = '';
 
             if (InternalRenderCache.ledger.length === 0) {
-                container.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No transaction configurations saved in sandbox database</td></tr>`;
+                container.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No transaction configurations saved</td></tr>`;
                 return;
             }
 
@@ -557,26 +551,18 @@
             });
         }
 
-        function writeLedgerToStorage() {
-            localStorage.setItem('edge_v2_ledger_datastore', JSON.stringify(InternalRenderCache.ledger));
-        }
-
         function syncLocalDataStorage() {
-            const rawStore = localStorage.getItem('edge_v2_ledger_datastore');
-            if (rawStore) {
-                try { 
-                    InternalRenderCache.ledger = JSON.parse(rawStore); 
-                } catch(e) { 
-                    InternalRenderCache.ledger = []; 
-                }
+            const data = localStorage.getItem('edge_v2_ledger_datastore');
+            if (data) {
+                try { InternalRenderCache.ledger = JSON.parse(data); } catch(e) { InternalRenderCache.ledger = []; }
             }
-            renderLedgerTableDOM();
+            renderLedger();
         }
 
-        function purgeLocalStorageStateStore() {
+        function clearLog() {
             InternalRenderCache.ledger = [];
-            writeLedgerToStorage();
-            renderLedgerTableDOM();
+            localStorage.removeItem('edge_v2_ledger_datastore');
+            renderLedger();
         }
     </script>
 </body>
