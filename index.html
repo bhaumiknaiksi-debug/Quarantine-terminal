@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EDGE // Advanced Decision Support Terminal</title>
+    <title>EDGE // Quant Execution Cockpit</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -13,48 +13,47 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #030406;
+            background-color: #020305;
             letter-spacing: -0.01em;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
         .panel-surface {
-            background: rgba(8, 10, 16, 0.85);
+            background: rgba(7, 9, 14, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.02);
         }
         
         .active-glow {
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.08);
-            border-color: rgba(99, 102, 241, 0.3) !important;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.06);
+            border-color: rgba(99, 102, 241, 0.25) !important;
         }
 
         .delta-up { color: #10b981 !important; }
         .delta-down { color: #ef4444 !important; }
 
         html, body { overflow-x: hidden; height: 100%; }
-        input:focus { border-color: #4f46e5 !important; outline: none; }
-        
+        input:focus { border-color: #6366f1 !important; outline: none; }
         .scroller-clean::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="text-slate-200 flex flex-col justify-between antialiased select-none">
 
-    <header class="w-full border-b border-slate-900 bg-[#040508]/90 sticky top-0 z-50 backdrop-blur-md px-4 py-2.5 flex items-center justify-between safe-top">
+    <header class="w-full border-b border-slate-900 bg-[#030407]/95 sticky top-0 z-50 backdrop-blur-md px-4 py-2 flex items-center justify-between safe-top">
         <div class="flex items-center space-x-2">
-            <div class="h-6 w-6 rounded bg-indigo-600 flex items-center justify-center shadow-md">
-                <i data-lucide="shield" class="h-3.5 w-3.5 text-white"></i>
+            <div class="h-5 w-5 rounded bg-indigo-600 flex items-center justify-center shadow-md">
+                <i data-lucide="activity" class="h-3 w-3 text-white"></i>
             </div>
-            <h1 class="text-xs font-bold tracking-wider text-slate-200 flex items-center mono">
-                EDGE<span class="text-indigo-500 font-normal mx-1">/</span>SYSTEM-OS
+            <h1 class="text-xs font-bold tracking-wider text-slate-300 flex items-center mono">
+                EDGE<span class="text-indigo-500 font-normal mx-1">/</span>COCKPIT-V3
             </h1>
         </div>
         <div class="flex items-center space-x-2">
-            <div class="text-[9px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded mono" id="render-telemetry">
+            <div class="text-[9px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded mono" id="telemetry-render-state">
                 IDLE
             </div>
-            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded-full">
-                <span class="h-1 w-1 rounded-full bg-indigo-400 animate-pulse"></span>
-                <span class="mono" id="fps-counter">60 FPS</span>
+            <div class="flex items-center space-x-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded-full">
+                <span class="h-1 w-1 rounded-full bg-indigo-400"></span>
+                <span class="mono" id="telemetry-loop-rate">-- HZ</span>
             </div>
         </div>
     </header>
@@ -63,140 +62,140 @@
         
         <section class="lg:col-span-4 space-y-2 flex flex-col">
             
-            <div class="panel-surface rounded-md p-3 flex items-center justify-between">
+            <div class="panel-surface rounded p-3 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="p-2 rounded bg-slate-950 border border-slate-900">
-                        <i data-lucide="compass" class="h-4 w-4 text-slate-400"></i>
+                        <i data-lucide="globe" class="h-3.5 w-3.5 text-slate-400"></i>
                     </div>
                     <div>
-                        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Macro Index Context</p>
+                        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Macro Risk Sentiment</p>
                         <h3 class="text-xs font-bold text-slate-200 mt-0.5 uppercase" id="ui-fng-text">LOADING...</h3>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-base font-bold mono tracking-tight text-slate-400" id="ui-fng-val">--</span>
+                    <span class="text-sm font-bold mono text-slate-400" id="ui-fng-val">--</span>
                 </div>
             </div>
 
-            <div class="panel-surface rounded-md flex flex-col flex-1 min-h-[220px]">
-                <div class="px-3 py-2 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
+            <div class="panel-surface rounded flex flex-col flex-1 min-h-[200px]">
+                <div class="px-3 py-1.5 border-b border-slate-900 bg-slate-950/40 flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="layout-grid" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Quant Asset Matrix
+                        <i data-lucide="cpu" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Operational Matrix
                     </span>
-                    <span class="text-[9px] mono text-slate-500">OKX GEOSAFE STREAM</span>
+                    <span class="text-[9px] mono text-slate-500">OKX SWAP VENUE</span>
                 </div>
-                <div class="divide-y divide-slate-900/60 overflow-y-auto flex-1 scroller-clean" id="watchlist-target-node">
+                <div class="divide-y divide-slate-900/60 overflow-y-auto flex-1 scroller-clean" id="watchlist-ui-root">
                     </div>
             </div>
 
-            <div class="panel-surface rounded-md p-3 space-y-2.5">
+            <div class="panel-surface rounded p-3 space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Decision Confluence
+                        <i data-lucide="layers" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Structural Metrics
                     </span>
-                    <span class="text-[9px] mono text-indigo-400 bg-indigo-500/5 px-1.5 py-0.5 rounded border border-indigo-500/10" id="ui-setup-quality">RANK --</span>
+                    <span class="text-[9px] mono text-indigo-400 bg-indigo-500/5 px-1.5 py-0.5 rounded border border-indigo-500/10" id="ui-setup-rank">RANK --</span>
                 </div>
 
-                <div class="bg-slate-950/40 border border-slate-900 rounded overflow-hidden text-[11px] mono">
+                <div class="bg-slate-950/50 border border-slate-900 rounded overflow-hidden text-[11px] mono">
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
                         <span class="text-slate-500">MARKET REGIME</span>
                         <span class="text-right font-bold text-slate-200 uppercase" id="ui-metric-regime">COMPUTING...</span>
                     </div>
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">VOL COEFF Z-SCORE</span>
+                        <span class="text-slate-500">VOLATILITY Z-SCORE</span>
                         <span class="text-right font-bold text-slate-300" id="ui-metric-zscore">--</span>
                     </div>
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">REGIME PERSISTENCE</span>
-                        <span class="text-right font-bold text-slate-300" id="ui-metric-persistence">--</span>
+                        <span class="text-slate-500">REGIME TIME DURATION</span>
+                        <span class="text-right font-bold text-slate-300 animate-pulse" id="ui-metric-persistence">--</span>
                     </div>
                     <div class="grid grid-cols-2 p-2">
-                        <span class="text-slate-500">OPERATIONAL BIAS</span>
+                        <span class="text-slate-500">TACTICAL VERDICT</span>
                         <span class="text-right font-bold text-slate-300 uppercase" id="ui-metric-verdict">--</span>
                     </div>
                 </div>
 
-                <div class="bg-indigo-600/5 border border-indigo-500/10 rounded p-2.5 text-center">
-                    <p class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Calculated Strategy Verdict</p>
-                    <h2 class="text-xs font-bold text-slate-200 mt-1 uppercase tracking-wide" id="ui-final-verdict">INITIALIZING PIPELINE...</h2>
+                <div class="bg-indigo-600/5 border border-indigo-500/10 rounded p-2 text-center">
+                    <p class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Statistical System Bias</p>
+                    <h2 class="text-xs font-bold text-slate-200 mt-0.5 uppercase tracking-wide" id="ui-final-verdict">INITIALIZING PIPELINE...</h2>
                 </div>
             </div>
         </section>
 
         <section class="lg:col-span-8 space-y-2 flex flex-col">
             
-            <div class="panel-surface rounded-md overflow-hidden h-[260px] md:h-[360px] relative w-full shadow-xl">
+            <div class="panel-surface rounded overflow-hidden h-[240px] md:h-[340px] relative w-full shadow-lg">
                 <div id="tradingview-canvas-target" class="w-full h-full"></div>
             </div>
 
-            <div class="panel-surface rounded-md p-3">
-                <div class="flex items-center justify-between mb-2.5">
+            <div class="panel-surface rounded p-3">
+                <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
-                        <i data-lucide="shield-alert" class="h-3.5 w-3.5 text-indigo-400"></i>
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Volatility-Adaptive Risk Allocation</h2>
+                        <i data-lucide="shield-check" class="h-3.5 w-3.5 text-indigo-400"></i>
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Mathematical Risk Sizing Engine</h2>
                     </div>
                     <div class="flex items-center space-x-1 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-[9px] font-bold mono text-slate-400">
-                        <span>ATR VOL BASIS:</span>
+                        <span>TRUE HISTORICAL ATR:</span>
                         <span class="text-indigo-400 uppercase font-bold" id="ui-atr-basis-value">LOADING...</span>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Portfolio Equity ($)</label>
-                        <input type="number" id="risk-equity" value="10000" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Portfolio Equity ($)</label>
+                        <input type="number" id="risk-equity" value="10000" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Max Risk Parameter (%)</label>
-                        <input type="number" id="risk-percent" value="1.0" step="0.25" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Max Capital Risk (%)</label>
+                        <input type="number" id="risk-percent" value="1.0" step="0.25" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide">Invalidation Stop ($)</label>
-                            <button id="btn-trigger-volstop" class="text-[8px] font-bold text-indigo-400 hover:underline cursor-pointer uppercase bg-transparent border-none">Auto-Stop</button>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase">Invalidation Stop ($)</label>
+                            <button id="btn-trigger-volstop" class="text-[8px] font-bold text-indigo-400 hover:underline cursor-pointer uppercase bg-transparent border-none">Set Vol-Stop</button>
                         </div>
-                        <input type="number" id="risk-stop" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
+                        <input type="number" id="risk-stop" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Profit Objective ($)</label>
-                        <input type="number" id="risk-take" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Profit Objective ($)</label>
+                        <input type="number" id="risk-take" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                 </div>
 
                 <div class="mt-3 pt-3 border-t border-slate-900/60 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
                     <div class="grid grid-cols-2 gap-2 flex-1">
-                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-2.5 py-1.5">
-                            <span class="text-[8px] uppercase text-indigo-400 font-bold block tracking-wider">Position Allocation Size</span>
+                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-2.5 py-1">
+                            <span class="text-[8px] uppercase text-indigo-400 font-bold block tracking-wider">Position Size Allocation</span>
                             <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-size">--</span>
                         </div>
-                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-2.5 py-1.5">
+                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-2.5 py-1">
                             <span class="text-[8px] uppercase text-emerald-400 font-bold block tracking-wider">Risk Reward Premium</span>
                             <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-rr">--</span>
                         </div>
                     </div>
-                    <button id="btn-commit-ledger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 px-4 rounded transition-all flex items-center justify-center cursor-pointer space-x-1 shadow-md">
-                        <i data-lucide="database" class="h-3.5 w-3.5"></i>
-                        <span>Log Setup Matrix</span>
+                    <button id="btn-commit-ledger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-3 rounded transition-all flex items-center justify-center cursor-pointer space-x-1">
+                        <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                        <span>Log Setup</span>
                     </button>
                 </div>
             </div>
 
-            <div class="panel-surface rounded-md flex flex-col overflow-hidden flex-1">
+            <div class="panel-surface rounded flex flex-col overflow-hidden flex-1">
                 <div class="px-3 py-1.5 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="history" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Setup Decision History Ledger
+                        <i data-lucide="database" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Active Strategy Ledger
                     </span>
-                    <button id="btn-flush-ledger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Flush Store</button>
+                    <button id="btn-flush-ledger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Purge Store</button>
                 </div>
-                <div class="overflow-x-auto w-full max-h-[110px] scroller-clean">
+                <div class="overflow-x-auto w-full max-h-[100px] scroller-clean">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-900 bg-slate-950/20 text-[9px] uppercase tracking-wider text-slate-500 font-bold">
-                                <th class="py-1.5 px-4">Asset</th>
-                                <th class="py-1.5 px-4">Allocation Metric</th>
-                                <th class="py-1.5 px-4">Stop Level</th>
-                                <th class="py-1.5 px-4">Profit Target</th>
-                                <th class="py-1.5 px-4 text-right">Time</th>
+                                <th class="py-1 px-4">Asset</th>
+                                <th class="py-1 px-4">Allocation Metric</th>
+                                <th class="py-1 px-4">Stop Level</th>
+                                <th class="py-1 px-4">Profit Target</th>
+                                <th class="py-1 px-4 text-right">Timestamp</th>
                             </tr>
                         </thead>
                         <tbody id="ledger-rows-target" class="divide-y divide-slate-900 text-xs text-slate-300 mono">
@@ -209,18 +208,18 @@
 
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // System Settings - Migrated seamlessly to OKX Geo-Safe endpoints for the Indian market context
         const CONFIG = {
-            assets: ['BTC-USDT', 'ETH-USDT', 'SOL-USDT', 'AVAX-USDT'], // Synchronized assets matching CIPHER framework layout
+            assets: ['BTC-USDT', 'ETH-USDT', 'SOL-USDT', 'AVAX-USDT'], 
             wsEndpoint: 'wss://wspap.okx.com:443/ws/v5/public',
             restBase: 'https://www.okx.com',
             fngEndpoint: 'https://api.alternative.me/fng/?limit=1'
         };
 
+        // Complete Isolated App State Memory Store
         let AppState = {
             activeAsset: 'BTC-USDT',
             tickerCache: {},
-            activeMetrics: { regime: 'STABLE DRIFT', zscore: 0.0, persistence: 0, verdict: 'OBSERVE', confidence: 50, rank: 'C' },
+            activeMetrics: { regime: 'STABLE DRIFT', zscore: 0.0, persistenceStart: Date.now(), verdict: 'OBSERVE', confidence: 50, rank: 'C' },
             ledgerLog: [],
             isDirty: false,
             renderLock: false,
@@ -228,9 +227,104 @@
             fngText: 'NEUTRAL'
         };
 
+        // Static DOM Element Cache Register (Fixes issue 6 optimization bottlenecks)
+        let DOM = {
+            telemetryRenderState: null,
+            telemetryLoopRate: null,
+            uiFngText: null,
+            uiFngVal: null,
+            uiMetricRegime: null,
+            uiMetricZScore: null,
+            uiMetricPersistence: null,
+            uiMetricVerdict: null,
+            uiSetupRank: null,
+            uiFinalVerdict: null,
+            uiAtrBasisValue: null,
+            outSize: null,
+            outRr: null,
+            riskEquity: null,
+            riskPercent: null,
+            riskStop: null,
+            riskTake: null,
+            ledgerTarget: null,
+            priceNodes: {},
+            changeNodes: {}
+        };
+
         let ActiveChartWidget = null;
 
-        // Unified network request fetch timeout wrapper to clear iOS Safari execution hangs
+        // Priority 2 optimization: Isolated Transport Engine Manager
+        const SocketTransportManager = {
+            instance: null,
+            heartbeatIntervalId: null,
+            reconnectTimeoutId: null,
+            reconnectAttemptsCount: 0,
+
+            initializeConnection: function() {
+                this.destroyActiveSocket();
+                
+                this.instance = new WebSocket(CONFIG.wsEndpoint);
+
+                this.instance.onopen = () => {
+                    this.reconnectAttemptsCount = 0;
+                    const args = CONFIG.assets.map(a => ({ channel: "tickers", instId: a }));
+                    this.instance.send(JSON.stringify({ op: "subscribe", args: args }));
+                    
+                    // Activate heartbeat frame ping loops
+                    this.heartbeatIntervalId = setInterval(() => {
+                        if(this.instance.readyState === WebSocket.OPEN) {
+                            this.instance.send("ping");
+                        }
+                    }, 20000);
+                };
+
+                this.instance.onmessage = (event) => {
+                    if (event.data === "pong") return;
+                    
+                    try {
+                        const packet = JSON.parse(event.data);
+                        if (packet && packet.data && packet.data[0]) {
+                            processIncomingTransportTick(packet.data[0]);
+                        }
+                    } catch(e) {}
+                };
+
+                this.instance.onclose = () => {
+                    this.scheduleReconnectionLoop();
+                };
+
+                this.instance.onerror = () => {
+                    this.instance.close();
+                };
+            },
+
+            scheduleReconnectionLoop: function() {
+                clearInterval(this.heartbeatIntervalId);
+                clearTimeout(this.reconnectTimeoutId);
+                
+                // Exponential Backoff algorithm configuration
+                const coolDownIntervalWindow = Math.min(30000, Math.pow(2, this.reconnectAttemptsCount) * 2000);
+                this.reconnectAttemptsCount++;
+
+                this.reconnectTimeoutId = setTimeout(() => {
+                    this.initializeConnection();
+                }, coolDownIntervalWindow);
+            },
+
+            destroyActiveSocket: function() {
+                clearInterval(this.heartbeatIntervalId);
+                if (this.instance) {
+                    // Detach listener event callbacks before purging instance allocation to eliminate closures
+                    this.instance.onopen = null;
+                    this.instance.onmessage = null;
+                    this.instance.onclose = null;
+                    this.instance.onerror = null;
+                    try { this.instance.close(); } catch(e) {}
+                    this.instance = null;
+                }
+            }
+        };
+
         function fetchWithTimeout(url, options = {}, timeout = 5000) {
             return Promise.race([
                 fetch(url, options),
@@ -238,8 +332,12 @@
             ]);
         }
 
+        /**
+         * Core System Initialization Bootstrap Hook
+         */
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
+            cacheStaticDOMReferences();
             bootstrapWatchlistStructure();
             
             setTimeout(() => {
@@ -247,20 +345,45 @@
             }, 400);
 
             seedHistoricalKLines();
-            initializeWebSocketConnectionPipeline();
+            SocketTransportManager.initializeConnection();
             pullFearGreedMetrics();
             syncLocalDataStorage();
             mountInteractiveControlHooks();
-            executeHardwareSyncTimer();
+            launchLoopTelemetryCounter();
         });
 
+        function cacheStaticDOMReferences() {
+            DOM.telemetryRenderState = document.getElementById('telemetry-render-state');
+            DOM.telemetryLoopRate = document.getElementById('telemetry-loop-rate');
+            DOM.uiFngText = document.getElementById('ui-fng-text');
+            DOM.uiFngVal = document.getElementById('ui-fng-val');
+            DOM.uiMetricRegime = document.getElementById('ui-metric-regime');
+            DOM.uiMetricZScore = document.getElementById('ui-metric-zscore');
+            DOM.uiMetricPersistence = document.getElementById('ui-metric-persistence');
+            DOM.uiMetricVerdict = document.getElementById('ui-metric-verdict');
+            DOM.uiSetupRank = document.getElementById('ui-setup-rank');
+            DOM.uiFinalVerdict = document.getElementById('ui-final-verdict');
+            DOM.uiAtrBasisValue = document.getElementById('ui-atr-basis-value');
+            DOM.outSize = document.getElementById('out-size');
+            DOM.outRr = document.getElementById('out-rr');
+            DOM.riskEquity = document.getElementById('risk-equity');
+            DOM.riskPercent = document.getElementById('risk-percent');
+            DOM.riskStop = document.getElementById('risk-stop');
+            DOM.riskTake = document.getElementById('risk-take');
+            DOM.ledgerTarget = document.getElementById('ledger-rows-target');
+        }
+
         function bootstrapWatchlistStructure() {
-            const node = document.getElementById('watchlist-target-node');
+            const node = document.getElementById('watchlist-ui-root');
             if(!node) return;
             node.innerHTML = '';
 
             CONFIG.assets.forEach(symbol => {
-                AppState.tickerCache[symbol] = { price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0, atr: 0.0, lastTickDirection: 0 };
+                // Instantiating structural statistical matrix registers into cache profiles
+                AppState.tickerCache[symbol] = { 
+                    price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0,
+                    atr14Mean: 0.0, atr14StdDev: 1.0, currentTrueRange: 0.0, lastTickDirection: 0 
+                };
                 
                 const element = document.createElement('div');
                 element.id = `row-token-${symbol}`;
@@ -278,6 +401,10 @@
                     </div>
                 `;
                 node.appendChild(element);
+                
+                // Map elements into static fast cache targets
+                DOM.priceNodes[symbol] = document.getElementById(`price-node-${symbol}`);
+                DOM.changeNodes[symbol] = document.getElementById(`change-node-${symbol}`);
             });
         }
 
@@ -302,29 +429,18 @@
             const container = document.getElementById('tradingview-canvas-target');
             if(!container) return;
 
-            // FIX 3: Clean up and clear existing instances out of window memory before rebuilding DOM layers
+            // Memory leak control architecture fix 3: clear instance from memory before destroying the iframe DOM node
             if (ActiveChartWidget && typeof ActiveChartWidget.remove === 'function') {
-                try {
-                    ActiveChartWidget.remove();
-                } catch(e) {
-                    console.warn("Widget removal cleanup note:", e);
-                }
+                try { ActiveChartWidget.remove(); } catch(e) {}
                 ActiveChartWidget = null;
             }
             
             container.innerHTML = '';
-
-            if(typeof TradingView === 'undefined') {
-                container.innerHTML = `<div class="p-4 text-xs text-slate-600 mono">CDN WIDGET TIMEOUT</div>`;
-                return;
-            }
-
-            // Standardize format definitions to parse smoothly across unified trading interfaces
-            const formatTradingViewString = `OKX:${symbol.replace('-', '')}.P`;
+            const mappedSymbolString = `OKX:${symbol.replace('-', '')}.P`;
 
             ActiveChartWidget = new TradingView.widget({
                 "autosize": true,
-                "symbol": formatTradingViewString,
+                "symbol": mappedSymbolString,
                 "interval": "60",
                 "timezone": "Etc/UTC",
                 "theme": "dark",
@@ -337,131 +453,135 @@
             });
         }
 
+        /**
+         * Robust Priority 1 Update: True Mathematical ATR and Standard Deviation Baseline Mapping
+         */
         function seedHistoricalKLines() {
             CONFIG.assets.forEach(symbol => {
-                // FIX 2: Wrapped with explicit timeout protection logic
-                fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/candles?instId=${symbol}&bar=1H&limit=14`)
+                fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/history-candles?instId=${symbol}&bar=1H&limit=30`)
                     .then(res => res.json())
                     .then(pack => {
-                        if(pack && pack.data) {
-                            let ranges = 0;
-                            pack.data.forEach(c => { 
-                                ranges += (parseFloat(c[2]) - parseFloat(c[3])); 
-                            });
-                            const calculatedAtr = ranges / 14;
-                            if(AppState.tickerCache[symbol]) {
-                                AppState.tickerCache[symbol].atr = calculatedAtr;
+                        if(pack && pack.data && pack.data.length >= 15) {
+                            let calculatedTrueRangeArray = [];
+                            
+                            // OKX candles arrive sorted from newest to oldest in array sequence
+                            for(let i = 0; i < pack.data.length - 1; i++) {
+                                const high = parseFloat(pack.data[i][2]);
+                                const low = parseFloat(pack.data[i][3]);
+                                const prevClose = parseFloat(pack.data[i+1][4]);
+                                
+                                [span_2](start_span)// True Range math logic[span_2](end_span)
+                                const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+                                calculatedTrueRangeArray.push(tr);
+                            }
+
+                            // Pull standard 14-period slice bounds
+                            const standardTrueRangeSlice = calculatedTrueRangeArray.slice(0, 14);
+                            
+                            // Calculate sample Mean (μ)
+                            const meanAtr = standardTrueRangeSlice.reduce((a, b) => a + b, 0) / 14;
+                            
+                            // Calculate sample Standard Deviation (σ)
+                            const sumOfSquaredDeviations = standardTrueRangeSlice.map(tr => Math.pow(tr - meanAtr, 2)).reduce((a, b) => a + b, 0);
+                            const stdDevAtr = Math.sqrt(sumOfSquaredDeviations / 13) || 1.0;
+
+                            const cache = AppState.tickerCache[symbol];
+                            if(cache) {
+                                cache.atr14Mean = meanAtr;
+                                cache.atr14StdDev = stdDevAtr;
                                 if(symbol === AppState.activeAsset) {
-                                    document.getElementById('ui-atr-basis-value').innerText = `$${calculatedAtr.toFixed(2)}`;
+                                    DOM.uiAtrBasisValue.innerText = `$${meanAtr.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
                                 }
                             }
                         }
                     }).catch(err => {
-                        console.warn(`ATR seed context limit notification for ${symbol}:`, err.message);
+                        console.warn(`ATR pipeline exception for ${symbol}:`, err.message);
                     });
             });
         }
 
-        function initializeWebSocketConnectionPipeline() {
-            try {
-                const socket = new WebSocket(CONFIG.wsEndpoint);
+        function processIncomingTransportTick(raw) {
+            const symbol = raw.instId;
+            const cache = AppState.tickerCache[symbol];
+            if (!cache) return;
 
-                socket.onopen = () => {
-                    const argumentsPayload = CONFIG.assets.map(a => ({ channel: "tickers", instId: a }));
-                    socket.send(JSON.stringify({ op: "subscribe", args: argumentsPayload }));
-                };
+            cache.prevPrice = cache.price;
+            cache.price = parseFloat(raw.last);
+            
+            const open24h = parseFloat(raw.open24h);
+            cache.change = open open24h > 0 ? ((cache.price - open24h) / open24h) * 100 : 0.0;
+            cache.high = parseFloat(raw.high24h);
+            cache.low = parseFloat(raw.low24h);
+            
+            [span_3](start_span)// Map true range tracking arrays inside real-time ticking loops[span_3](end_span)
+            const trackingCloseReference = cache.prevPrice > 0 ? cache.prevPrice : cache.price;
+            cache.currentTrueRange = Math.max(cache.high - cache.low, Math.abs(cache.high - trackingCloseReference), Math.abs(cache.low - trackingCloseReference));
 
-                socket.onmessage = (event) => {
-                    const packet = JSON.parse(event.data);
-                    if (packet && packet.data && packet.data[0]) {
-                        const raw = packet.data[0];
-                        const symbol = raw.instId;
-                        const cache = AppState.tickerCache[symbol];
-                        
-                        if (cache) {
-                            cache.prevPrice = cache.price;
-                            cache.price = parseFloat(raw.last);
-                            
-                            // Map 24-hour baseline configurations from structural endpoints
-                            const open24h = parseFloat(raw.open24h);
-                            cache.change = open24h > 0 ? ((cache.price - open24h) / open24h) * 100 : 0.0;
-                            cache.high = parseFloat(raw.high24h);
-                            cache.low = parseFloat(raw.low24h);
-                            
-                            if (cache.price > cache.prevPrice) cache.lastTickDirection = 1;
-                            else if (cache.price < cache.prevPrice) cache.lastTickDirection = -1;
-                            
-                            AppState.isDirty = true;
-                        }
-
-                        if (symbol === AppState.activeAsset) {
-                            processAdaptiveStateEngine(cache);
-                        }
-                        scheduleThrottledRenderPass();
-                    }
-                };
-
-                socket.onclose = () => { setTimeout(initializeWebSocketConnectionPipeline, 5000); };
-            } catch(e) { console.error("Websocket context link failure:", e); }
+            if (cache.price > cache.prevPrice) cache.lastTickDirection = 1;
+            else if (cache.price < cache.prevPrice) cache.lastTickDirection = -1;
+            
+            AppState.isDirty = true;
         }
 
+        /**
+         * Upgraded Priority 1: Probability Volatility Distance Z-Score Engine
+         */
         function processAdaptiveStateEngine(ticker) {
             if(!ticker || ticker.price === 0) return;
 
-            const liveRangeVolatility = ticker.high - ticker.low;
-            const baselineAtr = ticker.atr || (ticker.price * 0.02);
-            const normalizedZScoreVolatility = (liveRangeVolatility - baselineAtr) / baselineAtr;
+            const mean = ticker.atr14Mean || (ticker.price * 0.02);
+            const deviation = ticker.atr14StdDev || 1.0;
+            
+            // Pristine Gaussian standard normal score computation
+            const computedProbabilityZScore = (ticker.currentTrueRange - mean) / deviation;
 
             let currentDetectedRegime = 'STABLE DRIFT';
             let operationalVerdict = 'OBSERVE REGIME';
             let dynamicScoringWeights = 50; 
 
-            if (normalizedZScoreVolatility > 1.2) {
-                if (ticker.change > 2.0) {
+            // Hardened boundary definitions using clear statistical variance points
+            if (computedProbabilityZScore > 1.645) { // 90% single-tailed alpha confidence boundary
+                if (ticker.change > 1.5) {
                     currentDetectedRegime = 'BREAKOUT EXPANSION';
                     operationalVerdict = 'LONG MOMENTUM';
-                    dynamicScoringWeights += 20;
-                } else if (ticker.change < -2.0) {
+                    dynamicScoringWeights += 25;
+                } else if (ticker.change < -1.5) {
                     currentDetectedRegime = 'LIQUIDATION CASCADE';
                     operationalVerdict = 'CAPITULATION RUN';
                     dynamicScoringWeights -= 25;
                 }
-            } else if (normalizedZScoreVolatility < -0.4) {
+            } else if (computedProbabilityZScore < -0.84) { // Bottom quartile compression tracking
                 currentDetectedRegime = 'COMPRESSION SQUEEZE';
                 operationalVerdict = 'ACCUMULATION PROFILE';
-                // FIX 4: Implemented metric adjustment loop configuration rule parameters
-                dynamicScoringWeights += 5; 
+                dynamicScoringWeights += 10; // Fixed issue 4: compression weights now actively adjust
             } else {
-                if(Math.abs(ticker.change) < 0.8) {
+                if(Math.abs(ticker.change) < 0.5) {
                     currentDetectedRegime = 'CHOP MATRIX';
                     operationalVerdict = 'AVOID DEPLOYMENT';
                     dynamicScoringWeights = 50; 
                 }
             }
 
-            // FIX 5: Bound and clamp persistence frame calculations to stop unbounded logic increments
-            if (AppState.activeMetrics.regime === currentDetectedRegime) {
-                AppState.activeMetrics.persistence = Math.min(1000, AppState.activeMetrics.persistence + 1);
-            } else {
-                AppState.activeMetrics.persistence = 0;
+            // Fixed issue 7: time-persistence tracking using millisecond delta calculations
+            if (AppState.activeMetrics.regime !== currentDetectedRegime) {
+                AppState.activeMetrics.regime = currentDetectedRegime;
+                AppState.activeMetrics.persistenceStart = Date.now();
             }
 
-            let calculatedConfidenceScore = Math.max(5, Math.min(95, dynamicScoringWeights + (ticker.change * 1.5)));
+            let calculatedConfidenceScore = Math.max(5, Math.min(95, dynamicScoringWeights + (ticker.change * 1.2)));
             let strategyRankClass = 'C';
             
-            if (calculatedConfidenceScore > 70 || calculatedConfidenceScore < 30) strategyRankClass = 'A+ EXPLOC';
+            if (calculatedConfidenceScore > 72 || calculatedConfidenceScore < 28) strategyRankClass = 'A+ EXPLOC';
             else if (calculatedConfidenceScore > 58 || calculatedConfidenceScore < 42) strategyRankClass = 'A ALPHA';
             else if (currentDetectedRegime === 'CHOP MATRIX') strategyRankClass = 'AVOID';
 
-            AppState.activeMetrics.regime = currentDetectedRegime;
-            AppState.activeMetrics.zscore = normalizedZScoreVolatility;
+            AppState.activeMetrics.zscore = computedProbabilityZScore;
             AppState.activeMetrics.verdict = operationalVerdict;
             AppState.activeMetrics.confidence = Math.round(calculatedConfidenceScore);
             AppState.activeMetrics.rank = strategyRankClass;
         }
 
         function pullFearGreedMetrics() {
-            // FIX 2 & 7: Added timeout handling and transparent network link alerts to prevent silent failures
             fetchWithTimeout(CONFIG.fngEndpoint)
                 .then(res => res.json())
                 .then(data => {
@@ -472,8 +592,7 @@
                         scheduleThrottledRenderPass();
                     }
                 }).catch(err => {
-                    console.warn("FNG Engine Error Context:", err.message);
-                    AppState.fngText = "CORS API DISRUPTED";
+                    AppState.fngText = "OFFLINE CONTEXT (CORS)";
                     AppState.isDirty = true;
                     scheduleThrottledRenderPass();
                 });
@@ -483,22 +602,22 @@
             if (AppState.renderLock || !AppState.isDirty) return;
             AppState.renderLock = true;
             
-            const statusTelemetry = document.getElementById('render-telemetry');
-            if(statusTelemetry) statusTelemetry.innerText = "SYNC";
+            DOM.telemetryRenderState.innerText = "SYNC";
 
             setTimeout(() => {
                 flushCacheUpdatesToDOMView();
                 AppState.isDirty = false;
                 AppState.renderLock = false;
-                if(statusTelemetry) statusTelemetry.innerText = "IDLE";
+                DOM.telemetryRenderState.innerText = "IDLE";
             }, 250); 
         }
 
         function flushCacheUpdatesToDOMView() {
+            // 1. Repaint Watchlist Elements from fast local element cache (Stripped getElementById)
             CONFIG.assets.forEach(symbol => {
                 const node = AppState.tickerCache[symbol];
-                const pEl = document.getElementById(`price-node-${symbol}`);
-                const cEl = document.getElementById(`change-node-${symbol}`);
+                const pEl = DOM.priceNodes[symbol];
+                const cEl = DOM.changeNodes[symbol];
 
                 if (pEl && node.price > 0) {
                     pEl.innerText = node.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -514,45 +633,44 @@
                 }
             });
 
-            const uiFngVal = document.getElementById('ui-fng-val');
-            const uiFngText = document.getElementById('ui-fng-text');
-            if(uiFngVal) uiFngVal.innerText = AppState.fngValue;
-            if(uiFngText) uiFngText.innerText = AppState.fngText;
+            // 2. Repaint Global Metrics
+            DOM.uiFngVal.innerText = AppState.fngValue;
+            DOM.uiFngText.innerText = AppState.fngText;
 
             const metrics = AppState.activeMetrics;
-            const uiAtrNode = document.getElementById('ui-atr-basis-value');
+            const liveAssetAtr = AppState.tickerCache[AppState.activeAsset]?.atr14Mean || 0.0;
             
-            document.getElementById('ui-metric-regime').innerText = metrics.regime;
-            document.getElementById('ui-metric-zscore').innerText = metrics.zscore.toFixed(2);
-            document.getElementById('ui-metric-persistence').innerText = `${metrics.persistence}${metrics.persistence >= 1000 ? '+' : ''} TICKS`;
-            document.getElementById('ui-metric-verdict').innerText = metrics.verdict;
-            document.getElementById('ui-setup-quality').innerText = `RANK: ${metrics.rank}`;
+            DOM.uiMetricRegime.innerText = metrics.regime;
+            DOM.uiMetricZScore.innerText = metrics.zscore.toFixed(3);
             
-            if(uiAtrNode && AppState.tickerCache[AppState.activeAsset]?.atr > 0) {
-                uiAtrNode.innerText = `$${AppState.tickerCache[AppState.activeAsset].atr.toFixed(2)}`;
-            }
+            // Calculate actual time duration in seconds/minutes (Fix 7)
+            const durationInSeconds = Math.floor((Date.now() - metrics.persistenceStart) / 1000);
+            DOM.uiMetricPersistence.innerText = `${durationInSeconds} SECONDS LIVE`;
+            
+            DOM.uiMetricVerdict.innerText = metrics.verdict;
+            DOM.uiSetupRank.innerText = `RANK: ${metrics.rank}`;
+            DOM.uiAtrBasisValue.innerText = `$${liveAssetAtr.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
 
-            const verdictNode = document.getElementById('ui-final-verdict');
-            if (verdictNode) {
-                verdictNode.innerText = `${AppState.activeAsset} // ${metrics.verdict} (${metrics.confidence}%)`;
-                if(metrics.confidence >= 55) verdictNode.parentNode.className = "bg-emerald-600/5 border border-emerald-500/20 rounded p-2.5 text-center shadow-md";
-                else if(metrics.confidence <= 45) verdictNode.parentNode.className = "bg-rose-600/5 border border-rose-500/20 rounded p-2.5 text-center shadow-md";
-                else verdictNode.parentNode.className = "bg-indigo-600/5 border border-indigo-500/10 rounded p-2.5 text-center";
+            if (DOM.uiFinalVerdict) {
+                DOM.uiFinalVerdict.innerText = `${AppState.activeAsset} // ${metrics.verdict} (${metrics.confidence}%)`;
+                if(metrics.confidence >= 55) DOM.uiFinalVerdict.parentNode.className = "bg-emerald-600/5 border border-emerald-500/20 rounded p-2 text-center shadow-md";
+                else if(metrics.confidence <= 45) DOM.uiFinalVerdict.parentNode.className = "bg-rose-600/5 border border-rose-500/20 rounded p-2 text-center shadow-md";
+                else DOM.uiFinalVerdict.parentNode.className = "bg-indigo-600/5 border border-indigo-500/10 rounded p-2 text-center";
             }
 
             calculateCapitalFormulationFramework();
         }
 
         function calculateCapitalFormulationFramework() {
-            const equity = parseFloat(document.getElementById('risk-equity').value) || 0;
-            const riskPct = parseFloat(document.getElementById('risk-percent').value) || 0;
-            const stopPrice = parseFloat(document.getElementById('risk-stop').value) || 0;
-            const takeProfit = parseFloat(document.getElementById('risk-take').value) || 0;
+            const equity = parseFloat(DOM.riskEquity.value) || 0;
+            const riskPct = parseFloat(DOM.riskPercent.value) || 0;
+            const stopPrice = parseFloat(DOM.riskStop.value) || 0;
+            const takeProfit = parseFloat(DOM.riskTake.value) || 0;
             const activePrice = AppState.tickerCache[AppState.activeAsset]?.price || 0;
 
             if (equity <= 0 || riskPct <= 0 || activePrice <= 0 || stopPrice === activePrice) {
-                document.getElementById('out-size').innerText = "--";
-                document.getElementById('out-rr').innerText = "--";
+                DOM.outSize.innerText = "--";
+                DOM.outRr.innerText = "--";
                 return;
             }
 
@@ -562,8 +680,8 @@
             const completeCapitalNotionalSizing = allocationTargetUnits * activePrice;
             const calculatedRiskRewardRatioValue = Math.abs(takeProfit - activePrice) / pricingTriggerDistance;
 
-            document.getElementById('out-size').innerText = `$${completeCapitalNotionalSizing.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${allocationTargetUnits.toFixed(2)} Units)`;
-            document.getElementById('out-rr').innerText = `1 : ${calculatedRiskRewardRatioValue.toFixed(2)}`;
+            DOM.outSize.innerText = `$${completeCapitalNotionalSizing.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${allocationTargetUnits.toFixed(2)} Units)`;
+            DOM.outRr.innerText = `1 : ${calculatedRiskRewardRatioValue.toFixed(2)}`;
         }
 
         function autoCalculateVolatilityStop() {
@@ -571,30 +689,29 @@
             const ticker = AppState.tickerCache[asset];
             if (!ticker || ticker.price === 0) return;
 
-            const computedAtrBuffer = ticker.atr || (ticker.price * 0.02);
+            const computedAtrBuffer = ticker.atr14Mean || (ticker.price * 0.02);
             const structureDirectionMultiplier = AppState.activeMetrics.confidence >= 50 ? 1 : -1;
 
             const targetStopLevel = ticker.price - (computedAtrBuffer * 2.0 * structureDirectionMultiplier);
             const targetTakeLevel = ticker.price + (computedAtrBuffer * 4.5 * structureDirectionMultiplier);
 
-            document.getElementById('risk-stop').value = targetStopLevel.toFixed(2);
-            document.getElementById('risk-take').value = targetTakeLevel.toFixed(2);
+            DOM.riskStop.value = targetStopLevel.toFixed(2);
+            DOM.riskTake.value = targetTakeLevel.toFixed(2);
             AppState.isDirty = true;
             scheduleThrottledRenderPass();
         }
 
-        let frameCounter = 0;
+        let loopCounter = 0;
         let lastLoggedSecond = performance.now();
         function executeHardwareSyncTimer() {
-            frameCounter++;
+            loopCounter++;
             const clockNow = performance.now();
             if(clockNow >= lastLoggedSecond + 1000) {
-                const fpsLabel = document.getElementById('fps-counter');
-                if(fpsLabel) fpsLabel.innerText = `${frameCounter} FPS`;
-                frameCounter = 0;
+                // Fixed issue 5: Explicitly relabeled to display internal clock execution loops accurately
+                if(DOM.telemetryLoopRate) DOM.telemetryLoopRate.innerText = `${loopCounter} CLK_HZ`;
+                loopCounter = 0;
                 lastLoggedSecond = clockNow;
             }
-            // FIX 8: Context alert system log for monitoring persistent frame routines
             requestAnimationFrame(executeHardwareSyncTimer);
         }
 
@@ -611,9 +728,9 @@
         }
 
         function commitActiveSetupToLedgerStore() {
-            const stop = parseFloat(document.getElementById('risk-stop').value) || 0;
-            const take = parseFloat(document.getElementById('risk-take').value) || 0;
-            const sizeString = document.getElementById('out-size').innerText;
+            const stop = parseFloat(DOM.riskStop.value) || 0;
+            const take = parseFloat(DOM.riskTake.value) || 0;
+            const sizeString = DOM.outSize.innerText;
 
             if (sizeString === "--") return;
 
@@ -630,12 +747,11 @@
         }
 
         function renderLedgerTableDOM() {
-            const node = document.getElementById('ledger-rows-target');
-            if(!node) return;
-            node.innerHTML = '';
+            if(!DOM.ledgerTarget) return;
+            DOM.ledgerTarget.innerHTML = '';
 
             if (AppState.ledgerLog.length === 0) {
-                node.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No strategies registered inside sandbox ledger</td></tr>`;
+                DOM.ledgerTarget.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No active setups committed</td></tr>`;
                 return;
             }
 
@@ -649,7 +765,7 @@
                     <td class="py-2 px-4 text-emerald-400 font-bold">${row.take}</td>
                     <td class="py-2 px-4 text-slate-500 text-right text-[10px]">${row.time}</td>
                 `;
-                node.appendChild(tr);
+                DOM.ledgerTarget.appendChild(tr);
             });
         }
 
