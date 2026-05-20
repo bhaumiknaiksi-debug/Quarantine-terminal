@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EDGE // Professional Decision Support Terminal</title>
+    <title>EDGE // Advanced Decision Support Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -13,14 +13,14 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #030407;
+            background-color: #030406;
             letter-spacing: -0.01em;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
         .panel-surface {
-            background: rgba(9, 11, 18, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(8, 10, 16, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
         
         .active-glow {
@@ -28,32 +28,34 @@
             border-color: rgba(99, 102, 241, 0.3) !important;
         }
 
-        /* Throttled pulse changes to highlight data shifts without flashing animation spam */
         .delta-up { color: #10b981 !important; }
         .delta-down { color: #ef4444 !important; }
 
         html, body { overflow-x: hidden; height: 100%; }
         input:focus { border-color: #4f46e5 !important; outline: none; }
+        
+        /* Custom layout optimization handling for tight phone views */
+        .scroller-clean::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="text-slate-200 flex flex-col justify-between antialiased">
+<body class="text-slate-200 flex flex-col justify-between antialiased select-none">
 
-    <header class="w-full border-b border-slate-900 bg-[#05060a]/90 sticky top-0 z-50 backdrop-blur-md px-4 py-2.5 flex items-center justify-between safe-top">
-        <div class="flex items-center space-x-2.5">
+    <header class="w-full border-b border-slate-900 bg-[#040508]/90 sticky top-0 z-50 backdrop-blur-md px-4 py-2.5 flex items-center justify-between safe-top">
+        <div class="flex items-center space-x-2">
             <div class="h-6 w-6 rounded bg-indigo-600 flex items-center justify-center shadow-md">
                 <i data-lucide="shield" class="h-3.5 w-3.5 text-white"></i>
             </div>
             <h1 class="text-xs font-bold tracking-wider text-slate-200 flex items-center mono">
-                EDGE<span class="text-indigo-500 font-normal mx-1">/</span>DECISION-SUPPORT
+                EDGE<span class="text-indigo-500 font-normal mx-1">/</span>SYSTEM-OS
             </h1>
         </div>
         <div class="flex items-center space-x-2">
-            <div class="text-[9px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded mono" id="render-telemetry">
+            <div class="text-[9px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded mono" id="render-telemetry">
                 IDLE
             </div>
             <div class="flex items-center space-x-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded-full">
-                <span class="h-1 w-1 rounded-full bg-indigo-400"></span>
-                <span class="mono">BATCH_THROTTLE</span>
+                <span class="h-1 w-1 rounded-full bg-indigo-400 animate-pulse"></span>
+                <span class="mono" id="fps-counter">60 FPS</span>
             </div>
         </div>
     </header>
@@ -62,21 +64,36 @@
         
         <section class="lg:col-span-4 space-y-2 flex flex-col">
             
+            <div class="panel-surface rounded-md p-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 rounded bg-slate-950 border border-slate-900">
+                        <i data-lucide="compass" class="h-4 w-4 text-slate-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Macro Index Context</p>
+                        <h3 class="text-xs font-bold text-slate-200 mt-0.5 uppercase" id="ui-fng-text">LOADING...</h3>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-base font-bold mono tracking-tight text-slate-400" id="ui-fng-val">--</span>
+                </div>
+            </div>
+
             <div class="panel-surface rounded-md flex flex-col flex-1 min-h-[220px]">
                 <div class="px-3 py-2 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="layout-grid" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Token Asset Feed
+                        <i data-lucide="layout-grid" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Quant Asset Matrix
                     </span>
-                    <span class="text-[9px] mono text-slate-500">MUTEX STREAM</span>
+                    <span class="text-[9px] mono text-slate-500">REALTIME FEEDS</span>
                 </div>
-                <div class="divide-y divide-slate-900/60 overflow-y-auto flex-1" id="watchlist-target-node">
+                <div class="divide-y divide-slate-900/60 overflow-y-auto flex-1 scroller-clean" id="watchlist-target-node">
                     </div>
             </div>
 
             <div class="panel-surface rounded-md p-3 space-y-2.5">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Signal Confluence
+                        <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Decision Confluence
                     </span>
                     <span class="text-[9px] mono text-indigo-400 bg-indigo-500/5 px-1.5 py-0.5 rounded border border-indigo-500/10" id="ui-setup-quality">RANK --</span>
                 </div>
@@ -84,31 +101,25 @@
                 <div class="bg-slate-950/40 border border-slate-900 rounded overflow-hidden text-[11px] mono">
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
                         <span class="text-slate-500">MARKET REGIME</span>
-                        <span class="text-right font-bold text-slate-200" id="ui-metric-regime">COMPUTING...</span>
+                        <span class="text-right font-bold text-slate-200 uppercase" id="ui-metric-regime">COMPUTING...</span>
                     </div>
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">NORMALIZED COEFF</span>
+                        <span class="text-slate-500">VOL COEFF Z-SCORE</span>
                         <span class="text-right font-bold text-slate-300" id="ui-metric-zscore">--</span>
                     </div>
                     <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">REGIME DURATION</span>
+                        <span class="text-slate-500">REGIME PERSISTENCE</span>
                         <span class="text-right font-bold text-slate-300" id="ui-metric-persistence">--</span>
                     </div>
                     <div class="grid grid-cols-2 p-2">
-                        <span class="text-slate-500">STRATEGY VERDICT</span>
-                        <span class="text-right font-bold text-slate-300" id="ui-metric-verdict">--</span>
+                        <span class="text-slate-500">OPERATIONAL BIAS</span>
+                        <span class="text-right font-bold text-slate-300 uppercase" id="ui-metric-verdict">--</span>
                     </div>
                 </div>
 
-                <div class="bg-slate-900/40 border border-slate-800 rounded p-2.5 flex items-center justify-between">
-                    <div>
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Adaptive Score Vector</p>
-                        <h4 class="text-xs font-bold text-slate-300 uppercase mt-0.5" id="ui-adaptive-bias">CALCULATING</h4>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Confidence Vector</p>
-                        <span class="text-xs font-bold mono text-indigo-400" id="ui-adaptive-score">--%</span>
-                    </div>
+                <div class="bg-indigo-600/5 border border-indigo-500/10 rounded p-2.5 text-center">
+                    <p class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Calculated Strategy Verdict</p>
+                    <h2 class="text-xs font-bold text-slate-200 mt-1 uppercase tracking-wide" id="ui-final-verdict">INITIALIZING PIPELINE...</h2>
                 </div>
             </div>
         </section>
@@ -123,7 +134,7 @@
                 <div class="flex items-center justify-between mb-2.5">
                     <div class="flex items-center space-x-2">
                         <i data-lucide="shield-alert" class="h-3.5 w-3.5 text-indigo-400"></i>
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Adaptive Sizing Framework</h2>
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Volatility-Adaptive Risk Allocation</h2>
                     </div>
                     <div class="flex items-center space-x-1 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-[9px] font-bold mono text-slate-400">
                         <span>ATR VOL BASIS:</span>
@@ -134,39 +145,39 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Portfolio Equity ($)</label>
-                        <input type="number" id="risk-equity" value="10000" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
+                        <input type="number" id="risk-equity" value="10000" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Max Risk Parameter (%)</label>
-                        <input type="number" id="risk-percent" value="1.0" step="0.25" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
+                        <input type="number" id="risk-percent" value="1.0" step="0.25" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide">Invalidation Stop ($)</label>
-                            <button id="btn-trigger-volstop" class="text-[8px] font-bold text-indigo-400 hover:underline cursor-pointer uppercase bg-transparent border-none">Set Vol-Stop</button>
+                            <button id="btn-trigger-volstop" class="text-[8px] font-bold text-indigo-400 hover:underline cursor-pointer uppercase bg-transparent border-none">Auto-Stop</button>
                         </div>
-                        <input type="number" id="risk-stop" value="0" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
+                        <input type="number" id="risk-stop" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Profit Objective ($)</label>
-                        <input type="number" id="risk-take" value="0" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
+                        <input type="number" id="risk-take" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2.5 py-1 text-xs text-white font-semibold mono">
                     </div>
                 </div>
 
                 <div class="mt-3 pt-3 border-t border-slate-900/60 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
                     <div class="grid grid-cols-2 gap-2 flex-1">
-                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-2.5 py-1">
+                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-2.5 py-1.5">
                             <span class="text-[8px] uppercase text-indigo-400 font-bold block tracking-wider">Position Allocation Size</span>
                             <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-size">--</span>
                         </div>
-                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-2.5 py-1">
+                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-2.5 py-1.5">
                             <span class="text-[8px] uppercase text-emerald-400 font-bold block tracking-wider">Risk Reward Premium</span>
                             <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-rr">--</span>
                         </div>
                     </div>
-                    <button id="btn-commit-ledger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-3 rounded transition-all flex items-center justify-center cursor-pointer space-x-1 shadow-md shadow-indigo-600/5">
-                        <i data-lucide="activity" class="h-3.5 w-3.5"></i>
-                        <span>Log Setup</span>
+                    <button id="btn-commit-ledger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 px-4 rounded transition-all flex items-center justify-center cursor-pointer space-x-1 shadow-md">
+                        <i data-lucide="database" class="h-3.5 w-3.5"></i>
+                        <span>Log Setup Matrix</span>
                     </button>
                 </div>
             </div>
@@ -174,11 +185,11 @@
             <div class="panel-surface rounded-md flex flex-col overflow-hidden flex-1">
                 <div class="px-3 py-1.5 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="database" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Setup Decision History Ledger
+                        <i data-lucide="history" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Setup Decision History Ledger
                     </span>
-                    <button id="btn-flush-ledger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Clear</button>
+                    <button id="btn-flush-ledger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Flush Store</button>
                 </div>
-                <div class="overflow-x-auto w-full max-h-[110px]">
+                <div class="overflow-x-auto w-full max-h-[110px] scroller-clean">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-900 bg-slate-950/20 text-[9px] uppercase tracking-wider text-slate-500 font-bold">
@@ -199,40 +210,41 @@
 
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // System Settings
         const CONFIG = {
             assets: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'],
-            wsEndpoint: 'wss://stream.binance.com:9443/ws', // Fixed variable configuration match bug
-            restBase: 'https://api.binance.com'
+            wsEndpoint: 'wss://stream.binance.com:9443/ws',
+            restBase: 'https://api.binance.com',
+            fngEndpoint: 'https://api.alternative.me/fng/?limit=1'
         };
 
-        // Deep State Cache with Time Persistence Context Tracking
         let AppState = {
             activeAsset: 'BTCUSDT',
             tickerCache: {},
-            activeMetrics: { regime: 'STABLE_DRIFT', zscore: 0.0, persistence: 0, verdict: 'OBSERVE', score: 50, bias: 'NEUTRAL', rank: 'C' },
+            activeMetrics: { regime: 'STABLE DRIFT', zscore: 0.0, persistence: 0, verdict: 'OBSERVE', confidence: 50, rank: 'C' },
             ledgerLog: [],
             isDirty: false,
-            renderLock: false // Throttled Render Lock Flag
+            renderLock: false,
+            fngValue: 50,
+            fngText: 'NEUTRAL'
         };
 
         let ActiveChartWidget = null;
 
-        /**
-         * System Core Lifecycle Entry Hook
-         */
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
             bootstrapWatchlistStructure();
             
+            // Clean initial canvas mount sequence
             setTimeout(() => {
                 mountChartCanvasContainer(AppState.activeAsset);
-            }, 300);
+            }, 400);
 
-            seedHistoricalKLines(); // Hybrid Model Initialization
+            seedHistoricalKLines();
             initializeWebSocketConnectionPipeline();
+            pullFearGreedMetrics();
             syncLocalDataStorage();
             mountInteractiveControlHooks();
+            executeHardwareSyncTimer();
         });
 
         function bootstrapWatchlistStructure() {
@@ -241,7 +253,7 @@
             node.innerHTML = '';
 
             CONFIG.assets.forEach(symbol => {
-                AppState.tickerCache[symbol] = { price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0, atr: 0.0, ticksUp: 0, lastTickDirection: 0 };
+                AppState.tickerCache[symbol] = { price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0, atr: 0.0, lastTickDirection: 0 };
                 
                 const element = document.createElement('div');
                 element.id = `row-token-${symbol}`;
@@ -251,7 +263,7 @@
                 element.innerHTML = `
                     <div>
                         <h4 class="text-xs font-bold text-slate-200 tracking-wider mono">${symbol}</h4>
-                        <span class="text-[8px] font-bold text-slate-500 tracking-wide">BINANCE CORE</span>
+                        <span class="text-[8px] font-bold text-slate-500 tracking-wide">BINANCE SPOT</span>
                     </div>
                     <div class="text-right">
                         <p class="text-xs font-bold text-slate-100 mono" id="price-node-${symbol}">--</p>
@@ -265,6 +277,7 @@
         function performAssetShiftContext(symbol) {
             if (AppState.activeAsset === symbol) return;
 
+            // Clear visual focus rules from former configuration targets
             const oldTarget = document.getElementById(`row-token-${AppState.activeAsset}`);
             if(oldTarget) oldTarget.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-transparent`;
 
@@ -273,11 +286,8 @@
             const newTarget = document.getElementById(`row-token-${symbol}`);
             if(newTarget) newTarget.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-indigo-500 active-glow`;
 
-            if (ActiveChartWidget && typeof ActiveChartWidget.setSymbol === 'function') {
-                try { ActiveChartWidget.setSymbol(`BINANCE:${symbol}`, "60"); } catch(e) { mountChartCanvasContainer(symbol); }
-            } else {
-                mountChartCanvasContainer(symbol);
-            }
+            // CRITICAL FIX: Fully tear down and spin up the widget canvas to sync the canvas view parameters cleanly on mobile browsers
+            mountChartCanvasContainer(symbol);
 
             autoCalculateVolatilityStop();
             AppState.isDirty = true;
@@ -289,10 +299,16 @@
             if(!container) return;
             container.innerHTML = '';
 
+            if(typeof TradingView === 'undefined') {
+                container.innerHTML = `<div class="p-4 text-xs text-slate-600 mono">CDN WIDGET TIMEOUT</div>`;
+                return;
+            }
+
             ActiveChartWidget = new TradingView.widget({
                 "autosize": true,
                 "symbol": `BINANCE:${symbol}`,
                 "interval": "60",
+                "timezone": "Etc/UTC",
                 "theme": "dark",
                 "style": "1",
                 "locale": "en",
@@ -303,44 +319,31 @@
             });
         }
 
-        /**
-         * Hybrid Implementation: Ingest Low-Weight Historical Data Parameters on Setup
-         */
         function seedHistoricalKLines() {
             CONFIG.assets.forEach(symbol => {
                 fetch(`${CONFIG.restBase}/api/v3/klines?symbol=${symbol}&interval=1h&limit=14`)
                     .then(res => res.json())
                     .then(data => {
-                        let totalRangeSums = 0;
-                        data.forEach(candle => {
-                            const high = parseFloat(candle[2]);
-                            const low = parseFloat(candle[3]);
-                            totalRangeSums += (high - low);
-                        });
-                        const calculatedAtr = totalRangeSums / 14;
+                        let ranges = 0;
+                        data.forEach(c => { ranges += (parseFloat(c[2]) - parseFloat(c[3])); });
+                        const calculatedAtr = ranges / 14;
                         if(AppState.tickerCache[symbol]) {
                             AppState.tickerCache[symbol].atr = calculatedAtr;
                             if(symbol === AppState.activeAsset) {
                                 document.getElementById('ui-atr-basis-value').innerText = `$${calculatedAtr.toFixed(2)}`;
                             }
                         }
-                    }).catch(() => {
-                        if(symbol === AppState.activeAsset) document.getElementById('ui-atr-basis-value').innerText = "CALC FALLBACK";
-                    });
+                    }).catch(() => {});
             });
         }
 
-        /**
-         * Event-Driven Batched WebSocket Implementation Pipeline
-         */
         function initializeWebSocketConnectionPipeline() {
             try {
-                // Corrected variable configuration mapping target parameter bug
                 const socket = new WebSocket(CONFIG.wsEndpoint);
 
                 socket.onopen = () => {
                     const streams = CONFIG.assets.map(a => `${a.toLowerCase()}@ticker`);
-                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 303 }));
+                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 404 }));
                 };
 
                 socket.onmessage = (event) => {
@@ -365,23 +368,17 @@
                         if (symbol === AppState.activeAsset) {
                             processAdaptiveStateEngine(cache);
                         }
-
-                        // Trigger the batched UI update pass instead of drawing immediately
                         scheduleThrottledRenderPass();
                     }
                 };
 
                 socket.onclose = () => { setTimeout(initializeWebSocketConnectionPipeline, 5000); };
-            } catch(e) { console.error("Critical Connection Pipeline Error", e); }
+            } catch(e) { console.error("Websocket Pipeline System Error", e); }
         }
 
-        /**
-         * Adaptive Scoring & Time-Persistence Context Engine
-         */
         function processAdaptiveStateEngine(ticker) {
             if(!ticker || ticker.price === 0) return;
 
-            // 1. Calculate Real-Time Volatility Z-Score approximation relative to historical ATR parameters
             const liveRangeVolatility = ticker.high - ticker.low;
             const baselineAtr = ticker.atr || (ticker.price * 0.02);
             const normalizedZScoreVolatility = (liveRangeVolatility - baselineAtr) / baselineAtr;
@@ -390,42 +387,39 @@
             let operationalVerdict = 'OBSERVE REGIME';
             let dynamicScoringWeights = 50; 
 
-            // 2. State-Machine Context Switching Logic Array
-            if (normalizedZScoreVolatility > 1.5) {
-                if (ticker.change > 2.5) {
+            if (normalizedZScoreVolatility > 1.2) {
+                if (ticker.change > 2.0) {
                     currentDetectedRegime = 'BREAKOUT EXPANSION';
                     operationalVerdict = 'LONG MOMENTUM';
-                    dynamicScoringWeights += 25; // Adaptive Weight Factor Addition
-                } else if (ticker.change < -2.5) {
+                    dynamicScoringWeights += 20;
+                } else if (ticker.change < -2.0) {
                     currentDetectedRegime = 'LIQUIDATION CASCADE';
-                    operationalVerdict = 'CAPITULATION RISKS';
-                    dynamicScoringWeights -= 30;
+                    operationalVerdict = 'CAPITULATION RUN';
+                    dynamicScoringWeights -= 25;
                 }
-            } else if (normalizedZScoreVolatility < -0.5) {
+            } else if (normalizedZScoreVolatility < -0.4) {
                 currentDetectedRegime = 'COMPRESSION SQUEEZE';
-                operationalVerdict = 'STRATEGY ACCUMULATION';
+                operationalVerdict = 'ACCUMULATION PROFILE';
             } else {
-                if(Math.abs(ticker.change) < 1.0) {
-                    currentDetectedRegime = 'CHOP CONSOLIDATION';
-                    operationalVerdict = 'AVOID NOISE';
+                if(Math.abs(ticker.change) < 0.8) {
+                    currentDetectedRegime = 'CHOP MATRIX';
+                    operationalVerdict = 'AVOID DEPLOYMENT';
                     dynamicScoringWeights = 50; 
                 }
             }
 
-            // 3. Time Persistence Track Frame Accumulation Check
             if (AppState.activeMetrics.regime === currentDetectedRegime) {
                 AppState.activeMetrics.persistence += 1;
             } else {
-                AppState.activeMetrics.persistence = 0; // Reset lookback duration parameters
+                AppState.activeMetrics.persistence = 0;
             }
 
-            // 4. Score Quality Sorting Engine
             let calculatedConfidenceScore = Math.max(5, Math.min(95, dynamicScoringWeights + (ticker.change * 1.5)));
             let strategyRankClass = 'C';
             
-            if (calculatedConfidenceScore > 72 || calculatedConfidenceScore < 28) strategyRankClass = 'A+ EXPLOIT';
-            else if (calculatedConfidenceScore > 60 || calculatedConfidenceScore < 40) strategyRankClass = 'A ACCELERATING';
-            else if (currentDetectedRegime === 'CHOP CONSOLIDATION') strategyRankClass = 'AVOID';
+            if (calculatedConfidenceScore > 70 || calculatedConfidenceScore < 30) strategyRankClass = 'A+ EXPLOC';
+            else if (calculatedConfidenceScore > 58 || calculatedConfidenceScore < 42) strategyRankClass = 'A ALPHA';
+            else if (currentDetectedRegime === 'CHOP MATRIX') strategyRankClass = 'AVOID';
 
             AppState.activeMetrics.regime = currentDetectedRegime;
             AppState.activeMetrics.zscore = normalizedZScoreVolatility;
@@ -434,39 +428,46 @@
             AppState.activeMetrics.rank = strategyRankClass;
         }
 
-        /**
-         * Non-Blocking Throttled Batch Rendering Controller (Saves Mobile Battery Lifecycle)
-         */
+        function pullFearGreedMetrics() {
+            fetch(CONFIG.fngEndpoint)
+                .then(res => res.json())
+                .then(data => {
+                    if(data?.data?.[0]) {
+                        AppState.fngValue = data.data[0].value;
+                        AppState.fngText = data.data[0].value_classification;
+                        AppState.isDirty = true;
+                        scheduleThrottledRenderPass();
+                    }
+                }).catch(() => {});
+        }
+
         function scheduleThrottledRenderPass() {
             if (AppState.renderLock || !AppState.isDirty) return;
-
             AppState.renderLock = true;
-            document.getElementById('render-telemetry').innerText = "SYNCING";
+            
+            const statusTelemetry = document.getElementById('render-telemetry');
+            if(statusTelemetry) statusTelemetry.innerText = "SYNC";
 
-            // Locks repaint operations into a stable 250ms interval layout
             setTimeout(() => {
                 flushCacheUpdatesToDOMView();
                 AppState.isDirty = false;
                 AppState.renderLock = false;
-                document.getElementById('render-telemetry').innerText = "STABLE";
+                if(statusTelemetry) statusTelemetry.innerText = "IDLE";
             }, 250); 
         }
 
         function flushCacheUpdatesToDOMView() {
-            // 1. Repaint Watchlist Elements
             CONFIG.assets.forEach(symbol => {
                 const node = AppState.tickerCache[symbol];
                 const pEl = document.getElementById(`price-node-${symbol}`);
                 const cEl = document.getElementById(`change-node-${symbol}`);
 
                 if (pEl && node.price > 0) {
-                    pNodeText = node.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    pEl.innerText = pNodeText;
-                    
+                    pEl.innerText = node.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     if (node.lastTickDirection === 1) pEl.className = "text-xs font-bold mono delta-up";
                     else if (node.lastTickDirection === -1) pEl.className = "text-xs font-bold mono delta-down";
                     else pEl.className = "text-xs font-bold mono text-slate-100";
-                    node.lastTickDirection = 0; // Reset single vector context tick frame parameter
+                    node.lastTickDirection = 0;
                 }
 
                 if (cEl && node.price > 0) {
@@ -475,13 +476,17 @@
                 }
             });
 
-            // 2. Repaint Confluence Engine Elements
+            const uiFngVal = document.getElementById('ui-fng-val');
+            const uiFngText = document.getElementById('ui-fng-text');
+            if(uiFngVal) uiFngVal.innerText = AppState.fngValue;
+            if(uiFngText) uiFngText.innerText = AppState.fngText;
+
             const metrics = AppState.activeMetrics;
             const uiAtrNode = document.getElementById('ui-atr-basis-value');
             
             document.getElementById('ui-metric-regime').innerText = metrics.regime;
             document.getElementById('ui-metric-zscore').innerText = metrics.zscore.toFixed(2);
-            document.getElementById('ui-metric-persistence').innerText = `${metrics.persistence} FRAMES`;
+            document.getElementById('ui-metric-persistence').innerText = `${metrics.persistence} TICK FRAMES`;
             document.getElementById('ui-metric-verdict').innerText = metrics.verdict;
             document.getElementById('ui-setup-quality').innerText = `RANK: ${metrics.rank}`;
             
@@ -489,18 +494,14 @@
                 uiAtrNode.innerText = `$${AppState.tickerCache[AppState.activeAsset].atr.toFixed(2)}`;
             }
 
-            const biasLabel = document.getElementById('ui-adaptive-bias');
-            const scoreLabel = document.getElementById('ui-adaptive-score');
-
-            if(scoreLabel) scoreLabel.innerText = `${metrics.confidence}%`;
-            if(biasLabel) {
-                biasLabel.innerText = metrics.verdict;
-                if(metrics.confidence >= 55) biasLabel.className = "text-xs font-bold mt-0.5 text-emerald-400 uppercase";
-                else if(metrics.confidence <= 45) biasLabel.className = "text-xs font-bold mt-0.5 text-rose-400 uppercase";
-                else biasLabel.className = "text-xs font-bold mt-0.5 text-slate-400 uppercase";
+            const verdictNode = document.getElementById('ui-final-verdict');
+            if (verdictNode) {
+                verdictNode.innerText = `${AppState.activeAsset} // ${metrics.verdict} (${metrics.confidence}%)`;
+                if(metrics.confidence >= 55) verdictNode.parentNode.className = "bg-emerald-600/5 border border-emerald-500/20 rounded p-2.5 text-center shadow-md";
+                else if(metrics.confidence <= 45) verdictNode.parentNode.className = "bg-rose-600/5 border border-rose-500/20 rounded p-2.5 text-center shadow-md";
+                else verdictNode.parentNode.className = "bg-indigo-600/5 border border-indigo-500/10 rounded p-2.5 text-center";
             }
 
-            // 3. Process Sizing Matrix Formulas
             calculateCapitalFormulationFramework();
         }
 
@@ -532,17 +533,30 @@
             const ticker = AppState.tickerCache[asset];
             if (!ticker || ticker.price === 0) return;
 
-            // Seed volatility stop configuration parameters using local hybrid lookback vectors
             const computedAtrBuffer = ticker.atr || (ticker.price * 0.02);
             const structureDirectionMultiplier = AppState.activeMetrics.confidence >= 50 ? 1 : -1;
 
             const targetStopLevel = ticker.price - (computedAtrBuffer * 2.0 * structureDirectionMultiplier);
-            const targetTakeLevel = ticker.price + (computedAtrBuffer * 4.0 * structureDirectionMultiplier);
+            const targetTakeLevel = ticker.price + (computedAtrBuffer * 4.5 * structureDirectionMultiplier);
 
             document.getElementById('risk-stop').value = targetStopLevel.toFixed(2);
             document.getElementById('risk-take').value = targetTakeLevel.toFixed(2);
             AppState.isDirty = true;
             scheduleThrottledRenderPass();
+        }
+
+        let frameCounter = 0;
+        let lastLoggedSecond = performance.now();
+        function executeHardwareSyncTimer() {
+            frameCounter++;
+            const clockNow = performance.now();
+            if(clockNow >= lastLoggedSecond + 1000) {
+                const fpsLabel = document.getElementById('fps-counter');
+                if(fpsLabel) fpsLabel.innerText = `${frameCounter} FPS`;
+                frameCounter = 0;
+                lastLoggedSecond = clockNow;
+            }
+            requestAnimationFrame(executeHardwareSyncTimer);
         }
 
         function mountInteractiveControlHooks() {
@@ -582,7 +596,7 @@
             node.innerHTML = '';
 
             if (AppState.ledgerLog.length === 0) {
-                node.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No strategies registered inside sandbox memory ledger</td></tr>`;
+                node.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No strategies registered inside sandbox ledger</td></tr>`;
                 return;
             }
 
