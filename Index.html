@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EDGE // Quant Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090a0f;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass {
+            background: rgba(13, 15, 24, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* Custom scrollbar handling for mobile charts */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen pb-12 select-none overflow-x-hidden">
+
+    <header class="w-full border-b border-slate-800/60 bg-[#0d0f18]/80 sticky top-0 z-50 backdrop-blur-md px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                <i data-lucide="activity" class="h-4 w-4 text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-md font-bold tracking-tight text-white flex items-center">
+                    EDGE <span class="text-[10px] text-indigo-400 ml-1.5 px-1.5 py-0.5 rounded border border-indigo-500/20 bg-indigo-500/5 mono font-normal">QUANT</span>
+                </h1>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-full">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="mono" id="connection-status">LIVE STREAM</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 pt-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <section class="lg:col-span-4 space-y-4">
+            <div class="glass rounded-xl p-4 flex items-center justify-between shadow-xl">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                        <i data-lucide="gauge" class="h-5 w-5 text-amber-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Market Sentiment</p>
+                        <h3 class="text-sm font-bold text-slate-100" id="fng-label">Loading Index...</h3>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-2xl font-bold mono tracking-tight text-amber-400" id="fng-value">--</span>
+                </div>
+            </div>
+
+            <div class="glass rounded-xl overflow-hidden shadow-xl flex flex-col">
+                <div class="px-4 py-3 border-b border-slate-800/60 bg-slate-900/20 flex items-center justify-between">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
+                        <i data-lucide="layers" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i> Core Watchlist
+                    </h2>
+                    <span class="text-[10px] mono text-slate-400">WS Tickers</span>
+                </div>
+                <div class="divide-y divide-slate-800/40 max-h-[380px] overflow-y-auto" id="watchlist-container">
+                    </div>
+            </div>
+
+            <div class="glass rounded-xl p-4 space-y-3 shadow-xl">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
+                    <i data-lucide="cpu" class="h-4 w-4 mr-2 text-indigo-400"></i> Local Execution Signal
+                </h2>
+                <div class="bg-slate-950/40 border border-slate-800/60 rounded-lg p-3.5 flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Statistical Directional Bias</p>
+                        <h4 class="text-lg font-bold tracking-tight mt-0.5" id="signal-bias">NEUTRAL</h4>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Confidence Engine</p>
+                        <span class="text-lg font-bold mono" id="signal-score">50%</span>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed italic border-l-2 border-slate-700 pl-2.5">
+                    *[span_17](start_span)[span_18](start_span)Automated rule metrics are calculated locally inside the browser memory framework by parsing real-time rolling volatility changes and momentum parameters[span_17](end_span)[span_18](end_span).
+                </p>
+            </div>
+        </section>
+
+        <section class="lg:col-span-8 space-y-4">
+            <div class="glass rounded-xl overflow-hidden shadow-xl h-[340px] md:h-[450px] relative w-full">
+                <div id="tv-chart-widget-target" class="w-full h-full"></div>
+            </div>
+
+            <div class="glass rounded-xl p-4 shadow-xl">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4 flex items-center">
+                    <i data-lucide="calculator" class="h-4 w-4 mr-2 text-indigo-400"></i> Capital Allocation & Risk Management Engine
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Total Account Equity ($)</label>
+                        <input type="number" id="calc-equity" value="10000" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Risk Parameter (%)</label>
+                        <input type="number" id="calc-risk" value="1" step="0.25" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Invalidation Setup Price ($)</label>
+                        <input type="number" id="calc-stop" value="95" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">Target Profit Target ($)</label>
+                        <input type="number" id="calc-take" value="115" class="w-full bg-[#07080c] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-medium mono focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                </div>
+                
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800/60">
+                    <div class="bg-indigo-500/5 border border-indigo-500/10 rounded p-2.5 text-center">
+                        <span class="text-[10px] uppercase text-indigo-400 font-medium block">Position Size Allocation</span>
+                        <span class="text-sm font-bold text-white mono mt-0.5 block" id="out-position-size">--</span>
+                    </div>
+                    <div class="bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 text-center">
+                        <span class="text-[10px] uppercase text-emerald-400 font-medium block">Asymmetric Risk Reward Ratio</span>
+                        <span class="text-sm font-bold text-white mono mt-0.5 block" id="out-rr-ratio">--</span>
+                    </div>
+                    <button id="btn-log-trade" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 px-4 rounded shadow-md transition-all flex items-center justify-center cursor-pointer space-x-2">
+                        <i data-lucide="plus-circle" class="h-3.5 w-3.5"></i>
+                        <span>Commit Setup to Terminal Journal</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass rounded-xl overflow-hidden shadow-xl flex flex-col">
+                <div class="px-4 py-3 border-b border-slate-800/60 bg-slate-900/20 flex items-center justify-between">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
+                        <i data-lucide="book-open" class="h-4 w-4 mr-2 text-indigo-400"></i> Active Terminal Position Journal
+                    </h2>
+                    <button id="btn-clear-journal" class="text-[10px] text-rose-400 font-medium hover:underline tracking-wide bg-transparent cursor-pointer border-none">Flush Saved Entries</button>
+                </div>
+                <div class="p-0 overflow-x-auto w-full">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-slate-800/80 bg-slate-950/20 text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                                <th class="py-2 px-4">Market Asset</th>
+                                <th class="py-2 px-4">Allocated Capital</th>
+                                <th class="py-2 px-4">Invalidation Level</th>
+                                <th class="py-2 px-4">Profit Target</th>
+                                <th class="py-2 px-4 text-right">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journal-table-body" class="divide-y divide-slate-800/40 text-xs text-slate-300 mono">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        [span_19](start_span)[span_20](start_span)// System Architectural Core Configurations[span_19](end_span)[span_20](end_span)
+        const CONFIG = {
+            watchlistSymbols: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'],
+            fearGreedEndpoint: 'https://api.alternative.me/fng/?limit=1',
+            binanceWSBase: 'wss://stream.binance.com:9443/ws'
+        };
+
+        // Reactive Application State Encapsulation
+        let state = {
+            activeAsset: 'BTCUSDT',
+            marketData: {},
+            tvWidgetInstance: null,
+            journalEntries: []
+        };
+
+        /**
+         * Initialize App Modules on DOM Completion
+         */
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            initializeWatchlistState();
+            injectTradingViewWidget(state.activeAsset);
+            connectBinanceWebSocketEngine();
+            fetchFearAndGreedMetric();
+            loadLocalJournalData();
+            setupRiskCalculatorListeners();
+        });
+
+        /**
+         * Bootstrap Watchlist Elements into DOM
+         */
+        function initializeWatchlistState() {
+            const container = document.getElementById('watchlist-container');
+            container.innerHTML = '';
+            
+            CONFIG.watchlistSymbols.forEach(symbol => {
+                state.marketData[symbol] = { price: 0.0, change: 0.0 };
+                
+                const item = document.createElement('div');
+                item.id = `watchlist-row-${symbol}`;
+                item.className = `px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-800/20 transition-all ${state.activeAsset === symbol ? 'bg-indigo-600/10 border-l-2 border-indigo-500' : ''}`;
+                item.onclick = () => selectActiveAsset(symbol);
+                
+                item.innerHTML = `
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-100 tracking-tight">${symbol}</h4>
+                        <span class="text-[10px] uppercase text-slate-400 font-medium">Binance Spot</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-slate-200 mono" id="price-val-${symbol}">--</p>
+                        <p class="text-[10px] font-medium mono mt-0.5" id="change-val-${symbol}">--</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        /**
+         * Update Focused Market Asset and Component Views
+         */
+        function selectActiveAsset(symbol) {
+            if (state.activeAsset === symbol) return;
+            
+            // Toggle active tracking classes
+            document.getElementById(`watchlist-row-${state.activeAsset}`)?.classList.remove('bg-indigo-600/10', 'border-l-2', 'border-indigo-500');
+            state.activeAsset = symbol;
+            document.getElementById(`watchlist-row-${symbol}`)?.classList.add('bg-indigo-600/10', 'border-l-2', 'border-indigo-500');
+            
+            injectTradingViewWidget(symbol);
+            recalculateRiskSizingMetrics();
+        }
+
+        /**
+         * Instantiate and Mount TradingView Core Iframe Component
+         */
+        function injectTradingViewWidget(symbol) {
+            [span_21](start_span)// Clean up old widget instance to clear memory[span_21](end_span)
+            document.getElementById('tv-chart-widget-target').innerHTML = '';
+            
+            state.tvWidgetInstance = new TradingView.widget({
+                "autosize": true,
+                "symbol": `BINANCE:${symbol}`,
+                "interval": "60",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "enable_publishing": false,
+                "hide_side_toolbar": true,
+                "allow_symbol_change": false,
+                "container_id": "tv-chart-widget-target",
+                "studies": [
+                    "RSI@tv-basicstudies",
+                    "MASimple@tv-basicstudies"
+                ]
+            });
+        }
+
+        /**
+         * Manage Stateful Async Streaming via Binance WebSocket
+         */
+        function connectBinanceWebSocketEngine() {
+            const socket = new WebSocket(CONFIG.binanceWSBase);
+            
+            socket.onopen = () => {
+                const streams = CONFIG.watchlistSymbols.map(s => `${s.toLowerCase()}@ticker`);
+                socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 1 }));
+                document.getElementById('connection-status').innerText = "LIVE STREAM";
+            };
+
+            socket.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                // Listen for structural market stream packet matches
+                if (msg.e === "24hrTicker") {
+                    const symbol = msg.s;
+                    const price = parseFloat(msg.c);
+                    const change = parseFloat(msg.P);
+                    
+                    state.marketData[symbol] = { price, change };
+                    updateWatchlistDOMNode(symbol, price, change);
+                    
+                    if (symbol === state.activeAsset) {
+                        processAlgorithmicSignal(price, change);
+                    }
+                }
+            };
+
+            socket.onerror = () => {
+                document.getElementById('connection-status').innerText = "STREAM CORRUPTED";
+            };
+
+            socket.onclose = () => {
+                document.getElementById('connection-status').innerText = "RECONNECTING...";
+                setTimeout(connectBinanceWebSocketEngine, 5000);
+            };
+        }
+
+        /**
+         * Perform real-time updates on active UI components
+         */
+        function updateWatchlistDOMNode(symbol, price, change) {
+            const priceEl = document.getElementById(`price-val-${symbol}`);
+            const changeEl = document.getElementById(`change-val-${symbol}`);
+            if (!priceEl || !changeEl) return;
+
+            priceEl.innerText = price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            changeEl.innerText = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+            
+            if (change >= 0) {
+                changeEl.className = "text-[10px] font-bold text-emerald-400 mono mt-0.5";
+            } else {
+                changeEl.className = "text-[10px] font-bold text-rose-400 mono mt-0.5";
+            }
+        }
+
+        /**
+         * [span_22](start_span)[span_23](start_span)Process mathematical indicators on live token changes[span_22](end_span)[span_23](end_span)
+         */
+        function processAlgorithmicSignal(price, change) {
+            let baselineScore = 50; 
+            
+            [span_24](start_span)[span_25](start_span)// Rules-based calculation mapping rolling variance[span_24](end_span)[span_25](end_span)
+            if (change > 1.5) baselineScore += 15;
+            if (change > 4.0) baselineScore += 20;
+            if (change < -1.5) baselineScore -= 15;
+            if (change < -4.0) baselineScore -= 20;
+
+            const biasLabel = document.getElementById('signal-bias');
+            const scoreLabel = document.getElementById('signal-score');
+            
+            scoreLabel.innerText = `${baselineScore}%`;
+            
+            if (baselineScore > 60) {
+                biasLabel.innerText = "ACCUMULATION BIAS";
+                biasLabel.className = "text-lg font-bold text-emerald-400 tracking-tight mt-0.5";
+            } else if (baselineScore < 40) {
+                biasLabel.innerText = "DISTRIBUTION BIAS";
+                biasLabel.className = "text-lg font-bold text-rose-400 tracking-tight mt-0.5";
+            } else {
+                biasLabel.innerText = "COMPRESSION NEUTRAL";
+                biasLabel.className = "text-lg font-bold text-slate-400 tracking-tight mt-0.5";
+            }
+        }
+
+        /**
+         * Fetch Sentiment Indexes from Public API Enclaves
+         */
+        function fetchFearAndGreedMetric() {
+            fetch(CONFIG.fearGreedEndpoint)
+                .then(res => res.json())
+                .then(data => {
+                    const fng = data.data[0];
+                    document.getElementById('fng-value').innerText = fng.value;
+                    document.getElementById('fng-label').innerText = fng.value_classification;
+                    
+                    const valNum = parseInt(fng.value);
+                    const valContainer = document.getElementById('fng-value');
+                    if(valNum > 60) valContainer.className = "text-2xl font-bold mono tracking-tight text-emerald-400";
+                    else if(valNum < 40) valContainer.className = "text-2xl font-bold mono tracking-tight text-rose-400";
+                    else valContainer.className = "text-2xl font-bold mono tracking-tight text-amber-400";
+                })
+                .catch(() => {
+                    document.getElementById('fng-label').innerText = "Data Offline";
+                });
+        }
+
+        /**
+         * [span_26](start_span)[span_27](start_span)Quantitative Position Risk Calculation Logic[span_26](end_span)[span_27](end_span)
+         */
+        function setupRiskCalculatorListeners() {
+            ['calc-equity', 'calc-risk', 'calc-stop', 'calc-take'].forEach(id => {
+                document.getElementById(id).addEventListener('input', recalculateRiskSizingMetrics);
+            });
+            document.getElementById('btn-log-trade').addEventListener('click', appendEntryToLedger);
+            document.getElementById('btn-clear-journal').addEventListener('click', flushLocalJournalStore);
+        }
+
+        function recalculateRiskSizingMetrics() {
+            const equity = parseFloat(document.getElementById('calc-equity').value) || 0;
+            const riskPct = parseFloat(document.getElementById('calc-risk').value) || 0;
+            const stopPrice = parseFloat(document.getElementById('calc-stop').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('calc-take').value) || 0;
+            
+            const currentAssetPrice = state.marketData[state.activeAsset]?.price || 0;
+            
+            if (equity <= 0 || riskPct <= 0 || currentAssetPrice <= 0 || stopPrice === currentAssetPrice) {
+                document.getElementById('out-position-size').innerText = "--";
+                document.getElementById('out-rr-ratio').innerText = "--";
+                return;
+            }
+
+            [span_28](start_span)// Capital at risk calculation[span_28](end_span)
+            const cashRiskAmount = equity * (riskPct / 100);
+            const riskPerUnit = Math.abs(currentAssetPrice - stopPrice);
+            
+            [span_29](start_span)// Standard portfolio risk sizing formula[span_29](end_span)
+            const componentUnits = cashRiskAmount / riskPerUnit;
+            const absoluteCapitalAllocation = componentUnits * currentAssetPrice;
+            
+            const profitPerUnit = Math.abs(takeProfit - currentAssetPrice);
+            const riskRewardRatio = profitPerUnit / riskPerUnit;
+
+            document.getElementById('out-position-size').innerText = `$${absoluteCapitalAllocation.toLocaleString(undefined, {maximumFractionDigits: 2})} (${componentUnits.toFixed(2)} Units)`;
+            document.getElementById('out-rr-ratio').innerText = `1 : ${riskRewardRatio.toFixed(2)}`;
+        }
+
+        /**
+         * [span_30](start_span)State Storage Ledger Management Engine[span_30](end_span)
+         */
+        function appendEntryToLedger() {
+            const equity = parseFloat(document.getElementById('calc-equity').value) || 0;
+            const riskPct = parseFloat(document.getElementById('calc-risk').value) || 0;
+            const currentPrice = state.marketData[state.activeAsset]?.price || 0;
+            const stopPrice = parseFloat(document.getElementById('calc-stop').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('calc-take').value) || 0;
+
+            if(currentPrice <= 0) return;
+
+            const allocationText = document.getElementById('out-position-size').innerText;
+
+            const entry = {
+                asset: state.activeAsset,
+                allocation: allocationText,
+                stop: `$${stopPrice}`,
+                take: `$${takeProfit}`,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            state.journalEntries.unshift(entry);
+            saveJournalToLocalStorage();
+            renderJournalDOMTable();
+        }
+
+        function renderJournalDOMTable() {
+            const tbody = document.getElementById('journal-table-body');
+            tbody.innerHTML = '';
+
+            if (state.journalEntries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500 italic uppercase text-[10px] tracking-wide">No active setups committed to ledger</td></tr>`;
+                return;
+            }
+
+            state.journalEntries.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-800/30 hover:bg-slate-900/10";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-bold text-slate-100">${item.asset}</td>
+                    <td class="py-2.5 px-4 font-medium text-slate-300">${item.allocation}</td>
+                    <td class="py-2.5 px-4 font-medium text-rose-400">${item.stop}</td>
+                    <td class="py-2.5 px-4 font-medium text-emerald-400">${item.take}</td>
+                    <td class="py-2.5 px-4 text-slate-500 text-right">${item.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveJournalToLocalStorage() {
+            localStorage.setItem('edge_quant_journal', JSON.stringify(state.journalEntries));
+        }
+
+        function loadLocalJournalData() {
+            const stored = localStorage.getItem('edge_quant_journal');
+            if (stored) {
+                try { state.journalEntries = JSON.parse(stored); } catch(e) { state.journalEntries = []; }
+                renderJournalDOMTable();
+            } else {
+                renderJournalDOMTable();
+            }
+        }
+
+        function flushLocalJournalStore() {
+            state.journalEntries = [];
+            saveJournalToLocalStorage();
+            renderJournalDOMTable();
+        }
+    </script>
+</body>
+</html>
