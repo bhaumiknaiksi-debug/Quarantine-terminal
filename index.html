@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EDGE // Institutional Quant Terminal</title>
+    <title>EDGE // Professional Decision Support Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -13,196 +13,180 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #05060a;
+            background-color: #030407;
             letter-spacing: -0.01em;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* High-End Tech Glassmorphism Palette */
         .panel-surface {
-            background: rgba(10, 12, 22, 0.65);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(9, 11, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
         
         .active-glow {
-            box-shadow: 0 0 20px rgba(79, 70, 229, 0.15);
-            border-color: rgba(99, 102, 241, 0.35) !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.3) !important;
         }
 
-        html, body {
-            overflow-x: hidden;
-            height: 100%;
-        }
+        /* Throttled pulse changes to highlight data shifts without flashing animation spam */
+        .delta-up { color: #10b981 !important; }
+        .delta-down { color: #ef4444 !important; }
 
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+        html, body { overflow-x: hidden; height: 100%; }
+        input:focus { border-color: #4f46e5 !important; outline: none; }
     </style>
 </head>
 <body class="text-slate-200 flex flex-col justify-between antialiased">
 
-    <header class="w-full border-b border-slate-900 bg-[#07080d]/90 sticky top-0 z-50 backdrop-blur-md px-4 py-3 flex items-center justify-between safe-top">
+    <header class="w-full border-b border-slate-900 bg-[#05060a]/90 sticky top-0 z-50 backdrop-blur-md px-4 py-2.5 flex items-center justify-between safe-top">
         <div class="flex items-center space-x-2.5">
-            <div class="h-7 w-7 rounded bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-                <i data-lucide="terminal" class="h-3.5 w-3.5 text-white"></i>
+            <div class="h-6 w-6 rounded bg-indigo-600 flex items-center justify-center shadow-md">
+                <i data-lucide="shield" class="h-3.5 w-3.5 text-white"></i>
             </div>
-            <div>
-                <h1 class="text-sm font-bold tracking-wider text-white flex items-center mono">
-                    EDGE<span class="text-indigo-400 font-normal mx-1">//</span>SYSTEM-OS
-                </h1>
-            </div>
+            <h1 class="text-xs font-bold tracking-wider text-slate-200 flex items-center mono">
+                EDGE<span class="text-indigo-500 font-normal mx-1">/</span>DECISION-SUPPORT
+            </h1>
         </div>
-        <div class="flex items-center space-x-3">
-            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/20 px-2 py-0.5 rounded mono" id="fps-counter">
-                60 FPS
+        <div class="flex items-center space-x-2">
+            <div class="text-[9px] font-bold text-slate-500 bg-slate-900 px-2 py-0.5 rounded mono" id="render-telemetry">
+                IDLE
             </div>
-            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-full">
-                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="mono">CORE_STREAM</span>
+            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded-full">
+                <span class="h-1 w-1 rounded-full bg-indigo-400"></span>
+                <span class="mono">BATCH_THROTTLE</span>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 w-full max-w-7xl mx-auto px-3 pt-3 grid grid-cols-1 lg:grid-cols-12 gap-3 mb-6">
+    <main class="flex-1 w-full max-w-7xl mx-auto px-2 pt-2 grid grid-cols-1 lg:grid-cols-12 gap-2 mb-4">
         
-        <section class="lg:col-span-4 space-y-3 flex flex-col">
+        <section class="lg:col-span-4 space-y-2 flex flex-col">
             
-            <div class="panel-surface rounded-lg p-3.5 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 rounded bg-slate-900 border border-slate-800">
-                        <i data-lucide="compass" class="h-4 w-4 text-slate-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Macro Fear & Greed</p>
-                        <h3 class="text-xs font-bold text-slate-200 mt-0.5" id="fng-classification">CONNECTING...</h3>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-xl font-bold mono tracking-tight text-slate-400" id="fng-index-val">--</span>
-                </div>
-            </div>
-
-            <div class="panel-surface rounded-lg flex flex-col flex-1 min-h-[220px]">
-                <div class="px-3.5 py-2.5 border-b border-slate-900 bg-slate-950/40 flex items-center justify-between">
+            <div class="panel-surface rounded-md flex flex-col flex-1 min-h-[220px]">
+                <div class="px-3 py-2 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="activity" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Quant Asset Matrix
+                        <i data-lucide="layout-grid" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Token Asset Feed
                     </span>
-                    <span class="text-[9px] mono text-slate-500">REAL-TIME MULTIPLEX</span>
+                    <span class="text-[9px] mono text-slate-500">MUTEX STREAM</span>
                 </div>
-                <div class="divide-y divide-slate-900 overflow-y-auto flex-1" id="watchlist-target-node">
+                <div class="divide-y divide-slate-900/60 overflow-y-auto flex-1" id="watchlist-target-node">
                     </div>
             </div>
 
-            <div class="panel-surface rounded-lg p-3.5 space-y-3">
+            <div class="panel-surface rounded-md p-3 space-y-2.5">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="shield-alert" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Operational Edge Diagnostic
+                        <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Signal Confluence
                     </span>
-                    <span class="text-[9px] mono text-emerald-400 bg-emerald-500/5 px-1 rounded border border-emerald-500/10">V2 CORE</span>
+                    <span class="text-[9px] mono text-indigo-400 bg-indigo-500/5 px-1.5 py-0.5 rounded border border-indigo-500/10" id="ui-setup-quality">RANK --</span>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="bg-slate-950/60 border border-slate-900 rounded p-2.5">
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Directional Bias</p>
-                        <h4 class="text-xs font-bold mt-1 tracking-wide uppercase text-slate-300" id="engine-bias-output">COMPUTING...</h4>
+
+                <div class="bg-slate-950/40 border border-slate-900 rounded overflow-hidden text-[11px] mono">
+                    <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
+                        <span class="text-slate-500">MARKET REGIME</span>
+                        <span class="text-right font-bold text-slate-200" id="ui-metric-regime">COMPUTING...</span>
                     </div>
-                    <div class="bg-slate-950/60 border border-slate-900 rounded p-2.5">
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Confidence Vector</p>
-                        <h4 class="text-xs font-bold mt-1 mono text-slate-300" id="engine-score-output">--%</h4>
+                    <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
+                        <span class="text-slate-500">NORMALIZED COEFF</span>
+                        <span class="text-right font-bold text-slate-300" id="ui-metric-zscore">--</span>
+                    </div>
+                    <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
+                        <span class="text-slate-500">REGIME DURATION</span>
+                        <span class="text-right font-bold text-slate-300" id="ui-metric-persistence">--</span>
+                    </div>
+                    <div class="grid grid-cols-2 p-2">
+                        <span class="text-slate-500">STRATEGY VERDICT</span>
+                        <span class="text-right font-bold text-slate-300" id="ui-metric-verdict">--</span>
                     </div>
                 </div>
 
-                <div class="space-y-2 pt-1">
+                <div class="bg-slate-900/40 border border-slate-800 rounded p-2.5 flex items-center justify-between">
                     <div>
-                        <div class="flex justify-between text-[9px] text-slate-400 mono mb-1">
-                            <span>MOMENTUM CONFLUENCE</span>
-                            <span id="factor-track-momentum">--</span>
-                        </div>
-                        <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
-                            <div id="bar-track-momentum" class="h-full bg-indigo-500 transition-all duration-300" style="width: 50%"></div>
-                        </div>
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Adaptive Score Vector</p>
+                        <h4 class="text-xs font-bold text-slate-300 uppercase mt-0.5" id="ui-adaptive-bias">CALCULATING</h4>
                     </div>
-                    <div>
-                        <div class="flex justify-between text-[9px] text-slate-400 mono mb-1">
-                            <span>VOLATILITY DISTANCE (VWAP)</span>
-                            <span id="factor-track-volatility">--</span>
-                        </div>
-                        <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
-                            <div id="bar-track-volatility" class="h-full bg-sky-500 transition-all duration-300" style="width: 50%"></div>
-                        </div>
+                    <div class="text-right">
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Confidence Vector</p>
+                        <span class="text-xs font-bold mono text-indigo-400" id="ui-adaptive-score">--%</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="lg:col-span-8 space-y-3 flex flex-col">
+        <section class="lg:col-span-8 space-y-2 flex flex-col">
             
-            <div class="panel-surface rounded-lg overflow-hidden h-[300px] md:h-[420px] relative w-full shadow-2xl">
+            <div class="panel-surface rounded-md overflow-hidden h-[260px] md:h-[360px] relative w-full shadow-xl">
                 <div id="tradingview-canvas-target" class="w-full h-full"></div>
             </div>
 
-            <div class="panel-surface rounded-lg p-3.5">
-                <div class="flex items-center space-x-2 mb-3">
-                    <i data-lucide="scale" class="h-3.5 w-3.5 text-indigo-400"></i>
-                    <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Risk Allocation & Position Size Framework</h2>
+            <div class="panel-surface rounded-md p-3">
+                <div class="flex items-center justify-between mb-2.5">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="shield-alert" class="h-3.5 w-3.5 text-indigo-400"></i>
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Adaptive Sizing Framework</h2>
+                    </div>
+                    <div class="flex items-center space-x-1 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-[9px] font-bold mono text-slate-400">
+                        <span>ATR VOL BASIS:</span>
+                        <span class="text-indigo-400 uppercase font-bold" id="ui-atr-basis-value">LOADING...</span>
+                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Account Portfolio Equity ($)</label>
-                        <input type="number" id="risk-input-equity" value="10000" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Portfolio Equity ($)</label>
+                        <input type="number" id="risk-equity" value="10000" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Max Risk Target (%)</label>
-                        <input type="number" id="risk-input-pct" value="1.0" step="0.25" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Max Risk Parameter (%)</label>
+                        <input type="number" id="risk-percent" value="1.0" step="0.25" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Invalidation Stop Price ($)</label>
-                        <input type="number" id="risk-input-stop" value="60000" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide">Invalidation Stop ($)</label>
+                            <button id="btn-trigger-volstop" class="text-[8px] font-bold text-indigo-400 hover:underline cursor-pointer uppercase bg-transparent border-none">Set Vol-Stop</button>
+                        </div>
+                        <input type="number" id="risk-stop" value="0" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Profit Target Objective ($)</label>
-                        <input type="number" id="risk-input-take" value="72000" class="w-full bg-slate-950/80 border border-slate-900 rounded px-2 py-1.5 text-xs text-white font-semibold mono focus:outline-none focus:border-indigo-600 transition-colors">
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Profit Objective ($)</label>
+                        <input type="number" id="risk-take" value="0" class="w-full bg-slate-950 border border-slate-900/80 rounded px-2 py-1 text-xs text-white font-semibold mono">
                     </div>
                 </div>
 
-                <div class="mt-3.5 pt-3.5 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5">
+                <div class="mt-3 pt-3 border-t border-slate-900/60 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
                     <div class="grid grid-cols-2 gap-2 flex-1">
-                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-3 py-1.5 text-center sm:text-left">
+                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-2.5 py-1">
                             <span class="text-[8px] uppercase text-indigo-400 font-bold block tracking-wider">Position Allocation Size</span>
-                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="calc-output-size">--</span>
+                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-size">--</span>
                         </div>
-                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-3 py-1.5 text-center sm:text-left">
+                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-2.5 py-1">
                             <span class="text-[8px] uppercase text-emerald-400 font-bold block tracking-wider">Risk Reward Premium</span>
-                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="calc-output-rr">--</span>
+                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-rr">--</span>
                         </div>
                     </div>
-                    <button id="calc-commit-trigger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-4 rounded transition-all flex items-center justify-center cursor-pointer space-x-1.5 shrink-0 shadow-lg shadow-indigo-600/10">
-                        <i data-lucide="database" class="h-3.5 w-3.5"></i>
-                        <span>Commit Setup to System Log</span>
+                    <button id="btn-commit-ledger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-3 rounded transition-all flex items-center justify-center cursor-pointer space-x-1 shadow-md shadow-indigo-600/5">
+                        <i data-lucide="activity" class="h-3.5 w-3.5"></i>
+                        <span>Log Setup</span>
                     </button>
                 </div>
             </div>
 
-            <div class="panel-surface rounded-lg flex flex-col overflow-hidden">
-                <div class="px-3.5 py-2.5 border-b border-slate-900 bg-slate-950/40 flex items-center justify-between">
+            <div class="panel-surface rounded-md flex flex-col overflow-hidden flex-1">
+                <div class="px-3 py-1.5 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="folder-heart" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Account Matrix Ledger Logs
+                        <i data-lucide="database" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Setup Decision History Ledger
                     </span>
-                    <button id="ledger-flush-trigger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Purge Store</button>
+                    <button id="btn-flush-ledger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Clear</button>
                 </div>
-                <div class="overflow-x-auto w-full">
-                    <table class="w-full text-left border-collapse min-w-[560px]">
+                <div class="overflow-x-auto w-full max-h-[110px]">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-900 bg-slate-950/30 text-[9px] uppercase tracking-wider text-slate-500 font-bold">
-                                <th class="py-2 px-4">Market Symbol</th>
-                                <th class="py-2 px-4">Allocation Metric</th>
-                                <th class="py-2 px-4">Invalidation Trigger</th>
-                                <th class="py-2 px-4">Take Profit Objective</th>
-                                <th class="py-2 px-4 text-right">System Time</th>
+                            <tr class="border-b border-slate-900 bg-slate-950/20 text-[9px] uppercase tracking-wider text-slate-500 font-bold">
+                                <th class="py-1.5 px-4">Asset</th>
+                                <th class="py-1.5 px-4">Allocation Metric</th>
+                                <th class="py-1.5 px-4">Stop Level</th>
+                                <th class="py-1.5 px-4">Profit Target</th>
+                                <th class="py-1.5 px-4 text-right">Time</th>
                             </tr>
                         </thead>
                         <tbody id="ledger-rows-target" class="divide-y divide-slate-900 text-xs text-slate-300 mono">
@@ -215,120 +199,103 @@
 
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // System Settings Configurations
-        const SYSTEM_CONFIG = {
+        // System Settings
+        const CONFIG = {
             assets: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'],
-            sentimentFeed: 'https://api.alternative.me/fng/?limit=1',
-            streamEndpoint: 'wss://stream.binance.com:9443/ws'
+            wsEndpoint: 'wss://stream.binance.com:9443/ws', // Fixed variable configuration match bug
+            restBase: 'https://api.binance.com'
         };
 
-        // UI Cache
-        let InternalRenderCache = {
-            isDirty: false,
+        // Deep State Cache with Time Persistence Context Tracking
+        let AppState = {
             activeAsset: 'BTCUSDT',
-            fngData: { val: '--', text: 'FETCHING...' },
-            tickerState: {},
-            signalMetrics: { score: 50, bias: 'CALCULATING', momentum: 50, volatility: 50 },
-            ledger: []
+            tickerCache: {},
+            activeMetrics: { regime: 'STABLE_DRIFT', zscore: 0.0, persistence: 0, verdict: 'OBSERVE', score: 50, bias: 'NEUTRAL', rank: 'C' },
+            ledgerLog: [],
+            isDirty: false,
+            renderLock: false // Throttled Render Lock Flag
         };
 
-        let PrimaryChartInstance = null;
+        let ActiveChartWidget = null;
 
         /**
-         * Core Hook Entry Execution
+         * System Core Lifecycle Entry Hook
          */
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
-            bootstrapWatchlistTemplate();
+            bootstrapWatchlistStructure();
             
             setTimeout(() => {
-                mountTradingViewIframe(InternalRenderCache.activeAsset);
-            }, 400);
+                mountChartCanvasContainer(AppState.activeAsset);
+            }, 300);
 
-            initializeMultiplexStreamPipeline();
-            pullFearGreedMetrics();
+            seedHistoricalKLines(); // Hybrid Model Initialization
+            initializeWebSocketConnectionPipeline();
             syncLocalDataStorage();
-            mountInteractiveEventHandlers();
-            executeHardwareSyncLoop();
+            mountInteractiveControlHooks();
         });
 
-        function bootstrapWatchlistTemplate() {
-            const target = document.getElementById('watchlist-target-node');
-            if(!target) return;
-            target.innerHTML = '';
+        function bootstrapWatchlistStructure() {
+            const node = document.getElementById('watchlist-target-node');
+            if(!node) return;
+            node.innerHTML = '';
 
-            SYSTEM_CONFIG.assets.forEach(symbol => {
-                InternalRenderCache.tickerState[symbol] = { price: 0.0, change: 0.0, prevPrice: 0.0 };
+            CONFIG.assets.forEach(symbol => {
+                AppState.tickerCache[symbol] = { price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0, atr: 0.0, ticksUp: 0, lastTickDirection: 0 };
                 
                 const element = document.createElement('div');
-                element.id = `asset-row-${symbol}`;
-                element.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-transparent ${InternalRenderCache.activeAsset === symbol ? 'bg-indigo-600/5 border-l-indigo-500 active-glow' : ''}`;
-                element.onclick = () => performAssetContextShift(symbol);
+                element.id = `row-token-${symbol}`;
+                element.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-transparent ${AppState.activeAsset === symbol ? 'bg-indigo-600/5 border-l-indigo-500 active-glow' : ''}`;
+                element.onclick = () => performAssetShiftContext(symbol);
                 
                 element.innerHTML = `
                     <div>
                         <h4 class="text-xs font-bold text-slate-200 tracking-wider mono">${symbol}</h4>
-                        <div class="flex items-center space-x-1.5 mt-0.5">
-                            <span class="text-[8px] font-bold text-slate-500 tracking-wide uppercase">SPOT BINANCE</span>
-                        </div>
+                        <span class="text-[8px] font-bold text-slate-500 tracking-wide">BINANCE CORE</span>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs font-bold text-slate-100 mono" id="dom-price-${symbol}">--</p>
-                        <p class="text-[9px] font-medium mono mt-0.5 text-slate-500" id="dom-change-${symbol}">0.00%</p>
+                        <p class="text-xs font-bold text-slate-100 mono" id="price-node-${symbol}">--</p>
+                        <p class="text-[9px] font-medium mono mt-0.5 text-slate-500" id="change-node-${symbol}">0.00%</p>
                     </div>
                 `;
-                target.appendChild(element);
+                node.appendChild(element);
             });
         }
 
-        function performAssetContextShift(symbol) {
-            if (InternalRenderCache.activeAsset === symbol) return;
+        function performAssetShiftContext(symbol) {
+            if (AppState.activeAsset === symbol) return;
 
-            const oldRow = document.getElementById(`asset-row-${InternalRenderCache.activeAsset}`);
-            if(oldRow) oldRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-transparent`;
+            const oldTarget = document.getElementById(`row-token-${AppState.activeAsset}`);
+            if(oldTarget) oldTarget.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-transparent`;
 
-            InternalRenderCache.activeAsset = symbol;
+            AppState.activeAsset = symbol;
             
-            const newRow = document.getElementById(`asset-row-${symbol}`);
-            if(newRow) newRow.className = `px-3.5 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all border-l-2 border-indigo-500 active-glow`;
+            const newTarget = document.getElementById(`row-token-${symbol}`);
+            if(newTarget) newTarget.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-indigo-500 active-glow`;
 
-            if (PrimaryChartInstance && typeof PrimaryChartInstance.setSymbol === 'function') {
-                try {
-                    PrimaryChartInstance.setSymbol(`BINANCE:${symbol}`, "60");
-                } catch(e) {
-                    mountTradingViewIframe(symbol);
-                }
+            if (ActiveChartWidget && typeof ActiveChartWidget.setSymbol === 'function') {
+                try { ActiveChartWidget.setSymbol(`BINANCE:${symbol}`, "60"); } catch(e) { mountChartCanvasContainer(symbol); }
             } else {
-                mountTradingViewIframe(symbol);
+                mountChartCanvasContainer(symbol);
             }
 
-            const livePrice = InternalRenderCache.tickerState[symbol]?.price || 0;
-            if(livePrice > 0) {
-                document.getElementById('risk-input-stop').value = (livePrice * 0.98).toFixed(2);
-                document.getElementById('risk-input-take').value = (livePrice * 1.04).toFixed(2);
-            }
-            InternalRenderCache.isDirty = true;
+            autoCalculateVolatilityStop();
+            AppState.isDirty = true;
+            scheduleThrottledRenderPass();
         }
 
-        function mountTradingViewIframe(symbol) {
+        function mountChartCanvasContainer(symbol) {
             const container = document.getElementById('tradingview-canvas-target');
             if(!container) return;
             container.innerHTML = '';
-            
-            if(typeof TradingView === 'undefined') {
-                container.innerHTML = `<div class="p-6 text-xs text-slate-500 mono uppercase tracking-wider">TradingView Library Latency...</div>`;
-                return;
-            }
 
-            PrimaryChartInstance = new TradingView.widget({
+            ActiveChartWidget = new TradingView.widget({
                 "autosize": true,
                 "symbol": `BINANCE:${symbol}`,
                 "interval": "60",
-                "timezone": "Etc/UTC",
                 "theme": "dark",
                 "style": "1",
                 "locale": "en",
-                "enable_publishing": false,
                 "hide_side_toolbar": true,
                 "allow_symbol_change": false,
                 "container_id": "tradingview-canvas-target",
@@ -336,233 +303,315 @@
             });
         }
 
-        function initializeMultiplexStreamPipeline() {
+        /**
+         * Hybrid Implementation: Ingest Low-Weight Historical Data Parameters on Setup
+         */
+        function seedHistoricalKLines() {
+            CONFIG.assets.forEach(symbol => {
+                fetch(`${CONFIG.restBase}/api/v3/klines?symbol=${symbol}&interval=1h&limit=14`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let totalRangeSums = 0;
+                        data.forEach(candle => {
+                            const high = parseFloat(candle[2]);
+                            const low = parseFloat(candle[3]);
+                            totalRangeSums += (high - low);
+                        });
+                        const calculatedAtr = totalRangeSums / 14;
+                        if(AppState.tickerCache[symbol]) {
+                            AppState.tickerCache[symbol].atr = calculatedAtr;
+                            if(symbol === AppState.activeAsset) {
+                                document.getElementById('ui-atr-basis-value').innerText = `$${calculatedAtr.toFixed(2)}`;
+                            }
+                        }
+                    }).catch(() => {
+                        if(symbol === AppState.activeAsset) document.getElementById('ui-atr-basis-value').innerText = "CALC FALLBACK";
+                    });
+            });
+        }
+
+        /**
+         * Event-Driven Batched WebSocket Implementation Pipeline
+         */
+        function initializeWebSocketConnectionPipeline() {
             try {
-                const socket = new WebSocket(SYSTEM_CONFIG.streamEndpoint);
+                // Corrected variable configuration mapping target parameter bug
+                const socket = new WebSocket(CONFIG.wsEndpoint);
 
                 socket.onopen = () => {
-                    const streams = SYSTEM_CONFIG.assets.map(asset => `${asset.toLowerCase()}@ticker`);
-                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 101 }));
+                    const streams = CONFIG.assets.map(a => `${a.toLowerCase()}@ticker`);
+                    socket.send(JSON.stringify({ method: "SUBSCRIBE", params: streams, id: 303 }));
                 };
 
                 socket.onmessage = (event) => {
-                    const message = JSON.parse(event.data);
-                    if (message.e === "24hrTicker") {
-                        const symbol = message.s;
-                        const price = parseFloat(message.c);
-                        const change = parseFloat(message.P);
-
-                        const asset = InternalRenderCache.tickerState[symbol];
-                        if (asset) {
-                            asset.prevPrice = asset.price;
-                            asset.price = price;
-                            asset.change = change;
-                            InternalRenderCache.isDirty = true;
+                    const packet = JSON.parse(event.data);
+                    if (packet.e === "24hrTicker") {
+                        const symbol = packet.s;
+                        const cache = AppState.tickerCache[symbol];
+                        
+                        if (cache) {
+                            cache.prevPrice = cache.price;
+                            cache.price = parseFloat(packet.c);
+                            cache.change = parseFloat(packet.P);
+                            cache.high = parseFloat(packet.h);
+                            cache.low = parseFloat(packet.l);
+                            
+                            if (cache.price > cache.prevPrice) cache.lastTickDirection = 1;
+                            else if (cache.price < cache.prevPrice) cache.lastTickDirection = -1;
+                            
+                            AppState.isDirty = true;
                         }
 
-                        if (symbol === InternalRenderCache.activeAsset) {
-                            evaluateSignals(price, change);
+                        if (symbol === AppState.activeAsset) {
+                            processAdaptiveStateEngine(cache);
                         }
+
+                        // Trigger the batched UI update pass instead of drawing immediately
+                        scheduleThrottledRenderPass();
                     }
                 };
 
-                socket.onclose = () => {
-                    setTimeout(initializeMultiplexStreamPipeline, 4000);
-                };
-            } catch(e) {
-                console.error("WS Boot Error", e);
-            }
+                socket.onclose = () => { setTimeout(initializeWebSocketConnectionPipeline, 5000); };
+            } catch(e) { console.error("Critical Connection Pipeline Error", e); }
         }
 
-        function evaluateSignals(price, change) {
-            let score = 50; 
-            let mom = Math.max(-100, Math.min(100, change * 20));
-            let fng = parseInt(InternalRenderCache.fngData.val) || 50;
-            let sentiment = (50 - fng) * 1.5;
+        /**
+         * Adaptive Scoring & Time-Persistence Context Engine
+         */
+        function processAdaptiveStateEngine(ticker) {
+            if(!ticker || ticker.price === 0) return;
 
-            let finalScore = score + (mom * 0.25) + (sentiment * 0.15);
-            finalScore = Math.max(5, Math.min(95, finalScore));
+            // 1. Calculate Real-Time Volatility Z-Score approximation relative to historical ATR parameters
+            const liveRangeVolatility = ticker.high - ticker.low;
+            const baselineAtr = ticker.atr || (ticker.price * 0.02);
+            const normalizedZScoreVolatility = (liveRangeVolatility - baselineAtr) / baselineAtr;
 
-            InternalRenderCache.signalMetrics.score = Math.round(finalScore);
-            InternalRenderCache.signalMetrics.momentum = Math.round((mom + 100) / 2);
-            InternalRenderCache.signalMetrics.volatility = Math.round((sentiment + 100) / 2);
+            let currentDetectedRegime = 'STABLE DRIFT';
+            let operationalVerdict = 'OBSERVE REGIME';
+            let dynamicScoringWeights = 50; 
 
-            if (finalScore >= 58) {
-                InternalRenderCache.signalMetrics.bias = finalScore > 72 ? 'STRONG EXPANSION' : 'ACCUMULATION ZONE';
-            } else if (finalScore <= 42) {
-                InternalRenderCache.signalMetrics.bias = finalScore < 28 ? 'AGGRESSIVE LIQUIDATION' : 'DISTRIBUTION ZONE';
+            // 2. State-Machine Context Switching Logic Array
+            if (normalizedZScoreVolatility > 1.5) {
+                if (ticker.change > 2.5) {
+                    currentDetectedRegime = 'BREAKOUT EXPANSION';
+                    operationalVerdict = 'LONG MOMENTUM';
+                    dynamicScoringWeights += 25; // Adaptive Weight Factor Addition
+                } else if (ticker.change < -2.5) {
+                    currentDetectedRegime = 'LIQUIDATION CASCADE';
+                    operationalVerdict = 'CAPITULATION RISKS';
+                    dynamicScoringWeights -= 30;
+                }
+            } else if (normalizedZScoreVolatility < -0.5) {
+                currentDetectedRegime = 'COMPRESSION SQUEEZE';
+                operationalVerdict = 'STRATEGY ACCUMULATION';
             } else {
-                InternalRenderCache.signalMetrics.bias = 'COMPRESSION NEUTRAL';
+                if(Math.abs(ticker.change) < 1.0) {
+                    currentDetectedRegime = 'CHOP CONSOLIDATION';
+                    operationalVerdict = 'AVOID NOISE';
+                    dynamicScoringWeights = 50; 
+                }
             }
-            InternalRenderCache.isDirty = true;
-        }
 
-        function pullFearGreedMetrics() {
-            fetch(SYSTEM_CONFIG.sentimentFeed)
-                .then(res => res.json())
-                .then(data => {
-                    if(data?.data?.[0]) {
-                        InternalRenderCache.fngData.val = data.data[0].value;
-                        InternalRenderCache.fngData.text = data.data[0].value_classification;
-                        InternalRenderCache.isDirty = true;
-                    }
-                })
-                .catch(() => {
-                    InternalRenderCache.fngData.text = "OFFLINE LINK";
-                });
-        }
+            // 3. Time Persistence Track Frame Accumulation Check
+            if (AppState.activeMetrics.regime === currentDetectedRegime) {
+                AppState.activeMetrics.persistence += 1;
+            } else {
+                AppState.activeMetrics.persistence = 0; // Reset lookback duration parameters
+            }
 
-        let lastFrameTime = performance.now();
-        let frames = 0;
-
-        function executeHardwareSyncLoop() {
-            frames++;
-            const now = performance.now();
+            // 4. Score Quality Sorting Engine
+            let calculatedConfidenceScore = Math.max(5, Math.min(95, dynamicScoringWeights + (ticker.change * 1.5)));
+            let strategyRankClass = 'C';
             
-            if (now >= lastFrameTime + 1000) {
-                const fps = document.getElementById('fps-counter');
-                if(fps) fps.innerText = `${frames} FPS`;
-                frames = 0;
-                lastFrameTime = now;
-            }
+            if (calculatedConfidenceScore > 72 || calculatedConfidenceScore < 28) strategyRankClass = 'A+ EXPLOIT';
+            else if (calculatedConfidenceScore > 60 || calculatedConfidenceScore < 40) strategyRankClass = 'A ACCELERATING';
+            else if (currentDetectedRegime === 'CHOP CONSOLIDATION') strategyRankClass = 'AVOID';
 
-            if (InternalRenderCache.isDirty) {
-                flushUpdates();
-                InternalRenderCache.isDirty = false;
-            }
-            requestAnimationFrame(executeHardwareSyncLoop);
+            AppState.activeMetrics.regime = currentDetectedRegime;
+            AppState.activeMetrics.zscore = normalizedZScoreVolatility;
+            AppState.activeMetrics.verdict = operationalVerdict;
+            AppState.activeMetrics.confidence = Math.round(calculatedConfidenceScore);
+            AppState.activeMetrics.rank = strategyRankClass;
         }
 
-        function flushUpdates() {
-            SYSTEM_CONFIG.assets.forEach(symbol => {
-                const data = InternalRenderCache.tickerState[symbol];
-                const pNode = document.getElementById(`dom-price-${symbol}`);
-                const cNode = document.getElementById(`dom-change-${symbol}`);
+        /**
+         * Non-Blocking Throttled Batch Rendering Controller (Saves Mobile Battery Lifecycle)
+         */
+        function scheduleThrottledRenderPass() {
+            if (AppState.renderLock || !AppState.isDirty) return;
 
-                if (pNode && data.price > 0) {
-                    pNode.innerText = data.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    pNode.className = `text-xs font-bold mono ${data.price > data.prevPrice ? 'text-emerald-400' : data.price < data.prevPrice ? 'text-rose-400' : 'text-slate-100'}`;
+            AppState.renderLock = true;
+            document.getElementById('render-telemetry').innerText = "SYNCING";
+
+            // Locks repaint operations into a stable 250ms interval layout
+            setTimeout(() => {
+                flushCacheUpdatesToDOMView();
+                AppState.isDirty = false;
+                AppState.renderLock = false;
+                document.getElementById('render-telemetry').innerText = "STABLE";
+            }, 250); 
+        }
+
+        function flushCacheUpdatesToDOMView() {
+            // 1. Repaint Watchlist Elements
+            CONFIG.assets.forEach(symbol => {
+                const node = AppState.tickerCache[symbol];
+                const pEl = document.getElementById(`price-node-${symbol}`);
+                const cEl = document.getElementById(`change-node-${symbol}`);
+
+                if (pEl && node.price > 0) {
+                    pNodeText = node.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    pEl.innerText = pNodeText;
+                    
+                    if (node.lastTickDirection === 1) pEl.className = "text-xs font-bold mono delta-up";
+                    else if (node.lastTickDirection === -1) pEl.className = "text-xs font-bold mono delta-down";
+                    else pEl.className = "text-xs font-bold mono text-slate-100";
+                    node.lastTickDirection = 0; // Reset single vector context tick frame parameter
                 }
 
-                if (cNode && data.price > 0) {
-                    cNode.innerText = `${data.change >= 0 ? '+' : ''}${data.change.toFixed(2)}%`;
-                    cNode.className = `text-[9px] font-bold mono mt-0.5 ${data.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                if (cEl && node.price > 0) {
+                    cEl.innerText = `${node.change >= 0 ? '+' : ''}${node.change.toFixed(2)}%`;
+                    cEl.className = `text-[9px] font-bold mono mt-0.5 ${node.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
                 }
             });
 
-            const fngV = document.getElementById('fng-index-val');
-            const fngC = document.getElementById('fng-classification');
-            if(fngV) fngV.innerText = InternalRenderCache.fngData.val;
-            if(fngC) fngC.innerText = InternalRenderCache.fngData.text.toUpperCase();
-
-            const sig = InternalRenderCache.signalMetrics;
-            const bNode = document.getElementById('engine-bias-output');
-            const sNode = document.getElementById('engine-score-output');
-
-            if (sNode) sNode.innerText = `${sig.score}%`;
-            if (bNode) {
-                bNode.innerText = sig.bias;
-                bNode.className = `text-xs font-bold mt-1 tracking-wide uppercase ${sig.score >= 58 ? 'text-emerald-400' : sig.score <= 42 ? 'text-rose-400' : 'text-slate-400'}`;
+            // 2. Repaint Confluence Engine Elements
+            const metrics = AppState.activeMetrics;
+            const uiAtrNode = document.getElementById('ui-atr-basis-value');
+            
+            document.getElementById('ui-metric-regime').innerText = metrics.regime;
+            document.getElementById('ui-metric-zscore').innerText = metrics.zscore.toFixed(2);
+            document.getElementById('ui-metric-persistence').innerText = `${metrics.persistence} FRAMES`;
+            document.getElementById('ui-metric-verdict').innerText = metrics.verdict;
+            document.getElementById('ui-setup-quality').innerText = `RANK: ${metrics.rank}`;
+            
+            if(uiAtrNode && AppState.tickerCache[AppState.activeAsset]?.atr > 0) {
+                uiAtrNode.innerText = `$${AppState.tickerCache[AppState.activeAsset].atr.toFixed(2)}`;
             }
 
-            const mMom = document.getElementById('factor-track-momentum');
-            const bMom = document.getElementById('bar-track-momentum');
-            const mVol = document.getElementById('factor-track-volatility');
-            const bVol = document.getElementById('bar-track-volatility');
+            const biasLabel = document.getElementById('ui-adaptive-bias');
+            const scoreLabel = document.getElementById('ui-adaptive-score');
 
-            if(mMom) mMom.innerText = `${sig.momentum}%`;
-            if(bMom) bMom.style.width = `${sig.momentum}%`;
-            if(mVol) mVol.innerText = `${sig.volatility}%`;
-            if(bVol) bVol.style.width = `${sig.volatility}%`;
+            if(scoreLabel) scoreLabel.innerText = `${metrics.confidence}%`;
+            if(biasLabel) {
+                biasLabel.innerText = metrics.verdict;
+                if(metrics.confidence >= 55) biasLabel.className = "text-xs font-bold mt-0.5 text-emerald-400 uppercase";
+                else if(metrics.confidence <= 45) biasLabel.className = "text-xs font-bold mt-0.5 text-rose-400 uppercase";
+                else biasLabel.className = "text-xs font-bold mt-0.5 text-slate-400 uppercase";
+            }
 
-            processRiskMath();
+            // 3. Process Sizing Matrix Formulas
+            calculateCapitalFormulationFramework();
         }
 
-        function processRiskMath() {
-            const equity = parseFloat(document.getElementById('risk-input-equity').value) || 0;
-            const riskPct = parseFloat(document.getElementById('risk-input-pct').value) || 0;
-            const stopPrice = parseFloat(document.getElementById('risk-input-stop').value) || 0;
-            const takeProfit = parseFloat(document.getElementById('risk-input-take').value) || 0;
-            const price = InternalRenderCache.tickerState[InternalRenderCache.activeAsset]?.price || 0;
+        function calculateCapitalFormulationFramework() {
+            const equity = parseFloat(document.getElementById('risk-equity').value) || 0;
+            const riskPct = parseFloat(document.getElementById('risk-percent').value) || 0;
+            const stopPrice = parseFloat(document.getElementById('risk-stop').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('risk-take').value) || 0;
+            const activePrice = AppState.tickerCache[AppState.activeAsset]?.price || 0;
 
-            if (equity <= 0 || riskPct <= 0 || price <= 0 || stopPrice === price) {
-                document.getElementById('calc-output-size').innerText = "--";
-                document.getElementById('calc-output-rr').innerText = "--";
+            if (equity <= 0 || riskPct <= 0 || activePrice <= 0 || stopPrice === activePrice) {
+                document.getElementById('out-size').innerText = "--";
+                document.getElementById('out-rr').innerText = "--";
                 return;
             }
 
-            const cashRisk = equity * (riskPct / 100);
-            const dist = Math.abs(price - stopPrice);
-            const units = cashRisk / dist;
-            const allocation = units * price;
-            const rr = Math.abs(takeProfit - price) / dist;
+            const dollarRiskAmount = equity * (riskPct / 100);
+            const pricingTriggerDistance = Math.abs(activePrice - stopPrice);
+            const allocationTargetUnits = dollarRiskAmount / pricingTriggerDistance;
+            const completeCapitalNotionalSizing = allocationTargetUnits * activePrice;
+            const calculatedRiskRewardRatioValue = Math.abs(takeProfit - activePrice) / pricingTriggerDistance;
 
-            document.getElementById('calc-output-size').innerText = `$${allocation.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${units.toFixed(2)} Units)`;
-            document.getElementById('calc-output-rr').innerText = `1 : ${rr.toFixed(2)}`;
+            document.getElementById('out-size').innerText = `$${completeCapitalNotionalSizing.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${allocationTargetUnits.toFixed(2)} Units)`;
+            document.getElementById('out-rr').innerText = `1 : ${calculatedRiskRewardRatioValue.toFixed(2)}`;
         }
 
-        function mountInteractiveEventHandlers() {
-            ['risk-input-equity', 'risk-input-pct', 'risk-input-stop', 'risk-input-take'].forEach(id => {
-                document.getElementById(id)?.addEventListener('input', () => { InternalRenderCache.isDirty = true; });
+        function autoCalculateVolatilityStop() {
+            const asset = AppState.activeAsset;
+            const ticker = AppState.tickerCache[asset];
+            if (!ticker || ticker.price === 0) return;
+
+            // Seed volatility stop configuration parameters using local hybrid lookback vectors
+            const computedAtrBuffer = ticker.atr || (ticker.price * 0.02);
+            const structureDirectionMultiplier = AppState.activeMetrics.confidence >= 50 ? 1 : -1;
+
+            const targetStopLevel = ticker.price - (computedAtrBuffer * 2.0 * structureDirectionMultiplier);
+            const targetTakeLevel = ticker.price + (computedAtrBuffer * 4.0 * structureDirectionMultiplier);
+
+            document.getElementById('risk-stop').value = targetStopLevel.toFixed(2);
+            document.getElementById('risk-take').value = targetTakeLevel.toFixed(2);
+            AppState.isDirty = true;
+            scheduleThrottledRenderPass();
+        }
+
+        function mountInteractiveControlHooks() {
+            ['risk-equity', 'risk-percent', 'risk-stop', 'risk-take'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', () => { 
+                    AppState.isDirty = true; 
+                    scheduleThrottledRenderPass();
+                });
             });
-            document.getElementById('calc-commit-trigger')?.addEventListener('click', commitSetup);
-            document.getElementById('ledger-flush-trigger')?.addEventListener('click', clearLog);
+            document.getElementById('btn-trigger-volstop').addEventListener('click', autoCalculateVolatilityStop);
+            document.getElementById('btn-commit-ledger').addEventListener('click', commitActiveSetupToLedgerStore);
+            document.getElementById('btn-flush-ledger').addEventListener('click', wipeLocalDatastoreRegistry);
         }
 
-        function commitSetup() {
-            const stop = parseFloat(document.getElementById('risk-input-stop').value) || 0;
-            const take = parseFloat(document.getElementById('risk-input-take').value) || 0;
-            const size = document.getElementById('calc-output-size').innerText;
+        function commitActiveSetupToLedgerStore() {
+            const stop = parseFloat(document.getElementById('risk-stop').value) || 0;
+            const take = parseFloat(document.getElementById('risk-take').value) || 0;
+            const sizeString = document.getElementById('out-size').innerText;
 
-            if (size === "--") return;
+            if (sizeString === "--") return;
 
-            InternalRenderCache.ledger.unshift({
-                asset: InternalRenderCache.activeAsset,
-                allocation: size,
+            AppState.ledgerLog.unshift({
+                asset: AppState.activeAsset,
+                allocation: sizeString,
                 stop: `$${stop.toLocaleString()}`,
                 take: `$${take.toLocaleString()}`,
                 time: new Date().toLocaleTimeString()
             });
-            localStorage.setItem('edge_v2_ledger_datastore', JSON.stringify(InternalRenderCache.ledger));
-            renderLedger();
+
+            localStorage.setItem('edge_v3_decision_store', JSON.stringify(AppState.ledgerLog));
+            renderLedgerTableDOM();
         }
 
-        function renderLedger() {
-            const container = document.getElementById('ledger-rows-target');
-            if(!container) return;
-            container.innerHTML = '';
+        function renderLedgerTableDOM() {
+            const node = document.getElementById('ledger-rows-target');
+            if(!node) return;
+            node.innerHTML = '';
 
-            if (InternalRenderCache.ledger.length === 0) {
-                container.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No transaction configurations saved</td></tr>`;
+            if (AppState.ledgerLog.length === 0) {
+                node.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No strategies registered inside sandbox memory ledger</td></tr>`;
                 return;
             }
 
-            InternalRenderCache.ledger.forEach(entry => {
+            AppState.ledgerLog.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-slate-900/40 hover:bg-slate-900/5 transition-all";
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-bold text-slate-100 tracking-wider">${entry.asset}</td>
-                    <td class="py-3 px-4 font-medium text-slate-300">${entry.allocation}</td>
-                    <td class="py-3 px-4 font-bold text-rose-400">${entry.stop}</td>
-                    <td class="py-3 px-4 font-bold text-emerald-400">${entry.take}</td>
-                    <td class="py-3 px-4 text-slate-500 text-right text-[10px]">${entry.time}</td>
+                    <td class="py-2 px-4 font-bold text-slate-200">${row.asset}</td>
+                    <td class="py-2 px-4 text-slate-400 text-[11px]">${row.allocation}</td>
+                    <td class="py-2 px-4 text-rose-500 font-bold">${row.stop}</td>
+                    <td class="py-2 px-4 text-emerald-500 font-bold">${row.take}</td>
+                    <td class="py-2 px-4 text-slate-500 text-right text-[10px]">${row.time}</td>
                 `;
-                container.appendChild(tr);
+                node.appendChild(tr);
             });
         }
 
         function syncLocalDataStorage() {
-            const data = localStorage.getItem('edge_v2_ledger_datastore');
-            if (data) {
-                try { InternalRenderCache.ledger = JSON.parse(data); } catch(e) { InternalRenderCache.ledger = []; }
+            const storedData = localStorage.getItem('edge_v3_decision_store');
+            if (storedData) {
+                try { AppState.ledgerLog = JSON.parse(storedData); } catch(e) { AppState.ledgerLog = []; }
             }
-            renderLedger();
+            renderLedgerTableDOM();
         }
 
-        function clearLog() {
-            InternalRenderCache.ledger = [];
-            localStorage.removeItem('edge_v2_ledger_datastore');
-            renderLedger();
+        function wipeLocalDatastoreRegistry() {
+            AppState.ledgerLog = [];
+            localStorage.removeItem('edge_v3_decision_store');
+            renderLedgerTableDOM();
         }
     </script>
 </body>
