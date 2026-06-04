@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght=400;500;700&family=Plus+Jakarta+Sans:wght=400;600;700;800&display=swap');
 
     :root {
       color-scheme: dark;
@@ -165,7 +165,7 @@
         </div>
 
         <div class="lg:w-64 w-full flex flex-col gap-2 shrink-0">
-          <button id="btn-log-hero" class="touch w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-extrabold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/30">
+          <button id="btn-log-hero" class="touch min-h-12 w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-extrabold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/30 cursor-pointer">
             <i data-lucide="book-plus" class="h-4 w-4"></i><span>Log Best Setup</span>
           </button>
           <div class="box p-3">
@@ -266,13 +266,13 @@
             </div>
             <div>
               <div class="flex justify-between items-center gap-2 mb-1.5 pl-1 pr-1">
-                <label class="block text-[9px] font-extrabold text-slate-400 uppercase truncate">Stop (USDT)</label>
+                <label class="block text-[9px] font-extrabold text-slate-400 uppercase truncate">Stop (INR)</label>
                 <button id="btn-trigger-volstop" class="text-[9px] font-extrabold text-indigo-400 hover:text-indigo-300 uppercase bg-transparent border-none whitespace-nowrap cursor-pointer transition-colors">Auto Vol-Stop</button>
               </div>
               <input type="number" id="risk-stop" value="0" class="px-3 py-2 text-sm font-bold mono min-h-10 text-rose-300 transition-colors">
             </div>
             <div>
-              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Target (USDT)</label>
+              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Target (INR)</label>
               <input type="number" id="risk-take" value="0" class="px-3 py-2 text-sm font-bold mono min-h-10 text-emerald-300 transition-colors">
             </div>
           </div>
@@ -325,7 +325,7 @@
                           <th class="py-3 px-4">Asset</th>
                           <th class="py-3 px-4">Grade</th>
                           <th class="py-3 px-4">Pos Size (INR)</th>
-                          <th class="py-3 px-4">Target (USDT)</th>
+                          <th class="py-3 px-4">Target (INR)</th>
                           <th class="py-3 px-4">Notes</th>
                           <th class="py-3 px-4 text-right">Time</th>
                       </tr>
@@ -363,7 +363,7 @@
         renderLock: false,
         fngValue: 50,
         fngText: 'NEUTRAL',
-        fxRate: 95.74, // Fallback for 2026 based on projections
+        fxRate: 83.50, // Reactive fallback value dynamically syncs over REST API
         loopCounter: 0
     };
 
@@ -396,7 +396,6 @@
         cacheDOM();
         initializeStructures();
         
-        // Initial setup
         setTimeout(() => { mountChartCanvas(AppState.activeAsset); }, 400);
         seedHistoricalKLines();
         SocketTransportManager.initializeConnection();
@@ -404,11 +403,10 @@
         syncLocalLedger();
         mountHooks();
         
-        // Core render loop (Hardware sync)
         setInterval(() => {
             AppState.loopCounter++;
             if (AppState.loopCounter % 2 === 0 && DOM.headerFeedAge) {
-                DOM.headerFeedAge.innerText = `${Math.floor(Math.random() * 5 + 28)} HZ`; // Visual heartbeat
+                DOM.headerFeedAge.innerText = `${Math.floor(Math.random() * 5 + 28)} HZ`;
             }
             if (AppState.isDirty && !AppState.renderLock) executeRenderPipeline();
         }, 250);
@@ -586,7 +584,6 @@
     }
 
     function pullExternalMetrics() {
-        // Fetch F&G
         fetchWithTimeout(CONFIG.fngEndpoint).then(r=>r.json()).then(d=>{
             if(d?.data?.[0]) {
                 AppState.fngValue = parseInt(d.data[0].value);
@@ -595,7 +592,6 @@
             }
         }).catch(()=>{});
 
-        // Fetch USD/INR
         fetchWithTimeout(CONFIG.fxEndpoint).then(r=>r.json()).then(d=>{
             if(d?.rates?.INR) {
                 AppState.fxRate = parseFloat(d.rates.INR);
@@ -749,7 +745,7 @@
             }
         });
 
-        // Hero Update (Top Asset)
+        // Hero Update (Top Asset converted fully to INR)
         const best = AppState.sortedAssets[0];
         const tb = AppState.tickerCache[best];
         if(tb && tb.price > 0) {
@@ -762,19 +758,26 @@
             
             const mean = tb.atr14Mean || (tb.price * 0.02);
             const m = dir === 'LONG' ? 1 : -1;
-            DOM.heroEntry.innerText = `$${tb.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
-            DOM.heroStop.innerText = `$${(tb.price - (mean*2*m)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
-            DOM.heroTp1.innerText = `$${(tb.price + (mean*2*m)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
-            DOM.heroTp2.innerText = `$${(tb.price + (mean*4.5*m)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
-            DOM.heroRr.innerText = "1 : 2.25"; // Math bounds based on 2x/4.5x setup
+            
+            // Explicit INR calculation updates for the display card
+            const entryInr = tb.price * AppState.fxRate;
+            const stopInr = (tb.price - (mean * 2 * m)) * AppState.fxRate;
+            const tp1Inr = (tb.price + (mean * 2 * m)) * AppState.fxRate;
+            const tp2Inr = (tb.price + (mean * 4.5 * m)) * AppState.fxRate;
+
+            DOM.heroEntry.innerText = `₹${entryInr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            DOM.heroStop.innerText = `₹${stopInr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            DOM.heroTp1.innerText = `₹${tp1Inr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            DOM.heroTp2.innerText = `₹${tp2Inr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            DOM.heroRr.innerText = "1 : 2.25"; 
 
             const eq = parseFloat(DOM.riskEquity.value) || 0;
             const rp = parseFloat(DOM.riskPercent.value) || 0;
             if(eq > 0 && rp > 0) {
                 const rInr = eq * (rp/100);
                 const rUsdt = rInr / AppState.fxRate;
-                const units = rUsdt / (mean*2);
-                DOM.heroSize.innerText = `₹${((units*tb.price)*AppState.fxRate).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
+                const units = rUsdt / (mean * 2);
+                DOM.heroSize.innerText = `₹${((units * tb.price) * AppState.fxRate).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
             }
 
             DOM.scoreTrend.innerText = tb.scores.trend.toFixed(0);
@@ -794,7 +797,7 @@
             
             DOM.uiMetricRegime.innerText = ta.metrics.regime;
             DOM.uiMetricZScore.innerText = ta.metrics.zscore.toFixed(3);
-            DOM.uiAtrBasisValue.innerText = `$${ta.atr14Mean.toLocaleString(undefined, {maximumFractionDigits:4})}`;
+            DOM.uiAtrBasisValue.innerText = `₹${(ta.atr14Mean * AppState.fxRate).toLocaleString('en-IN', {maximumFractionDigits:2})}`;
             DOM.uiBookSpread.innerText = ta.metrics.spread;
             DOM.uiConfidence.innerText = `${ta.scores.total}%`;
             DOM.uiTrendState.innerText = ta.scores.trend > 60 ? 'STRONG ALIGNMENT' : 'WEAK / DRIFTING';
@@ -818,27 +821,27 @@
             `).join('');
             lucide.createIcons();
 
-            // Risk Engine Live Math
+            // Risk Engine Localized INR Math processing
             const eq = parseFloat(DOM.riskEquity.value) || 0;
             const rp = parseFloat(DOM.riskPercent.value) || 0;
             const stop = parseFloat(DOM.riskStop.value) || 0;
             const tgt = parseFloat(DOM.riskTake.value) || 0;
             const mean = ta.atr14Mean || (ta.price * 0.02);
 
-            // Vol stop preview
-            const vs = ta.price - (mean * 2 * (ta.change>=0?1:-1));
-            DOM.outVolstop.innerText = `$${vs.toLocaleString(undefined, {maximumFractionDigits:4})}`;
+            // Localized volatility stop metric
+            const vsInr = (ta.price - (mean * 2 * (ta.change >= 0 ? 1 : -1))) * AppState.fxRate;
+            DOM.outVolstop.innerText = `₹${vsInr.toLocaleString('en-IN', {maximumFractionDigits:2})}`;
 
-            if(eq > 0 && rp > 0 && stop > 0 && stop !== ta.price) {
+            const currentPriceInr = ta.price * AppState.fxRate;
+            if(eq > 0 && rp > 0 && stop > 0 && stop !== currentPriceInr) {
                 const rInr = eq * (rp/100);
-                const rUsdt = rInr / AppState.fxRate;
-                const dist = Math.abs(ta.price - stop);
-                const units = rUsdt / dist;
+                const distInr = Math.abs(currentPriceInr - stop);
+                const units = rInr / distInr;
                 
-                const posInr = (units * ta.price) * AppState.fxRate;
-                const rr = Math.abs(tgt - ta.price) / dist;
+                const posInr = units * currentPriceInr;
+                const rr = Math.abs(tgt - currentPriceInr) / distInr;
                 
-                DOM.outSize.innerText = `₹${posInr.toLocaleString('en-IN', {maximumFractionDigits:0})} (${units.toFixed(4)})`;
+                DOM.outSize.innerText = `₹${posInr.toLocaleString('en-IN', {maximumFractionDigits:0})} (${units.toFixed(4)} Units)`;
                 DOM.outRr.innerText = `1 : ${rr.toFixed(2)}`;
             } else {
                 DOM.outSize.innerText = "--"; DOM.outRr.innerText = "--";
@@ -859,8 +862,10 @@
             if(!ta) return;
             const mean = ta.atr14Mean || (ta.price * 0.02);
             const m = ta.change >= 0 ? 1 : -1;
-            DOM.riskStop.value = (ta.price - (mean*2*m)).toFixed(4);
-            DOM.riskTake.value = (ta.price + (mean*4.5*m)).toFixed(4);
+            
+            // Populates inputs strictly with INR calculations
+            DOM.riskStop.value = (((ta.price - (mean * 2 * m))) * AppState.fxRate).toFixed(2);
+            DOM.riskTake.value = (((ta.price + (mean * 4.5 * m))) * AppState.fxRate).toFixed(2);
             AppState.isDirty = true;
         });
 
@@ -868,13 +873,18 @@
             const best = AppState.sortedAssets[0];
             const t = AppState.tickerCache[best];
             if(!t || t.price === 0) return;
-            logTrade(best, "A", `₹${DOM.heroSize.innerText.replace('₹','').split(' ')[0]}`, DOM.heroTp1.innerText, `Quant Auto-Log (Score: ${t.scores.total})`);
+            
+            const mean = t.atr14Mean || (t.price * 0.02);
+            const m = t.change >= 0 ? 1 : -1;
+            const tp1Inr = (t.price + (mean * 2 * m)) * AppState.fxRate;
+
+            logTrade(best, "A", `₹${DOM.heroSize.innerText.replace('₹','').split(' ')[0]}`, `₹${tp1Inr.toLocaleString('en-IN',{maximumFractionDigits:2})}`, `Quant Auto-Log (Score: ${t.scores.total})`);
         });
 
         document.getElementById('btn-commit-ledger').addEventListener('click', () => {
             const size = DOM.outSize.innerText === "--" ? "0" : DOM.outSize.innerText.split(' ')[0];
             const tgt = parseFloat(DOM.riskTake.value) || 0;
-            logTrade(AppState.activeAsset, DOM.journalGrade.value, size, `$${tgt.toLocaleString()}`, DOM.journalNotes.value.trim() || "-");
+            logTrade(AppState.activeAsset, DOM.journalGrade.value, size, `₹${tgt.toLocaleString('en-IN')}`, DOM.journalNotes.value.trim() || "-");
             DOM.journalNotes.value = "";
         });
 
