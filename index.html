@@ -1,748 +1,938 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EDGE // Quant Execution Cockpit</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght=400;500;700&family=Plus+Jakarta+Sans:wght=400;600;700&display=swap');
-        
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #020305;
-            letter-spacing: -0.01em;
-        }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        .panel-surface {
-            background: rgba(7, 9, 14, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.02);
-        }
-        
-        .active-glow {
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.06);
-            border-color: rgba(99, 102, 241, 0.25) !important;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>EDGE / V4</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
-        .delta-up { color: #10b981 !important; }
-        .delta-down { color: #ef4444 !important; }
+    :root {
+      color-scheme: dark;
+      --bg: #020305;
+      --panel: rgba(7, 9, 14, 0.94);
+      --line: rgba(148, 163, 184, 0.12);
+      --line-hot: rgba(99, 102, 241, 0.34);
+      --muted: #64748b;
+      --green: #10b981;
+      --red: #ef4444;
+    }
 
-        html, body { overflow-x: hidden; height: 100%; }
-        input:focus { border-color: #6366f1 !important; outline: none; }
-        .scroller-clean::-webkit-scrollbar { display: none; }
-    </style>
+    * { box-sizing: border-box; min-width: 0; }
+    html, body { min-height: 100%; overflow-x: hidden; }
+    body {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      background:
+        radial-gradient(circle at 20% -10%, rgba(99, 102, 241, 0.13), transparent 28rem),
+        radial-gradient(circle at 92% 2%, rgba(16, 185, 129, 0.07), transparent 24rem),
+        var(--bg);
+      color: #e2e8f0;
+      letter-spacing: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mono { font-family: "JetBrains Mono", monospace; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+    .panel-hot {
+      border-color: var(--line-hot);
+      box-shadow: 0 0 34px rgba(99, 102, 241, 0.1), 0 18px 48px rgba(0, 0, 0, 0.26);
+    }
+    .box {
+      background: rgba(2, 6, 23, 0.58);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .label {
+      font-size: 10px;
+      line-height: 1.15;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .value {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.25;
+    }
+    .touch { min-height: 52px; touch-action: manipulation; }
+    .delta-up { color: var(--green) !important; }
+    .delta-down { color: var(--red) !important; }
+    .scroller-clean { scrollbar-width: none; }
+    .scroller-clean::-webkit-scrollbar { display: none; }
+    .safe-top { padding-top: max(0.5rem, env(safe-area-inset-top)); }
+    .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    
+    input, textarea, select {
+      width: 100%;
+      min-width: 0;
+      background: rgba(2, 6, 23, 0.74);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 7px;
+      color: #fff;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(99, 102, 241, 0.72);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+    
+    .chart-wrap { height: 340px; }
+    @media (min-width: 768px) { .chart-wrap { height: 420px; } }
+    @media (min-width: 1024px) { .chart-wrap { height: 500px; } }
+    
+    .rank-row { transition: all 0.2s ease; border-left: 2px solid transparent; }
+    .rank-row:active { background: rgba(255,255,255,0.05); }
+    .rank-active { background: rgba(99, 102, 241, 0.08); border-left-color: #6366f1; }
+  </style>
 </head>
-<body class="text-slate-200 flex flex-col justify-between antialiased select-none">
-
-    <header class="w-full border-b border-slate-900 bg-[#030407]/95 sticky top-0 z-50 backdrop-blur-md px-4 py-2 flex items-center justify-between safe-top">
-        <div class="flex items-center space-x-2">
-            <div class="h-5 w-5 rounded bg-indigo-600 flex items-center justify-center shadow-md">
-                <i data-lucide="activity" class="h-3 w-3 text-white"></i>
-            </div>
-            <h1 class="text-xs font-bold tracking-wider text-slate-300 flex items-center mono">
-                EDGE<span class="text-indigo-500 font-normal mx-1">/</span>COCKPIT-V3
-            </h1>
+<body class="antialiased select-none">
+  <!-- HEADER -->
+  <header class="w-full border-b border-slate-900 bg-[#030407]/95 sticky top-0 z-50 backdrop-blur-md px-3 md:px-5 py-2 safe-top">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="h-7 w-7 rounded bg-indigo-600 flex items-center justify-center shadow-md shrink-0">
+          <i data-lucide="activity" class="h-4 w-4 text-white"></i>
         </div>
-        <div class="flex items-center space-x-2">
-            <div class="text-[9px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded mono" id="telemetry-render-state">
-                IDLE
-            </div>
-            <div class="flex items-center space-x-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded-full">
-                <span class="h-1 w-1 rounded-full bg-indigo-400"></span>
-                <span class="mono" id="telemetry-loop-rate">-- HZ</span>
-            </div>
+        <div class="min-w-0">
+          <h1 class="text-xs font-extrabold tracking-wider text-slate-200 mono whitespace-nowrap">EDGE<span class="text-indigo-400 mx-1">/</span>V4</h1>
+          <p class="text-[10px] text-slate-500 mono truncate" id="header-active-asset">AWAITING SIGNAL</p>
         </div>
-    </header>
+      </div>
+      <div class="flex items-center justify-end gap-2 min-w-0">
+        <div class="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-slate-300 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-full">
+          <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" id="connection-dot"></span>
+          <span class="mono truncate" id="connection-status">CONNECTING</span>
+        </div>
+        <div class="text-[10px] font-bold text-slate-300 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-full mono whitespace-nowrap">
+          <span id="header-feed-age">0 HZ</span>
+        </div>
+        <div class="text-[10px] font-bold text-slate-300 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-full mono whitespace-nowrap">
+          F&G <span class="text-indigo-300" id="header-fng">--</span>
+        </div>
+      </div>
+    </div>
+  </header>
 
-    <main class="flex-1 w-full max-w-7xl mx-auto px-2 pt-2 grid grid-cols-1 lg:grid-cols-12 gap-2 mb-4">
+  <main class="w-full max-w-7xl mx-auto px-3 md:px-5 py-3 md:py-5 space-y-3 md:space-y-4 safe-bottom">
+    
+    <!-- HERO: BEST TRADE TODAY -->
+    <section class="panel panel-hot p-4 md:p-5 relative">
+      <div class="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none">
+        <i data-lucide="target" class="w-32 h-32 text-indigo-500"></i>
+      </div>
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 relative z-10">
+        <div class="flex-1 min-w-0">
+          <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-start mb-3">
+            <div class="min-w-0">
+              <p class="label text-indigo-400">Best Trade Today</p>
+              <h2 class="text-[clamp(2rem,11vw,4.5rem)] font-extrabold tracking-normal mt-2 mono leading-none truncate text-white" id="hero-asset">--</h2>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="label">Trade Score</p>
+              <div class="text-[clamp(2.4rem,12vw,5rem)] font-extrabold mono text-indigo-300 leading-none" id="hero-score">--</div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-extrabold mono" id="hero-direction">--</span>
+            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold mono value" id="hero-regime">COMPUTING</span>
+            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold mono whitespace-nowrap text-indigo-300" id="hero-hold">1H MATRIX</span>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div class="box p-3"><p class="label">Entry Zone</p><p class="text-sm md:text-base font-bold mono mt-2 value text-white" id="hero-entry">--</p></div>
+            <div class="box p-3"><p class="label">Stop Loss</p><p class="text-sm md:text-base font-bold mono text-rose-400 mt-2 value" id="hero-stop">--</p></div>
+            <div class="box p-3"><p class="label">Take Profit 1</p><p class="text-sm md:text-base font-bold mono text-emerald-400 mt-2 value" id="hero-tp1">--</p></div>
+            <div class="box p-3"><p class="label">Take Profit 2</p><p class="text-sm md:text-base font-bold mono text-emerald-500 mt-2 value" id="hero-tp2">--</p></div>
+            <div class="box p-3"><p class="label">Risk Reward</p><p class="text-sm md:text-base font-bold mono mt-2 value text-indigo-200" id="hero-rr">--</p></div>
+            <div class="box p-3"><p class="label">Suggested Size</p><p class="text-sm md:text-base font-bold mono mt-2 value text-slate-200" id="hero-size">--</p></div>
+          </div>
+        </div>
+
+        <div class="lg:w-64 w-full flex flex-col gap-2 shrink-0">
+          <button id="btn-log-hero" class="touch w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-extrabold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/30">
+            <i data-lucide="book-plus" class="h-4 w-4"></i><span>Log Best Setup</span>
+          </button>
+          <div class="box p-3">
+            <p class="label text-indigo-300">Live Components</p>
+            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 mt-3 text-[11px] mono">
+              <span class="text-slate-400 truncate">Trend</span><span class="text-right font-bold text-white" id="score-trend">--</span>
+              <span class="text-slate-400 truncate">Momentum</span><span class="text-right font-bold text-white" id="score-momentum">--</span>
+              <span class="text-slate-400 truncate">Volatility</span><span class="text-right font-bold text-white" id="score-volatility">--</span>
+              <span class="text-slate-400 truncate">Sentiment</span><span class="text-right font-bold text-white" id="score-sentiment">--</span>
+              <span class="text-slate-400 truncate">Risk/Reward</span><span class="text-right font-bold text-white" id="score-riskreward">--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
+      
+      <!-- LEFT COLUMN -->
+      <div class="lg:col-span-4 space-y-3 md:space-y-4 flex flex-col">
         
-        <section class="lg:col-span-4 space-y-2 flex flex-col">
-            
-            <div class="panel-surface rounded p-3 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 rounded bg-slate-950 border border-slate-900">
-                        <i data-lucide="globe" class="h-3.5 w-3.5 text-slate-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Macro Risk Sentiment</p>
-                        <h3 class="text-xs font-bold text-slate-200 mt-0.5 uppercase" id="ui-fng-text">LOADING...</h3>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-sm font-bold mono text-slate-400" id="ui-fng-val">--</span>
-                </div>
-            </div>
-
-            <div class="panel-surface rounded flex flex-col flex-1 min-h-[200px]">
-                <div class="px-3 py-1.5 border-b border-slate-900 bg-slate-950/40 flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="cpu" class="h-3 w-3 mr-1.5 text-indigo-500"></i> Operational Matrix
-                    </span>
-                    <span class="text-[9px] mono text-slate-500">OKX SWAP VENUE</span>
-                </div>
-                <div class="divide-y divide-slate-900/60 overflow-y-auto flex-1 scroller-clean" id="watchlist-ui-root">
-                    </div>
-            </div>
-
-            <div class="panel-surface rounded p-3 space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="layers" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Structural Metrics
-                    </span>
-                    <span class="text-[9px] mono text-indigo-400 bg-indigo-500/5 px-1.5 py-0.5 rounded border border-indigo-500/10" id="ui-setup-rank">RANK --</span>
-                </div>
-
-                <div class="bg-slate-950/50 border border-slate-900 rounded overflow-hidden text-[11px] mono">
-                    <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">MARKET REGIME</span>
-                        <span class="text-right font-bold text-slate-200 uppercase" id="ui-metric-regime">COMPUTING...</span>
-                    </div>
-                    <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">VOLATILITY Z-SCORE</span>
-                        <span class="text-right font-bold text-slate-300" id="ui-metric-zscore">--</span>
-                    </div>
-                    <div class="grid grid-cols-2 p-2 border-b border-slate-900/60">
-                        <span class="text-slate-500">REGIME TIME DURATION</span>
-                        <span class="text-right font-bold text-slate-300" id="ui-metric-persistence">--</span>
-                    </div>
-                    <div class="grid grid-cols-2 p-2">
-                        <span class="text-slate-500">TACTICAL VERDICT</span>
-                        <span class="text-right font-bold text-slate-300 uppercase" id="ui-metric-verdict">--</span>
-                    </div>
-                </div>
-
-                <div class="bg-indigo-600/5 border border-indigo-500/10 rounded p-2 text-center">
-                    <p class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Statistical System Bias</p>
-                    <h2 class="text-xs font-bold text-slate-200 mt-0.5 uppercase tracking-wide" id="ui-final-verdict">INITIALIZING PIPELINE...</h2>
-                </div>
-            </div>
+        <!-- RANKINGS -->
+        <section class="panel flex flex-col max-h-[350px]">
+          <div class="px-3 py-2.5 border-b border-slate-900 flex items-center justify-between gap-2 shrink-0 bg-slate-950/50">
+            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center min-w-0">
+              <i data-lucide="list-ordered" class="h-3.5 w-3.5 mr-1.5 text-indigo-400 shrink-0"></i><span class="truncate">Opportunity Rankings</span>
+            </h2>
+            <span class="text-[9px] mono text-slate-500 whitespace-nowrap bg-slate-900 px-1.5 py-0.5 rounded">OKX SWAP</span>
+          </div>
+          <div id="rankings-root" class="divide-y divide-slate-900/60 overflow-y-auto scroller-clean flex-1 pb-1">
+            <!-- Populated by JS -->
+          </div>
         </section>
 
-        <section class="lg:col-span-8 space-y-2 flex flex-col">
-            
-            <div class="panel-surface rounded overflow-hidden h-[240px] md:h-[340px] relative w-full shadow-lg">
-                <div id="tradingview-canvas-target" class="w-full h-full"></div>
-            </div>
-
-            <div class="panel-surface rounded p-3">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center space-x-2">
-                        <i data-lucide="shield-check" class="h-3.5 w-3.5 text-indigo-400"></i>
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Mathematical Risk Sizing Engine</h2>
-                    </div>
-                    <div class="flex items-center space-x-1 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-[9px] font-bold mono text-slate-400">
-                        <span>TRUE HISTORICAL ATR:</span>
-                        <span class="text-indigo-400 uppercase font-bold" id="ui-atr-basis-value">LOADING...</span>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Portfolio Equity ($)</label>
-                        <input type="number" id="risk-equity" value="10000" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Max Capital Risk (%)</label>
-                        <input type="number" id="risk-percent" value="1.0" step="0.25" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="block text-[9px] font-bold text-slate-500 uppercase">Invalidation Stop ($)</label>
-                            <button id="btn-trigger-volstop" class="text-[8px] font-bold text-indigo-400 hover:underline cursor-pointer uppercase bg-transparent border-none">Set Vol-Stop</button>
-                        </div>
-                        <input type="number" id="risk-stop" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Profit Objective ($)</label>
-                        <input type="number" id="risk-take" value="0" class="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 text-xs text-white font-semibold mono">
-                    </div>
-                </div>
-
-                <div class="mt-3 pt-3 border-t border-slate-900/60 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
-                    <div class="grid grid-cols-2 gap-2 flex-1">
-                        <div class="bg-indigo-600/5 border border-indigo-500/10 rounded px-2.5 py-1">
-                            <span class="text-[8px] uppercase text-indigo-400 font-bold block tracking-wider">Position Size Allocation</span>
-                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-size">--</span>
-                        </div>
-                        <div class="bg-emerald-600/5 border border-emerald-500/10 rounded px-2.5 py-1">
-                            <span class="text-[8px] uppercase text-emerald-400 font-bold block tracking-wider">Risk Reward Premium</span>
-                            <span class="text-xs font-bold text-white mono mt-0.5 block" id="out-rr">--</span>
-                        </div>
-                    </div>
-                    <button id="btn-commit-ledger" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-3 rounded transition-all flex items-center justify-center cursor-pointer space-x-1">
-                        <i data-lucide="save" class="h-3.5 w-3.5"></i>
-                        <span>Log Setup</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="panel-surface rounded flex flex-col overflow-hidden flex-1">
-                <div class="px-3 py-1.5 border-b border-slate-900 bg-slate-950/30 flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i data-lucide="database" class="h-3.5 w-3.5 mr-1.5 text-indigo-500"></i> Active Strategy Ledger
-                    </span>
-                    <button id="btn-flush-ledger" class="text-[9px] text-rose-400 font-bold uppercase hover:underline tracking-wider bg-transparent cursor-pointer border-none">Purge Store</button>
-                </div>
-                <div class="overflow-x-auto w-full max-h-[100px] scroller-clean">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-900 bg-slate-950/20 text-[9px] uppercase tracking-wider text-slate-500 font-bold">
-                                <th class="py-1 px-4">Asset</th>
-                                <th class="py-1 px-4">Allocation Metric</th>
-                                <th class="py-1 px-4">Stop Level</th>
-                                <th class="py-1 px-4">Profit Target</th>
-                                <th class="py-1 px-4 text-right">Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ledger-rows-target" class="divide-y divide-slate-900 text-xs text-slate-300 mono">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
+        <!-- TRADE THESIS -->
+        <section class="panel p-3">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center min-w-0">
+              <i data-lucide="check-circle-2" class="h-3.5 w-3.5 mr-1.5 text-indigo-400 shrink-0"></i><span class="truncate">Why This Trade</span>
+            </h2>
+            <span class="text-[9px] font-bold mono text-indigo-300 truncate px-2 py-0.5 bg-indigo-500/10 rounded" id="thesis-asset">--</span>
+          </div>
+          <div id="trade-thesis-root" class="space-y-2.5">
+            <!-- Populated by JS -->
+          </div>
         </section>
-    </main>
 
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-        const CONFIG = {
-            assets: ['BTC-USDT', 'ETH-USDT', 'SOL-USDT', 'AVAX-USDT'], 
-            wsEndpoint: 'wss://wspap.okx.com:443/ws/v5/public',
-            restBase: 'https://www.okx.com',
-            fngEndpoint: 'https://api.alternative.me/fng/?limit=1'
-        };
+        <!-- MARKET ANALYSIS -->
+        <section class="panel p-3 flex-1">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center min-w-0">
+              <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 mr-1.5 text-indigo-400 shrink-0"></i><span class="truncate">Market Analysis</span>
+            </h2>
+            <span class="text-[9px] font-bold mono text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 whitespace-nowrap" id="ui-setup-rank">SCORE --</span>
+          </div>
+          <div class="box text-[11px] mono bg-transparent border-none">
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Market Regime</span><span class="text-right font-bold uppercase text-white truncate" id="ui-metric-regime">COMPUTING</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Volatility Z-Score</span><span class="text-right font-bold text-white" id="ui-metric-zscore">--</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Fear & Greed</span><span class="text-right font-bold text-white" id="ui-fng-line">--</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">USD/INR</span><span class="text-right font-bold text-indigo-300" id="ui-fx-rate">SYNCING</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Feed Status</span><span class="text-right font-bold text-emerald-400" id="ui-feed-status">CONNECTING</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Order Book Spread</span><span class="text-right font-bold text-white" id="ui-book-spread">--</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Confidence</span><span class="text-right font-bold text-white" id="ui-confidence">--</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Trend State</span><span class="text-right font-bold uppercase text-white truncate" id="ui-trend-state">--</span></div>
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 pt-3 mt-1"><span class="text-indigo-400 font-extrabold uppercase tracking-wider">Tactical Verdict</span><span class="text-right font-extrabold uppercase text-indigo-400 truncate" id="ui-metric-verdict">--</span></div>
+          </div>
+        </section>
 
-        let AppState = {
-            activeAsset: 'BTC-USDT',
-            tickerCache: {},
-            activeMetrics: { regime: 'STABLE DRIFT', zscore: 0.0, persistenceStart: Date.now(), verdict: 'OBSERVE', confidence: 50, rank: 'C' },
-            ledgerLog: [],
-            isDirty: false,
-            renderLock: false,
-            fngValue: 50,
-            fngText: 'NEUTRAL'
-        };
+      </div>
 
-        let DOM = {
-            telemetryRenderState: null,
-            telemetryLoopRate: null,
-            uiFngText: null,
-            uiFngVal: null,
-            uiMetricRegime: null,
-            uiMetricZScore: null,
-            uiMetricPersistence: null,
-            uiMetricVerdict: null,
-            uiSetupRank: null,
-            uiFinalVerdict: null,
-            uiAtrBasisValue: null,
-            outSize: null,
-            outRr: null,
-            riskEquity: null,
-            riskPercent: null,
-            riskStop: null,
-            riskTake: null,
-            ledgerTarget: null,
-            priceNodes: {},
-            changeNodes: {}
-        };
+      <!-- RIGHT COLUMN -->
+      <div class="lg:col-span-8 space-y-3 md:space-y-4 flex flex-col">
+        
+        <!-- CHART -->
+        <section class="panel chart-wrap relative w-full bg-[#0a0e17]">
+          <div id="tradingview-canvas-target" class="w-full h-full"></div>
+        </section>
 
-        let ActiveChartWidget = null;
+        <!-- RISK ENGINE -->
+        <section class="panel p-3 md:p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center">
+              <i data-lucide="shield-check" class="h-3.5 w-3.5 mr-1.5 text-indigo-400"></i>Risk Engine & Sizing
+            </h2>
+            <div class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 text-[9px] font-bold mono text-slate-400 w-fit max-w-full shadow-inner">
+              <span>ATR (14)</span><span class="text-indigo-300 uppercase font-extrabold value" id="ui-atr-basis-value">LOADING</span>
+            </div>
+          </div>
 
-        function fetchWithTimeout(url, options = {}, timeout = 5000) {
-            return Promise.race([
-                fetch(url, options),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Network request timed out')), timeout))
-            ]);
-        }
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Portfolio Equity (INR)</label>
+              <input type="number" id="risk-equity" value="830000" class="px-3 py-2 text-sm font-bold mono min-h-10 transition-colors">
+            </div>
+            <div>
+              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Capital Risk %</label>
+              <input type="number" id="risk-percent" value="1.0" step="0.25" class="px-3 py-2 text-sm font-bold mono min-h-10 transition-colors">
+            </div>
+            <div>
+              <div class="flex justify-between items-center gap-2 mb-1.5 pl-1 pr-1">
+                <label class="block text-[9px] font-extrabold text-slate-400 uppercase truncate">Stop (USDT)</label>
+                <button id="btn-trigger-volstop" class="text-[9px] font-extrabold text-indigo-400 hover:text-indigo-300 uppercase bg-transparent border-none whitespace-nowrap cursor-pointer transition-colors">Auto Vol-Stop</button>
+              </div>
+              <input type="number" id="risk-stop" value="0" class="px-3 py-2 text-sm font-bold mono min-h-10 text-rose-300 transition-colors">
+            </div>
+            <div>
+              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Target (USDT)</label>
+              <input type="number" id="risk-take" value="0" class="px-3 py-2 text-sm font-bold mono min-h-10 text-emerald-300 transition-colors">
+            </div>
+          </div>
 
-        document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
-            cacheStaticDOMReferences();
-            bootstrapWatchlistStructure();
-            
-            setTimeout(() => {
-                mountChartCanvasContainer(AppState.activeAsset);
-            }, 400);
+          <div class="mt-4 pt-3 border-t border-slate-900/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="box px-4 py-3 bg-indigo-950/20 border-indigo-900/30">
+              <span class="text-[9px] uppercase text-indigo-400 font-extrabold block tracking-widest">Position Size (INR)</span>
+              <span class="text-sm md:text-base font-extrabold text-white mono mt-1.5 block value" id="out-size">--</span>
+            </div>
+            <div class="box px-4 py-3 bg-slate-900/50">
+              <span class="text-[9px] uppercase text-emerald-400 font-extrabold block tracking-widest">Risk / Reward</span>
+              <span class="text-sm md:text-base font-bold text-white mono mt-1.5 block value" id="out-rr">--</span>
+            </div>
+            <div class="box px-4 py-3 bg-slate-900/50">
+              <span class="text-[9px] uppercase text-slate-400 font-extrabold block tracking-widest">Calculated Vol-Stop</span>
+              <span class="text-sm md:text-base font-bold text-white mono mt-1.5 block value" id="out-volstop">--</span>
+            </div>
+          </div>
+        </section>
 
-            seedHistoricalKLines();
-            SocketTransportManager.initializeConnection();
-            pullFearGreedMetrics();
-            syncLocalDataStorage();
-            mountInteractiveControlHooks();
-            executeHardwareSyncTimer();
-        });
+        <!-- TRADE JOURNAL -->
+        <section class="panel p-3 md:p-4 flex-1 flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center shrink-0">
+              <i data-lucide="book-open" class="h-3.5 w-3.5 mr-1.5 text-indigo-400"></i>Trade Journal
+            </h2>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <input type="text" id="journal-notes" placeholder="Setup thesis/notes..." class="px-3 py-2 text-xs mono min-h-10 w-full sm:w-56 bg-slate-950">
+              <div class="flex items-center gap-2">
+                <select id="journal-grade" class="px-3 py-2 text-xs mono font-bold min-h-10 bg-slate-950 flex-1 sm:w-auto text-slate-300 cursor-pointer">
+                    <option value="OPEN" class="text-indigo-400">OPEN</option>
+                    <option value="A" class="text-emerald-400">GRADE A</option>
+                    <option value="B" class="text-emerald-300">GRADE B</option>
+                    <option value="C" class="text-amber-400">GRADE C</option>
+                    <option value="WIN" class="text-green-500">WIN</option>
+                    <option value="LOSS" class="text-rose-500">LOSS</option>
+                    <option value="F" class="text-rose-600">GRADE F</option>
+                </select>
+                <button id="btn-commit-ledger" class="touch min-h-10 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-xs px-5 rounded-lg transition-all whitespace-nowrap shadow-md cursor-pointer">
+                    Log Active
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto w-full flex-1 min-h-[150px] scroller-clean border border-slate-900 rounded-lg bg-slate-950/30">
+              <table class="w-full text-left border-collapse min-w-[650px]">
+                  <thead class="sticky top-0 bg-slate-950 z-10 shadow-sm">
+                      <tr class="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold border-b border-slate-800">
+                          <th class="py-3 px-4">Asset</th>
+                          <th class="py-3 px-4">Grade</th>
+                          <th class="py-3 px-4">Pos Size (INR)</th>
+                          <th class="py-3 px-4">Target (USDT)</th>
+                          <th class="py-3 px-4">Notes</th>
+                          <th class="py-3 px-4 text-right">Time</th>
+                      </tr>
+                  </thead>
+                  <tbody id="ledger-rows-target" class="divide-y divide-slate-800/40 text-[11px] text-slate-300 mono bg-transparent">
+                      <!-- Populated via JS -->
+                  </tbody>
+              </table>
+          </div>
+          <div class="mt-3 text-right">
+              <button id="btn-flush-ledger" class="text-[9px] text-slate-600 font-extrabold uppercase tracking-widest hover:text-rose-400 transition-colors bg-transparent border-none cursor-pointer px-2 py-1">Purge Journal</button>
+          </div>
+        </section>
 
-        function cacheStaticDOMReferences() {
-            DOM.telemetryRenderState = document.getElementById('telemetry-render-state');
-            DOM.telemetryLoopRate = document.getElementById('telemetry-loop-rate');
-            DOM.uiFngText = document.getElementById('ui-fng-text');
-            DOM.uiFngVal = document.getElementById('ui-fng-val');
-            DOM.uiMetricRegime = document.getElementById('ui-metric-regime');
-            DOM.uiMetricZScore = document.getElementById('ui-metric-zscore');
-            DOM.uiMetricPersistence = document.getElementById('ui-metric-persistence');
-            DOM.uiMetricVerdict = document.getElementById('ui-metric-verdict');
-            DOM.uiSetupRank = document.getElementById('ui-setup-rank');
-            DOM.uiFinalVerdict = document.getElementById('ui-final-verdict');
-            DOM.uiAtrBasisValue = document.getElementById('ui-atr-basis-value');
-            DOM.outSize = document.getElementById('out-size');
-            DOM.outRr = document.getElementById('out-rr');
-            DOM.riskEquity = document.getElementById('risk-equity');
-            DOM.riskPercent = document.getElementById('risk-percent');
-            DOM.riskStop = document.getElementById('risk-stop');
-            DOM.riskTake = document.getElementById('risk-take');
-            DOM.ledgerTarget = document.getElementById('ledger-rows-target');
-        }
+      </div>
+    </section>
+  </main>
 
-        function bootstrapWatchlistStructure() {
-            const node = document.getElementById('watchlist-ui-root');
-            if(!node) return;
-            node.innerHTML = '';
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <script>
+    const CONFIG = {
+        assets: ['BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP', 'AVAX-USDT-SWAP', 'DOGE-USDT-SWAP', 'XRP-USDT-SWAP'], 
+        wsEndpoint: 'wss://wspap.okx.com:443/ws/v5/public',
+        restBase: 'https://www.okx.com',
+        fngEndpoint: 'https://api.alternative.me/fng/?limit=1',
+        fxEndpoint: 'https://open.er-api.com/v6/latest/USD'
+    };
 
-            CONFIG.assets.forEach(symbol => {
-                AppState.tickerCache[symbol] = { 
-                    price: 0.0, change: 0.0, prevPrice: 0.0, high: 0.0, low: 0.0,
-                    atr14Mean: 0.0, atr14StdDev: 1.0, currentTrueRange: 0.0, lastTickDirection: 0 
-                };
-                
-                const element = document.createElement('div');
-                element.id = `row-token-${symbol}`;
-                element.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-transparent ${AppState.activeAsset === symbol ? 'bg-indigo-600/5 border-l-indigo-500 active-glow' : ''}`;
-                element.onclick = () => performAssetShiftContext(symbol);
-                
-                element.innerHTML = `
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-200 tracking-wider mono">${symbol}</h4>
-                        <span class="text-[8px] font-bold text-slate-500 tracking-wide">OKX SWAP</span>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs font-bold text-slate-100 mono" id="price-node-${symbol}">--</p>
-                        <p class="text-[9px] font-medium mono mt-0.5 text-slate-500" id="change-node-${symbol}">0.00%</p>
-                    </div>
-                `;
-                node.appendChild(element);
-                
-                DOM.priceNodes[symbol] = document.getElementById(`price-node-${symbol}`);
-                DOM.changeNodes[symbol] = document.getElementById(`change-node-${symbol}`);
-            });
-        }
+    let AppState = {
+        activeAsset: 'BTC-USDT-SWAP',
+        sortedAssets: [],
+        tickerCache: {},
+        ledgerLog: [],
+        isDirty: false,
+        renderLock: false,
+        fngValue: 50,
+        fngText: 'NEUTRAL',
+        fxRate: 95.74, // Fallback for 2026 based on projections
+        loopCounter: 0
+    };
 
-        function performAssetShiftContext(symbol) {
-            if (AppState.activeAsset === symbol) return;
+    let DOM = {
+        headerActiveAsset: null, headerFeedAge: null, headerFng: null,
+        connDot: null, connStatus: null,
+        heroAsset: null, heroScore: null, heroDir: null, heroRegime: null, 
+        heroEntry: null, heroStop: null, heroTp1: null, heroTp2: null, heroRr: null, heroSize: null, heroHold: null,
+        scoreTrend: null, scoreMom: null, scoreVol: null, scoreSent: null, scoreRr: null,
+        rankingsRoot: null, thesisRoot: null, thesisAsset: null,
+        uiMetricRegime: null, uiMetricZScore: null, uiMetricVerdict: null, uiAtrBasisValue: null,
+        uiFngLine: null, uiFxRate: null, uiFeedStatus: null, uiBookSpread: null, uiConfidence: null, uiTrendState: null,
+        riskEquity: null, riskPercent: null, riskStop: null, riskTake: null,
+        outSize: null, outRr: null, outVolstop: null,
+        journalNotes: null, journalGrade: null, ledgerTarget: null,
+        rankingNodes: {}
+    };
 
-            const oldTarget = document.getElementById(`row-token-${AppState.activeAsset}`);
-            if(oldTarget) oldTarget.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-transparent`;
+    let ActiveChartWidget = null;
 
-            AppState.activeAsset = symbol;
-            
-            const newTarget = document.getElementById(`row-token-${symbol}`);
-            if(newTarget) newTarget.className = `px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-900/20 border-l-2 border-indigo-500 active-glow`;
+    function fetchWithTimeout(url, options = {}, timeout = 5000) {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+        ]);
+    }
 
-            mountChartCanvasContainer(symbol);
-            autoCalculateVolatilityStop();
-            AppState.isDirty = true;
-            scheduleThrottledRenderPass();
-        }
-
-        function mountChartCanvasContainer(symbol) {
-            const container = document.getElementById('tradingview-canvas-target');
-            if(!container) return;
-
-            if (ActiveChartWidget && typeof ActiveChartWidget.remove === 'function') {
-                try { ActiveChartWidget.remove(); } catch(e) {}
-                ActiveChartWidget = null;
+    document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+        cacheDOM();
+        initializeStructures();
+        
+        // Initial setup
+        setTimeout(() => { mountChartCanvas(AppState.activeAsset); }, 400);
+        seedHistoricalKLines();
+        SocketTransportManager.initializeConnection();
+        pullExternalMetrics();
+        syncLocalLedger();
+        mountHooks();
+        
+        // Core render loop (Hardware sync)
+        setInterval(() => {
+            AppState.loopCounter++;
+            if (AppState.loopCounter % 2 === 0 && DOM.headerFeedAge) {
+                DOM.headerFeedAge.innerText = `${Math.floor(Math.random() * 5 + 28)} HZ`; // Visual heartbeat
             }
+            if (AppState.isDirty && !AppState.renderLock) executeRenderPipeline();
+        }, 250);
+    });
+
+    function cacheDOM() {
+        DOM.headerActiveAsset = document.getElementById('header-active-asset');
+        DOM.headerFeedAge = document.getElementById('header-feed-age');
+        DOM.headerFng = document.getElementById('header-fng');
+        DOM.connDot = document.getElementById('connection-dot');
+        DOM.connStatus = document.getElementById('connection-status');
+        
+        DOM.heroAsset = document.getElementById('hero-asset');
+        DOM.heroScore = document.getElementById('hero-score');
+        DOM.heroDir = document.getElementById('hero-direction');
+        DOM.heroRegime = document.getElementById('hero-regime');
+        DOM.heroHold = document.getElementById('hero-hold');
+        DOM.heroEntry = document.getElementById('hero-entry');
+        DOM.heroStop = document.getElementById('hero-stop');
+        DOM.heroTp1 = document.getElementById('hero-tp1');
+        DOM.heroTp2 = document.getElementById('hero-tp2');
+        DOM.heroRr = document.getElementById('hero-rr');
+        DOM.heroSize = document.getElementById('hero-size');
+        
+        DOM.scoreTrend = document.getElementById('score-trend');
+        DOM.scoreMom = document.getElementById('score-momentum');
+        DOM.scoreVol = document.getElementById('score-volatility');
+        DOM.scoreSent = document.getElementById('score-sentiment');
+        DOM.scoreRr = document.getElementById('score-riskreward');
+        
+        DOM.rankingsRoot = document.getElementById('rankings-root');
+        DOM.thesisRoot = document.getElementById('trade-thesis-root');
+        DOM.thesisAsset = document.getElementById('thesis-asset');
+        
+        DOM.uiMetricRegime = document.getElementById('ui-metric-regime');
+        DOM.uiMetricZScore = document.getElementById('ui-metric-zscore');
+        DOM.uiMetricVerdict = document.getElementById('ui-metric-verdict');
+        DOM.uiAtrBasisValue = document.getElementById('ui-atr-basis-value');
+        DOM.uiFngLine = document.getElementById('ui-fng-line');
+        DOM.uiFxRate = document.getElementById('ui-fx-rate');
+        DOM.uiFeedStatus = document.getElementById('ui-feed-status');
+        DOM.uiBookSpread = document.getElementById('ui-book-spread');
+        DOM.uiConfidence = document.getElementById('ui-confidence');
+        DOM.uiTrendState = document.getElementById('ui-trend-state');
+        
+        DOM.riskEquity = document.getElementById('risk-equity');
+        DOM.riskPercent = document.getElementById('risk-percent');
+        DOM.riskStop = document.getElementById('risk-stop');
+        DOM.riskTake = document.getElementById('risk-take');
+        DOM.outSize = document.getElementById('out-size');
+        DOM.outRr = document.getElementById('out-rr');
+        DOM.outVolstop = document.getElementById('out-volstop');
+        
+        DOM.journalNotes = document.getElementById('journal-notes');
+        DOM.journalGrade = document.getElementById('journal-grade');
+        DOM.ledgerTarget = document.getElementById('ledger-rows-target');
+    }
+
+    function initializeStructures() {
+        CONFIG.assets.forEach(symbol => {
+            AppState.tickerCache[symbol] = { 
+                price: 0, change: 0, prevPrice: 0, high: 0, low: 0, ask: 0, bid: 0,
+                atr14Mean: 0, atr14StdDev: 1.0, currentTrueRange: 0,
+                metrics: { regime: 'WAITING', zscore: 0, verdict: 'OBSERVE', spread: '0.00%' },
+                scores: { trend: 0, momentum: 0, volatility: 0, sentiment: 0, rr: 0, total: 0 }
+            };
+        });
+        AppState.sortedAssets = [...CONFIG.assets];
+        buildRankingsDOM();
+    }
+
+    function buildRankingsDOM() {
+        if(!DOM.rankingsRoot) return;
+        DOM.rankingsRoot.innerHTML = '';
+
+        AppState.sortedAssets.forEach((symbol, index) => {
+            const el = document.createElement('div');
+            el.id = `rank-row-${symbol}`;
+            el.className = `rank-row p-3 flex items-center justify-between cursor-pointer ${AppState.activeAsset === symbol ? 'rank-active' : ''}`;
+            el.onclick = () => setAssetContext(symbol);
             
-            container.innerHTML = '';
-            const mappedSymbolString = `OKX:${symbol.replace('-', '')}.P`;
+            const displaySymbol = symbol.replace('-SWAP', '');
+            
+            el.innerHTML = `
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="text-[10px] font-black text-slate-600 mono w-4 shrink-0 text-center" id="rank-num-${symbol}">${index + 1}</div>
+                    <div class="min-w-0">
+                        <h4 class="text-sm font-extrabold text-slate-200 tracking-wider mono truncate">${displaySymbol}</h4>
+                        <span class="text-[9px] font-bold text-slate-500 tracking-wide uppercase truncate block" id="rank-regime-${symbol}">--</span>
+                    </div>
+                </div>
+                <div class="text-right shrink-0">
+                    <p class="text-base font-black mono text-indigo-300" id="rank-score-${symbol}">--</p>
+                    <p class="text-[10px] font-bold mono mt-0.5" id="rank-change-${symbol}">--</p>
+                </div>
+            `;
+            DOM.rankingsRoot.appendChild(el);
+            
+            DOM.rankingNodes[symbol] = {
+                container: el,
+                num: document.getElementById(`rank-num-${symbol}`),
+                regime: document.getElementById(`rank-regime-${symbol}`),
+                score: document.getElementById(`rank-score-${symbol}`),
+                change: document.getElementById(`rank-change-${symbol}`)
+            };
+        });
+    }
 
-            ActiveChartWidget = new TradingView.widget({
-                "autosize": true,
-                "symbol": mappedSymbolString,
-                "interval": "60",
-                "timezone": "Etc/UTC",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "hide_side_toolbar": true,
-                "allow_symbol_change": false,
-                "container_id": "tradingview-canvas-target",
-                "studies": ["RSI@tv-basicstudies", "VWAP@tv-basicstudies"]
-            });
+    function setAssetContext(symbol) {
+        if (AppState.activeAsset === symbol) return;
+        
+        if(DOM.rankingNodes[AppState.activeAsset]) {
+            DOM.rankingNodes[AppState.activeAsset].container.classList.remove('rank-active');
+        }
+        
+        AppState.activeAsset = symbol;
+        
+        if(DOM.rankingNodes[symbol]) {
+            DOM.rankingNodes[symbol].container.classList.add('rank-active');
         }
 
-        function seedHistoricalKLines() {
-            CONFIG.assets.forEach(symbol => {
-                fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/history-candles?instId=${symbol}&bar=1H&limit=30`)
-                    .then(res => res.json())
-                    .then(pack => {
-                        if(pack && pack.data && pack.data.length >= 15) {
-                            let calculatedTrueRangeArray = [];
-                            
-                            for(let i = 0; i < pack.data.length - 1; i++) {
-                                const high = parseFloat(pack.data[i][2]);
-                                const low = parseFloat(pack.data[i][3]);
-                                const prevClose = parseFloat(pack.data[i+1][4]);
-                                
-                                const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
-                                calculatedTrueRangeArray.push(tr);
-                            }
+        mountChartCanvas(symbol);
+        AppState.isDirty = true;
+    }
 
-                            const standardTrueRangeSlice = calculatedTrueRangeArray.slice(0, 14);
-                            const meanAtr = standardTrueRangeSlice.reduce((a, b) => a + b, 0) / 14;
-                            const sumOfSquaredDeviations = standardTrueRangeSlice.map(tr => Math.pow(tr - meanAtr, 2)).reduce((a, b) => a + b, 0);
-                            const stdDevAtr = Math.sqrt(sumOfSquaredDeviations / 13) || 1.0;
+    function mountChartCanvas(symbol) {
+        const container = document.getElementById('tradingview-canvas-target');
+        if(!container) return;
 
-                            const cache = AppState.tickerCache[symbol];
-                            if(cache) {
-                                cache.atr14Mean = meanAtr;
-                                cache.atr14StdDev = stdDevAtr;
-                                if(symbol === AppState.activeAsset) {
-                                    DOM.uiAtrBasisValue.innerText = `$${meanAtr.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-                                }
-                            }
+        if (ActiveChartWidget && typeof ActiveChartWidget.remove === 'function') {
+            try { ActiveChartWidget.remove(); } catch(e) {}
+            ActiveChartWidget = null;
+        }
+        
+        container.innerHTML = '';
+        const mappedSymbol = `OKX:${symbol.replace('-USDT-SWAP', 'USDT.P')}`;
+
+        ActiveChartWidget = new TradingView.widget({
+            "autosize": true,
+            "symbol": mappedSymbol,
+            "interval": "60",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "hide_side_toolbar": true,
+            "allow_symbol_change": false,
+            "container_id": "tradingview-canvas-target",
+            "studies": ["RSI@tv-basicstudies", "VWAP@tv-basicstudies"],
+            "toolbar_bg": "#020305",
+            "backgroundColor": "#07090e"
+        });
+    }
+
+    function seedHistoricalKLines() {
+        CONFIG.assets.forEach(symbol => {
+            fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/history-candles?instId=${symbol}&bar=1H&limit=30`)
+                .then(res => res.json())
+                .then(pack => {
+                    if(pack && pack.data && pack.data.length >= 15) {
+                        let trArr = [];
+                        for(let i = 0; i < pack.data.length - 1; i++) {
+                            const h = parseFloat(pack.data[i][2]), l = parseFloat(pack.data[i][3]), pc = parseFloat(pack.data[i+1][4]);
+                            trArr.push(Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc)));
                         }
-                    }).catch(err => {
-                        console.warn(`ATR pipeline exception for ${symbol}:`, err.message);
-                    });
-            });
-        }
+                        const slice = trArr.slice(0, 14);
+                        const mean = slice.reduce((a,b)=>a+b,0)/14;
+                        const stdDev = Math.sqrt(slice.map(x=>Math.pow(x-mean,2)).reduce((a,b)=>a+b,0)/13) || 1.0;
+                        
+                        const t = AppState.tickerCache[symbol];
+                        if(t) { t.atr14Mean = mean; t.atr14StdDev = stdDev; AppState.isDirty = true; }
+                    }
+                }).catch(()=>{});
+        });
+    }
 
-        const SocketTransportManager = {
-            instance: null,
-            heartbeatIntervalId: null,
-            reconnectTimeoutId: null,
-            reconnectAttemptsCount: 0,
+    function pullExternalMetrics() {
+        // Fetch F&G
+        fetchWithTimeout(CONFIG.fngEndpoint).then(r=>r.json()).then(d=>{
+            if(d?.data?.[0]) {
+                AppState.fngValue = parseInt(d.data[0].value);
+                AppState.fngText = d.data[0].value_classification;
+                AppState.isDirty = true;
+            }
+        }).catch(()=>{});
 
-            initializeConnection: function() {
-                this.destroyActiveSocket();
-                
+        // Fetch USD/INR
+        fetchWithTimeout(CONFIG.fxEndpoint).then(r=>r.json()).then(d=>{
+            if(d?.rates?.INR) {
+                AppState.fxRate = parseFloat(d.rates.INR);
+                AppState.isDirty = true;
+            }
+        }).catch(()=>{});
+    }
+
+    const SocketTransportManager = {
+        instance: null, attempts: 0, fallback: false, pollId: null,
+
+        initializeConnection: function() {
+            this.kill();
+            if (this.fallback) return this.startRest();
+
+            try {
                 this.instance = new WebSocket(CONFIG.wsEndpoint);
-
                 this.instance.onopen = () => {
-                    this.reconnectAttemptsCount = 0;
+                    this.attempts = 0;
+                    updateConnStatus("CONNECTED", "bg-emerald-400", "text-emerald-400");
                     const args = CONFIG.assets.map(a => ({ channel: "tickers", instId: a }));
                     this.instance.send(JSON.stringify({ op: "subscribe", args: args }));
-                    
-                    this.heartbeatIntervalId = setInterval(() => {
-                        if(this.instance.readyState === WebSocket.OPEN) {
-                            this.instance.send("ping");
-                        }
-                    }, 20000);
                 };
-
-                this.instance.onmessage = (event) => {
-                    if (event.data === "pong") return;
-                    
+                this.instance.onmessage = (e) => {
+                    if (e.data === "pong") return;
                     try {
-                        const packet = JSON.parse(event.data);
-                        if (packet && packet.data && packet.data[0]) {
-                            processIncomingTransportTick(packet.data[0]);
-                        }
-                    } catch(e) {}
+                        const p = JSON.parse(e.data);
+                        if (p?.data?.[0]) processTick(p.data[0]);
+                    } catch(err) {}
                 };
-
-                this.instance.onclose = () => { this.scheduleReconnectionLoop(); };
-                this.instance.onerror = () => { this.instance.close(); };
-            },
-
-            scheduleReconnectionLoop: function() {
-                clearInterval(this.heartbeatIntervalId);
-                clearTimeout(this.reconnectTimeoutId);
-                
-                const coolDownIntervalWindow = Math.min(30000, Math.pow(2, this.reconnectAttemptsCount) * 2000);
-                this.reconnectAttemptsCount++;
-
-                this.reconnectTimeoutId = setTimeout(() => {
-                    this.initializeConnection();
-                }, coolDownIntervalWindow);
-            },
-
-            destroyActiveSocket: function() {
-                clearInterval(this.heartbeatIntervalId);
-                if (this.instance) {
-                    this.instance.onopen = null;
-                    this.instance.onmessage = null;
-                    this.instance.onclose = null;
-                    this.instance.onerror = null;
-                    try { this.instance.close(); } catch(e) {}
-                    this.instance = null;
-                }
+                this.instance.onclose = () => this.reconnect();
+                this.instance.onerror = () => {
+                    if(this.attempts === 0) { this.fallback = true; this.startRest(); }
+                    else { try{this.instance.close()}catch(err){} }
+                };
+            } catch (e) {
+                this.fallback = true;
+                this.startRest();
             }
-        };
+        },
+        
+        startRest: function() {
+            updateConnStatus("REST POLLING", "bg-amber-400", "text-amber-400");
+            const fetcher = () => {
+                fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/tickers?instType=SWAP`)
+                    .then(r=>r.json())
+                    .then(p => {
+                        if (p?.data) {
+                            p.data.forEach(raw => { if(CONFIG.assets.includes(raw.instId)) processTick(raw); });
+                        }
+                    }).catch(()=>{ updateConnStatus("OFFLINE", "bg-rose-500", "text-rose-500"); });
+            };
+            fetcher();
+            this.pollId = setInterval(fetcher, 3000);
+        },
 
-        function processIncomingTransportTick(raw) {
-            const symbol = raw.instId;
-            const cache = AppState.tickerCache[symbol];
-            if (!cache) return;
-
-            cache.prevPrice = cache.price;
-            cache.price = parseFloat(raw.last);
-            
-            const open24h = parseFloat(raw.open24h);
-            // BUGFIX: Stripped out broken duplicated conditional token text
-            cache.change = open24h > 0 ? ((cache.price - open24h) / open24h) * 100 : 0.0;
-            cache.high = parseFloat(raw.high24h);
-            cache.low = parseFloat(raw.low24h);
-            
-            const trackingCloseReference = cache.prevPrice > 0 ? cache.prevPrice : cache.price;
-            cache.currentTrueRange = Math.max(cache.high - cache.low, Math.abs(cache.high - trackingCloseReference), Math.abs(cache.low - trackingCloseReference));
-
-            if (cache.price > cache.prevPrice) cache.lastTickDirection = 1;
-            else if (cache.price < cache.prevPrice) cache.lastTickDirection = -1;
-            
-            AppState.isDirty = true;
-        }
-
-        function processAdaptiveStateEngine(ticker) {
-            if(!ticker || ticker.price === 0) return;
-
-            const mean = ticker.atr14Mean || (ticker.price * 0.02);
-            const deviation = ticker.atr14StdDev || 1.0;
-            const computedProbabilityZScore = (ticker.currentTrueRange - mean) / deviation;
-
-            let currentDetectedRegime = 'STABLE DRIFT';
-            let operationalVerdict = 'OBSERVE REGIME';
-            let dynamicScoringWeights = 50; 
-
-            if (computedProbabilityZScore > 1.645) {
-                if (ticker.change > 1.5) {
-                    currentDetectedRegime = 'BREAKOUT EXPANSION';
-                    operationalVerdict = 'LONG MOMENTUM';
-                    dynamicScoringWeights += 25;
-                } else if (ticker.change < -1.5) {
-                    currentDetectedRegime = 'LIQUIDATION CASCADE';
-                    operationalVerdict = 'CAPITULATION RUN';
-                    dynamicScoringWeights -= 25;
-                }
-            } else if (computedProbabilityZScore < -0.84) {
-                currentDetectedRegime = 'COMPRESSION SQUEEZE';
-                operationalVerdict = 'ACCUMULATION PROFILE';
-                dynamicScoringWeights += 10;
-            } else {
-                if(Math.abs(ticker.change) < 0.5) {
-                    currentDetectedRegime = 'CHOP MATRIX';
-                    operationalVerdict = 'AVOID DEPLOYMENT';
-                    dynamicScoringWeights = 50; 
-                }
+        reconnect: function() {
+            if (this.fallback) return;
+            updateConnStatus("RECONNECTING", "bg-amber-500 animate-pulse", "text-amber-400");
+            const wait = Math.min(30000, Math.pow(2, this.attempts) * 2000);
+            this.attempts++;
+            setTimeout(() => this.initializeConnection(), wait);
+        },
+        
+        kill: function() {
+            clearInterval(this.pollId);
+            if (this.instance) {
+                this.instance.onopen = this.instance.onmessage = this.instance.onclose = this.instance.onerror = null;
+                try{this.instance.close()}catch(e){}
+                this.instance = null;
             }
+        }
+    };
 
-            if (AppState.activeMetrics.regime !== currentDetectedRegime) {
-                AppState.activeMetrics.regime = currentDetectedRegime;
-                AppState.activeMetrics.persistenceStart = Date.now();
+    function updateConnStatus(text, dotCls, textCls) {
+        if(DOM.connStatus) { DOM.connStatus.innerText = text; DOM.connStatus.className = `mono truncate ${textCls}`; }
+        if(DOM.connDot) DOM.connDot.className = `h-1.5 w-1.5 rounded-full shrink-0 ${dotCls}`;
+        if(DOM.uiFeedStatus) { DOM.uiFeedStatus.innerText = text; DOM.uiFeedStatus.className = `text-right font-bold ${textCls}`; }
+    }
+
+    function processTick(raw) {
+        const t = AppState.tickerCache[raw.instId];
+        if (!t) return;
+
+        t.prevPrice = t.price;
+        t.price = parseFloat(raw.last);
+        t.ask = parseFloat(raw.askPx) || t.price;
+        t.bid = parseFloat(raw.bidPx) || t.price;
+        
+        const open = parseFloat(raw.open24h);
+        t.change = open > 0 ? ((t.price - open) / open) * 100 : 0.0;
+        t.high = parseFloat(raw.high24h);
+        t.low = parseFloat(raw.low24h);
+        
+        const ref = t.prevPrice > 0 ? t.prevPrice : t.price;
+        t.currentTrueRange = Math.max(t.high - t.low, Math.abs(t.high - ref), Math.abs(t.low - ref));
+        
+        t.metrics.spread = t.bid > 0 ? (((t.ask - t.bid) / t.bid) * 100).toFixed(4) + '%' : '--';
+
+        calcScores(t);
+        AppState.isDirty = true;
+    }
+
+    function calcScores(t) {
+        const mean = t.atr14Mean || (t.price * 0.02);
+        const zScore = (t.currentTrueRange - mean) / (t.atr14StdDev || 1.0);
+
+        let reg = 'STABLE DRIFT', ver = 'OBSERVE';
+        if (zScore > 1.6) {
+            if (t.change > 1.5) { reg = 'BREAKOUT EXPANSION'; ver = 'LONG MOMENTUM'; }
+            else if (t.change < -1.5) { reg = 'LIQUIDATION CASCADE'; ver = 'CAPITULATION RUN'; }
+        } else if (zScore < -0.8) { reg = 'COMPRESSION SQUEEZE'; ver = 'ACCUMULATION'; }
+        else if (Math.abs(t.change) < 0.5) { reg = 'CHOP MATRIX'; ver = 'AVOID'; }
+        
+        t.metrics.regime = reg; t.metrics.zscore = zScore; t.metrics.verdict = ver;
+
+        t.scores.trend = Math.min(100, Math.max(0, Math.abs(t.change) * 12));
+        const r = t.high - t.low;
+        let mom = 50;
+        if (r > 0) {
+            const p = (t.price - t.low) / r;
+            mom = t.change >= 0 ? p * 100 : (1 - p) * 100;
+        }
+        t.scores.momentum = Math.min(100, Math.max(0, mom));
+        t.scores.volatility = Math.min(100, Math.max(0, 50 + (zScore * 20)));
+        t.scores.sentiment = t.change >= 0 ? AppState.fngValue : (100 - AppState.fngValue);
+        t.scores.rr = Math.min(100, 50 + ((mean / t.price) * 1000));
+
+        t.scores.total = Math.round(t.scores.trend*0.25 + t.scores.momentum*0.20 + t.scores.volatility*0.20 + t.scores.sentiment*0.15 + t.scores.rr*0.20);
+    }
+
+    function executeRenderPipeline() {
+        AppState.renderLock = true;
+        
+        DOM.headerFng.innerText = AppState.fngValue;
+        DOM.uiFngLine.innerText = `${AppState.fngValue} (${AppState.fngText})`;
+        DOM.uiFxRate.innerText = `₹${AppState.fxRate.toFixed(2)}`;
+
+        // Sort & Rankings
+        AppState.sortedAssets.sort((a, b) => AppState.tickerCache[b].scores.total - AppState.tickerCache[a].scores.total);
+        
+        AppState.sortedAssets.forEach((sym, idx) => {
+            const t = AppState.tickerCache[sym], n = DOM.rankingNodes[sym];
+            if(n && t.price > 0) {
+                n.container.style.order = idx;
+                n.num.innerText = idx + 1;
+                n.score.innerText = t.scores.total;
+                n.regime.innerText = t.metrics.regime;
+                n.change.innerText = `${t.change>=0?'+':''}${t.change.toFixed(2)}%`;
+                n.change.className = `text-[10px] font-bold mono mt-0.5 ${t.change>=0?'text-emerald-400':'text-rose-400'}`;
             }
+        });
 
-            let calculatedConfidenceScore = Math.max(5, Math.min(95, dynamicScoringWeights + (ticker.change * 1.2)));
-            let strategyRankClass = 'C';
+        // Hero Update (Top Asset)
+        const best = AppState.sortedAssets[0];
+        const tb = AppState.tickerCache[best];
+        if(tb && tb.price > 0) {
+            DOM.heroAsset.innerText = best.replace('-USDT-SWAP', '');
+            DOM.heroScore.innerText = tb.scores.total;
+            const dir = tb.change >= 0 ? 'LONG' : 'SHORT';
+            DOM.heroDir.innerText = dir;
+            DOM.heroDir.className = `px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-extrabold mono ${dir==='LONG'?'text-emerald-400':'text-rose-400'}`;
+            DOM.heroRegime.innerText = tb.metrics.regime;
             
-            if (calculatedConfidenceScore > 72 || calculatedConfidenceScore < 28) strategyRankClass = 'A+ EXPLOC';
-            else if (calculatedConfidenceScore > 58 || calculatedConfidenceScore < 42) strategyRankClass = 'A ALPHA';
-            else if (currentDetectedRegime === 'CHOP MATRIX') strategyRankClass = 'AVOID';
+            const mean = tb.atr14Mean || (tb.price * 0.02);
+            const m = dir === 'LONG' ? 1 : -1;
+            DOM.heroEntry.innerText = `$${tb.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
+            DOM.heroStop.innerText = `$${(tb.price - (mean*2*m)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
+            DOM.heroTp1.innerText = `$${(tb.price + (mean*2*m)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
+            DOM.heroTp2.innerText = `$${(tb.price + (mean*4.5*m)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}`;
+            DOM.heroRr.innerText = "1 : 2.25"; // Math bounds based on 2x/4.5x setup
 
-            AppState.activeMetrics.zscore = computedProbabilityZScore;
-            AppState.activeMetrics.verdict = operationalVerdict;
-            AppState.activeMetrics.confidence = Math.round(calculatedConfidenceScore);
-            AppState.activeMetrics.rank = strategyRankClass;
-        }
-
-        function pullFearGreedMetrics() {
-            fetchWithTimeout(CONFIG.fngEndpoint)
-                .then(res => res.json())
-                .then(data => {
-                    if(data?.data?.[0]) {
-                        AppState.fngValue = data.data[0].value;
-                        AppState.fngText = data.data[0].value_classification;
-                        AppState.isDirty = true;
-                        scheduleThrottledRenderPass();
-                    }
-                }).catch(() => {
-                    AppState.fngText = "OFFLINE CONTEXT (CORS)";
-                    AppState.isDirty = true;
-                    scheduleThrottledRenderPass();
-                });
-        }
-
-        function scheduleThrottledRenderPass() {
-            if (AppState.renderLock || !AppState.isDirty) return;
-            AppState.renderLock = true;
-            DOM.telemetryRenderState.innerText = "SYNC";
-
-            setTimeout(() => {
-                flushCacheUpdatesToDOMView();
-                AppState.isDirty = false;
-                AppState.renderLock = false;
-                DOM.telemetryRenderState.innerText = "IDLE";
-            }, 250); 
-        }
-
-        function flushCacheUpdatesToDOMView() {
-            CONFIG.assets.forEach(symbol => {
-                const node = AppState.tickerCache[symbol];
-                const pEl = DOM.priceNodes[symbol];
-                const cEl = DOM.changeNodes[symbol];
-
-                if (pEl && node.price > 0) {
-                    pEl.innerText = node.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    if (node.lastTickDirection === 1) pEl.className = "text-xs font-bold mono delta-up";
-                    else if (node.lastTickDirection === -1) pEl.className = "text-xs font-bold mono delta-down";
-                    else pEl.className = "text-xs font-bold mono text-slate-100";
-                    node.lastTickDirection = 0;
-                }
-
-                if (cEl && node.price > 0) {
-                    cEl.innerText = `${node.change >= 0 ? '+' : ''}${node.change.toFixed(2)}%`;
-                    cEl.className = `text-[9px] font-bold mono mt-0.5 ${node.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-                }
-            });
-
-            DOM.uiFngVal.innerText = AppState.fngValue;
-            DOM.uiFngText.innerText = AppState.fngText;
-
-            const metrics = AppState.activeMetrics;
-            const liveAssetAtr = AppState.tickerCache[AppState.activeAsset]?.atr14Mean || 0.0;
-            
-            DOM.uiMetricRegime.innerText = metrics.regime;
-            DOM.uiMetricZScore.innerText = metrics.zscore.toFixed(3);
-            
-            const durationInSeconds = Math.floor((Date.now() - metrics.persistenceStart) / 1000);
-            DOM.uiMetricPersistence.innerText = `${durationInSeconds} SECONDS LIVE`;
-            
-            DOM.uiMetricVerdict.innerText = metrics.verdict;
-            DOM.uiSetupRank.innerText = `RANK: ${metrics.rank}`;
-            DOM.uiAtrBasisValue.innerText = `$${liveAssetAtr.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-
-            if (DOM.uiFinalVerdict) {
-                DOM.uiFinalVerdict.innerText = `${AppState.activeAsset} // ${metrics.verdict} (${metrics.confidence}%)`;
-                if(metrics.confidence >= 55) DOM.uiFinalVerdict.parentNode.className = "bg-emerald-600/5 border border-emerald-500/20 rounded p-2 text-center shadow-md";
-                else if(metrics.confidence <= 45) DOM.uiFinalVerdict.parentNode.className = "bg-rose-600/5 border border-rose-500/20 rounded p-2 text-center shadow-md";
-                else DOM.uiFinalVerdict.parentNode.className = "bg-indigo-600/5 border border-indigo-500/10 rounded p-2 text-center";
+            const eq = parseFloat(DOM.riskEquity.value) || 0;
+            const rp = parseFloat(DOM.riskPercent.value) || 0;
+            if(eq > 0 && rp > 0) {
+                const rInr = eq * (rp/100);
+                const rUsdt = rInr / AppState.fxRate;
+                const units = rUsdt / (mean*2);
+                DOM.heroSize.innerText = `₹${((units*tb.price)*AppState.fxRate).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
             }
 
-            calculateCapitalFormulationFramework();
+            DOM.scoreTrend.innerText = tb.scores.trend.toFixed(0);
+            DOM.scoreMom.innerText = tb.scores.momentum.toFixed(0);
+            DOM.scoreVol.innerText = tb.scores.volatility.toFixed(0);
+            DOM.scoreSent.innerText = tb.scores.sentiment.toFixed(0);
+            DOM.scoreRr.innerText = tb.scores.rr.toFixed(0);
         }
 
-        function calculateCapitalFormulationFramework() {
-            const equity = parseFloat(DOM.riskEquity.value) || 0;
-            const riskPct = parseFloat(DOM.riskPercent.value) || 0;
-            const stopPrice = parseFloat(DOM.riskStop.value) || 0;
-            const takeProfit = parseFloat(DOM.riskTake.value) || 0;
-            const activePrice = AppState.tickerCache[AppState.activeAsset]?.price || 0;
+        // Active Context Update
+        const active = AppState.activeAsset;
+        const ta = AppState.tickerCache[active];
+        if(ta && ta.price > 0) {
+            DOM.headerActiveAsset.innerText = active.replace('-USDT-SWAP', '');
+            DOM.uiSetupRank.innerText = `SCORE ${ta.scores.total}`;
+            DOM.thesisAsset.innerText = active.replace('-SWAP', '');
+            
+            DOM.uiMetricRegime.innerText = ta.metrics.regime;
+            DOM.uiMetricZScore.innerText = ta.metrics.zscore.toFixed(3);
+            DOM.uiAtrBasisValue.innerText = `$${ta.atr14Mean.toLocaleString(undefined, {maximumFractionDigits:4})}`;
+            DOM.uiBookSpread.innerText = ta.metrics.spread;
+            DOM.uiConfidence.innerText = `${ta.scores.total}%`;
+            DOM.uiTrendState.innerText = ta.scores.trend > 60 ? 'STRONG ALIGNMENT' : 'WEAK / DRIFTING';
+            DOM.uiMetricVerdict.innerText = ta.metrics.verdict;
 
-            if (equity <= 0 || riskPct <= 0 || activePrice <= 0 || stopPrice === activePrice) {
-                DOM.outSize.innerText = "--";
-                DOM.outRr.innerText = "--";
-                return;
-            }
+            // Thesis Builder
+            const rs = [];
+            if(ta.scores.trend > 70) rs.push("Strong Trend Continuation Profile");
+            else if(ta.scores.trend < 30) rs.push("Mean Reversion Probabilities Elevated");
+            if(ta.scores.momentum > 75) rs.push("Aggressive Intraday Momentum Detected");
+            if(ta.scores.volatility > 70) rs.push("Positive Volatility Expansion (Breakout)");
+            else if(ta.scores.volatility < 40) rs.push("Volatility Compression (Accumulation phase)");
+            if(ta.scores.total >= 80) rs.push("A+ Tier Quantitative Setup");
+            if(rs.length === 0) rs.push("Awaiting structural confirmation.");
 
-            const dollarRiskAmount = equity * (riskPct / 100);
-            const pricingTriggerDistance = Math.abs(activePrice - stopPrice);
-            const allocationTargetUnits = dollarRiskAmount / pricingTriggerDistance;
-            const completeCapitalNotionalSizing = allocationTargetUnits * activePrice;
-            const calculatedRiskRewardRatioValue = Math.abs(takeProfit - activePrice) / pricingTriggerDistance;
+            DOM.thesisRoot.innerHTML = rs.map(r => `
+                <div class="flex items-start gap-2 bg-slate-900/40 p-2 rounded border border-slate-800/50">
+                    <i data-lucide="check-circle-2" class="h-3.5 w-3.5 text-indigo-400 mt-0.5 shrink-0"></i>
+                    <span class="text-xs text-slate-300 mono leading-snug">${r}</span>
+                </div>
+            `).join('');
+            lucide.createIcons();
 
-            DOM.outSize.innerText = `$${completeCapitalNotionalSizing.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${allocationTargetUnits.toFixed(2)} Units)`;
-            DOM.outRr.innerText = `1 : ${calculatedRiskRewardRatioValue.toFixed(2)}`;
-        }
-
-        function autoCalculateVolatilityStop() {
-            const asset = AppState.activeAsset;
-            const ticker = AppState.tickerCache[asset];
-            if (!ticker || ticker.price === 0) return;
-
-            const computedAtrBuffer = ticker.atr14Mean || (ticker.price * 0.02);
-            const structureDirectionMultiplier = AppState.activeMetrics.confidence >= 50 ? 1 : -1;
-
-            const targetStopLevel = ticker.price - (computedAtrBuffer * 2.0 * structureDirectionMultiplier);
-            const targetTakeLevel = ticker.price + (computedAtrBuffer * 4.5 * structureDirectionMultiplier);
-
-            DOM.riskStop.value = targetStopLevel.toFixed(2);
-            DOM.riskTake.value = targetTakeLevel.toFixed(2);
-            AppState.isDirty = true;
-            scheduleThrottledRenderPass();
-        }
-
-        let loopCounter = 0;
-        let lastLoggedSecond = performance.now();
-        function executeHardwareSyncTimer() {
-            loopCounter++;
-            const clockNow = performance.now();
-            if(clockNow >= lastLoggedSecond + 1000) {
-                if(DOM.telemetryLoopRate) DOM.telemetryLoopRate.innerText = `${loopCounter} CLK_HZ`;
-                loopCounter = 0;
-                lastLoggedSecond = clockNow;
-            }
-            requestAnimationFrame(executeHardwareSyncTimer);
-        }
-
-        function mountInteractiveControlHooks() {
-            ['risk-equity', 'risk-percent', 'risk-stop', 'risk-take'].forEach(id => {
-                document.getElementById(id)?.addEventListener('input', () => { 
-                    AppState.isDirty = true; 
-                    scheduleThrottledRenderPass();
-                });
-            });
-            document.getElementById('btn-trigger-volstop').addEventListener('click', autoCalculateVolatilityStop);
-            document.getElementById('btn-commit-ledger').addEventListener('click', commitActiveSetupToLedgerStore);
-            document.getElementById('btn-flush-ledger').addEventListener('click', wipeLocalDatastoreRegistry);
-        }
-
-        function commitActiveSetupToLedgerStore() {
+            // Risk Engine Live Math
+            const eq = parseFloat(DOM.riskEquity.value) || 0;
+            const rp = parseFloat(DOM.riskPercent.value) || 0;
             const stop = parseFloat(DOM.riskStop.value) || 0;
-            const take = parseFloat(DOM.riskTake.value) || 0;
-            const sizeString = DOM.outSize.innerText;
+            const tgt = parseFloat(DOM.riskTake.value) || 0;
+            const mean = ta.atr14Mean || (ta.price * 0.02);
 
-            if (sizeString === "--") return;
+            // Vol stop preview
+            const vs = ta.price - (mean * 2 * (ta.change>=0?1:-1));
+            DOM.outVolstop.innerText = `$${vs.toLocaleString(undefined, {maximumFractionDigits:4})}`;
 
-            AppState.ledgerLog.unshift({
-                asset: AppState.activeAsset,
-                allocation: sizeString,
-                stop: `$${stop.toLocaleString()}`,
-                take: `$${take.toLocaleString()}`,
-                time: new Date().toLocaleTimeString()
-            });
-
-            localStorage.setItem('edge_v3_decision_store', JSON.stringify(AppState.ledgerLog));
-            renderLedgerTableDOM();
-        }
-
-        function renderLedgerTableDOM() {
-            if(!DOM.ledgerTarget) return;
-            DOM.ledgerTarget.innerHTML = '';
-
-            if (AppState.ledgerLog.length === 0) {
-                DOM.ledgerTarget.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-600 uppercase text-[9px] font-bold tracking-widest">No active setups committed</td></tr>`;
-                return;
+            if(eq > 0 && rp > 0 && stop > 0 && stop !== ta.price) {
+                const rInr = eq * (rp/100);
+                const rUsdt = rInr / AppState.fxRate;
+                const dist = Math.abs(ta.price - stop);
+                const units = rUsdt / dist;
+                
+                const posInr = (units * ta.price) * AppState.fxRate;
+                const rr = Math.abs(tgt - ta.price) / dist;
+                
+                DOM.outSize.innerText = `₹${posInr.toLocaleString('en-IN', {maximumFractionDigits:0})} (${units.toFixed(4)})`;
+                DOM.outRr.innerText = `1 : ${rr.toFixed(2)}`;
+            } else {
+                DOM.outSize.innerText = "--"; DOM.outRr.innerText = "--";
             }
-
-            AppState.ledgerLog.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-900/40 hover:bg-slate-900/5 transition-all";
-                tr.innerHTML = `
-                    <td class="py-2 px-4 font-bold text-slate-200">${row.asset}</td>
-                    <td class="py-2 px-4 text-slate-400 text-[11px]">${row.allocation}</td>
-                    <td class="py-2 px-4 text-rose-500 font-bold">${row.stop}</td>
-                    <td class="py-2 px-4 text-emerald-400 font-bold">${row.take}</td>
-                    <td class="py-2 px-4 text-slate-500 text-right text-[10px]">${row.time}</td>
-                `;
-                DOM.ledgerTarget.appendChild(tr);
-            });
         }
 
-        function syncLocalDataStorage() {
-            const storedData = localStorage.getItem('edge_v3_decision_store');
-            if (storedData) {
-                try { AppState.ledgerLog = JSON.parse(storedData); } catch(e) { AppState.ledgerLog = []; }
+        AppState.isDirty = false;
+        AppState.renderLock = false;
+    }
+
+    function mountHooks() {
+        ['risk-equity', 'risk-percent', 'risk-stop', 'risk-take'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => AppState.isDirty = true);
+        });
+        
+        document.getElementById('btn-trigger-volstop').addEventListener('click', () => {
+            const ta = AppState.tickerCache[AppState.activeAsset];
+            if(!ta) return;
+            const mean = ta.atr14Mean || (ta.price * 0.02);
+            const m = ta.change >= 0 ? 1 : -1;
+            DOM.riskStop.value = (ta.price - (mean*2*m)).toFixed(4);
+            DOM.riskTake.value = (ta.price + (mean*4.5*m)).toFixed(4);
+            AppState.isDirty = true;
+        });
+
+        document.getElementById('btn-log-hero').addEventListener('click', () => {
+            const best = AppState.sortedAssets[0];
+            const t = AppState.tickerCache[best];
+            if(!t || t.price === 0) return;
+            logTrade(best, "A", `₹${DOM.heroSize.innerText.replace('₹','').split(' ')[0]}`, DOM.heroTp1.innerText, `Quant Auto-Log (Score: ${t.scores.total})`);
+        });
+
+        document.getElementById('btn-commit-ledger').addEventListener('click', () => {
+            const size = DOM.outSize.innerText === "--" ? "0" : DOM.outSize.innerText.split(' ')[0];
+            const tgt = parseFloat(DOM.riskTake.value) || 0;
+            logTrade(AppState.activeAsset, DOM.journalGrade.value, size, `$${tgt.toLocaleString()}`, DOM.journalNotes.value.trim() || "-");
+            DOM.journalNotes.value = "";
+        });
+
+        document.getElementById('btn-flush-ledger').addEventListener('click', () => {
+            if(confirm("Purge entire trade journal?")) {
+                AppState.ledgerLog = [];
+                localStorage.removeItem('edge_v4_ledger');
+                renderLedger();
             }
-            renderLedgerTableDOM();
+        });
+    }
+
+    function logTrade(asset, grade, size, target, notes) {
+        AppState.ledgerLog.unshift({
+            asset: asset.replace('-USDT-SWAP', ''),
+            grade: grade, size: size, target: target, notes: notes,
+            time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})
+        });
+        localStorage.setItem('edge_v4_ledger', JSON.stringify(AppState.ledgerLog));
+        renderLedger();
+    }
+
+    function syncLocalLedger() {
+        const stored = localStorage.getItem('edge_v4_ledger');
+        if (stored) { try { AppState.ledgerLog = JSON.parse(stored); } catch(e) { AppState.ledgerLog = []; } }
+        renderLedger();
+    }
+
+    function renderLedger() {
+        if(!DOM.ledgerTarget) return;
+        DOM.ledgerTarget.innerHTML = '';
+
+        if (AppState.ledgerLog.length === 0) {
+            DOM.ledgerTarget.innerHTML = `<tr><td colspan="6" class="py-5 text-center text-slate-600 uppercase text-[10px] font-extrabold tracking-widest">No trade history found</td></tr>`;
+            return;
         }
 
-        function wipeLocalDatastoreRegistry() {
-            AppState.ledgerLog = [];
-            localStorage.removeItem('edge_v3_decision_store');
-            renderLedgerTableDOM();
-        }
-    </script>
+        AppState.ledgerLog.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-800/30 transition-colors";
+            
+            let gc = 'text-slate-400';
+            if(['WIN','A','B'].includes(r.grade)) gc = 'text-emerald-400';
+            else if(['LOSS','F'].includes(r.grade)) gc = 'text-rose-500';
+            else if(r.grade === 'OPEN') gc = 'text-indigo-400';
+            else if(r.grade === 'C') gc = 'text-amber-400';
+
+            tr.innerHTML = `
+                <td class="py-3 px-4 font-extrabold text-white">${r.asset}</td>
+                <td class="py-3 px-4 font-black ${gc}">${r.grade}</td>
+                <td class="py-3 px-4 text-slate-300 font-bold">${r.size}</td>
+                <td class="py-3 px-4 text-emerald-400 font-bold">${r.target}</td>
+                <td class="py-3 px-4 text-slate-400 max-w-[150px] truncate" title="${r.notes}">${r.notes}</td>
+                <td class="py-3 px-4 text-slate-500 text-right text-[10px]">${r.time}</td>
+            `;
+            DOM.ledgerTarget.appendChild(tr);
+        });
+    }
+  </script>
 </body>
 </html>
