@@ -5,21 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>EDGE / V4</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <title>EDGE / V5 OS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://s3.tradingview.com/tv.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght=400;500;700&family=Plus+Jakarta+Sans:wght=400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
     :root {
       color-scheme: dark;
-      --bg: #020305;
-      --panel: rgba(7, 9, 14, 0.94);
-      --line: rgba(148, 163, 184, 0.12);
-      --line-hot: rgba(99, 102, 241, 0.34);
+      --bg: #010203;
+      --panel: rgba(6, 8, 12, 0.85);
+      --line: rgba(148, 163, 184, 0.1);
+      --line-hot: rgba(99, 102, 241, 0.35);
       --muted: #64748b;
       --green: #10b981;
       --red: #ef4444;
+      --blue: #3b82f6;
     }
 
     * { box-sizing: border-box; min-width: 0; }
@@ -27,51 +30,47 @@
     body {
       margin: 0;
       font-family: "Plus Jakarta Sans", sans-serif;
-      background:
-        radial-gradient(circle at 20% -10%, rgba(99, 102, 241, 0.13), transparent 28rem),
-        radial-gradient(circle at 92% 2%, rgba(16, 185, 129, 0.07), transparent 24rem),
-        var(--bg);
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.1), transparent 30rem),
+        radial-gradient(circle at 85% 100%, rgba(16, 185, 129, 0.05), transparent 30rem);
+      background-attachment: fixed;
       color: #e2e8f0;
       letter-spacing: 0;
       -webkit-tap-highlight-color: transparent;
     }
 
     .mono { font-family: "JetBrains Mono", monospace; }
+    
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       overflow: hidden;
     }
     .panel-hot {
       border-color: var(--line-hot);
-      box-shadow: 0 0 34px rgba(99, 102, 241, 0.1), 0 18px 48px rgba(0, 0, 0, 0.26);
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.08), 0 12px 32px rgba(0, 0, 0, 0.4);
     }
+    
     .box {
-      background: rgba(2, 6, 23, 0.58);
-      border: 1px solid rgba(148, 163, 184, 0.1);
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.04);
       border-radius: 8px;
-      overflow: hidden;
     }
+    
     .label {
-      font-size: 10px;
-      line-height: 1.15;
+      font-size: 9px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       font-weight: 800;
       color: var(--muted);
     }
-    .value {
-      overflow-wrap: anywhere;
-      word-break: break-word;
-      line-height: 1.25;
-    }
-    .touch { min-height: 52px; touch-action: manipulation; }
-    .delta-up { color: var(--green) !important; }
-    .delta-down { color: var(--red) !important; }
+    
+    .touch { min-height: 48px; touch-action: manipulation; }
     .scroller-clean { scrollbar-width: none; }
     .scroller-clean::-webkit-scrollbar { display: none; }
     .safe-top { padding-top: max(0.5rem, env(safe-area-inset-top)); }
@@ -79,870 +78,841 @@
     
     input, textarea, select {
       width: 100%;
-      min-width: 0;
-      background: rgba(2, 6, 23, 0.74);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      border-radius: 7px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
       color: #fff;
     }
     input:focus, textarea:focus, select:focus {
-      border-color: rgba(99, 102, 241, 0.72);
+      border-color: rgba(99, 102, 241, 0.6);
       outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
     }
-    
-    .chart-wrap { height: 340px; }
-    @media (min-width: 768px) { .chart-wrap { height: 420px; } }
-    @media (min-width: 1024px) { .chart-wrap { height: 500px; } }
+
+    .progress-bg { background: rgba(255,255,255,0.05); height: 4px; border-radius: 2px; overflow: hidden; width: 100%; }
+    .progress-bar { height: 100%; transition: width 0.3s ease; }
+
+    .chart-wrap { height: 320px; }
+    @media (min-width: 768px) { .chart-wrap { height: 440px; } }
+    @media (min-width: 1024px) { .chart-wrap { height: 550px; } }
     
     .rank-row { transition: all 0.2s ease; border-left: 2px solid transparent; }
-    .rank-row:active { background: rgba(255,255,255,0.05); }
+    .rank-row:hover { background: rgba(255,255,255,0.02); }
     .rank-active { background: rgba(99, 102, 241, 0.08); border-left-color: #6366f1; }
   </style>
 </head>
 <body class="antialiased select-none">
-  <!-- HEADER -->
-  <header class="w-full border-b border-slate-900 bg-[#030407]/95 sticky top-0 z-50 backdrop-blur-md px-3 md:px-5 py-2 safe-top">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+  <header class="w-full border-b border-slate-900 bg-[#010203]/90 sticky top-0 z-50 backdrop-blur-xl px-3 md:px-5 py-2 safe-top">
+    <div class="max-w-[1600px] mx-auto flex items-center justify-between gap-3">
       <div class="flex items-center gap-2 min-w-0">
-        <div class="h-7 w-7 rounded bg-indigo-600 flex items-center justify-center shadow-md shrink-0">
-          <i data-lucide="activity" class="h-4 w-4 text-white"></i>
+        <div class="h-8 w-8 rounded bg-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.4)] shrink-0">
+          <i data-lucide="cpu" class="h-4 w-4 text-white"></i>
         </div>
         <div class="min-w-0">
-          <h1 class="text-xs font-extrabold tracking-wider text-slate-200 mono whitespace-nowrap">EDGE<span class="text-indigo-400 mx-1">/</span>V4</h1>
-          <p class="text-[10px] text-slate-500 mono truncate" id="header-active-asset">AWAITING SIGNAL</p>
+          <h1 class="text-xs font-black tracking-widest text-white mono whitespace-nowrap">EDGE<span class="text-indigo-400 mx-1">/</span>V5</h1>
+          <p class="text-[9px] font-bold text-slate-500 mono tracking-widest truncate" id="header-active-asset">AWAITING ENGINE</p>
         </div>
       </div>
       <div class="flex items-center justify-end gap-2 min-w-0">
-        <div class="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-slate-300 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-full">
+        <div class="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-slate-300 bg-slate-900/60 border border-slate-800 px-2.5 py-1 rounded-full">
           <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" id="connection-dot"></span>
-          <span class="mono truncate" id="connection-status">CONNECTING</span>
+          <span class="mono truncate uppercase tracking-wider" id="connection-status">INITIALIZING</span>
         </div>
-        <div class="text-[10px] font-bold text-slate-300 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-full mono whitespace-nowrap">
-          <span id="header-feed-age">0 HZ</span>
+        <div class="hidden md:block text-[10px] font-bold text-slate-300 bg-slate-900/60 border border-slate-800 px-2.5 py-1 rounded-full mono whitespace-nowrap tracking-wider">
+          F&G <span class="text-indigo-400 font-black ml-1" id="header-fng">--</span>
         </div>
-        <div class="text-[10px] font-bold text-slate-300 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-full mono whitespace-nowrap">
-          F&G <span class="text-indigo-300" id="header-fng">--</span>
+        <div class="text-[10px] font-bold text-slate-300 bg-slate-900/60 border border-slate-800 px-2.5 py-1 rounded-full mono whitespace-nowrap tracking-wider">
+          USD/INR <span class="text-emerald-400 font-black ml-1" id="header-fx">--</span>
         </div>
       </div>
     </div>
   </header>
 
-  <main class="w-full max-w-7xl mx-auto px-3 md:px-5 py-3 md:py-5 space-y-3 md:space-y-4 safe-bottom">
+  <main id="capture-zone" class="w-full max-w-[1600px] mx-auto px-3 md:px-5 py-3 md:py-5 space-y-3 md:space-y-4 safe-bottom">
     
-    <!-- HERO: BEST TRADE TODAY -->
-    <section class="panel panel-hot p-4 md:p-5 relative">
-      <div class="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none">
-        <i data-lucide="target" class="w-32 h-32 text-indigo-500"></i>
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
+      
+      <div class="lg:col-span-8 panel panel-hot flex flex-col relative overflow-visible">
+        <div class="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
+          <i data-lucide="crosshair" class="w-48 h-48 text-indigo-500"></i>
+        </div>
+        
+        <div class="p-4 md:p-6 flex-1 z-10 flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-black uppercase tracking-widest border border-indigo-500/30">Composite Rank #1</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mono" id="hero-regime">COMPUTING</span>
+              </div>
+              <h2 class="text-4xl md:text-6xl font-black tracking-tighter mt-1 mono leading-none text-white flex items-end gap-3" id="hero-asset">--
+                <span class="text-sm font-bold text-slate-500 mb-1 tracking-widest hidden sm:inline" id="hero-direction-text">AWAITING</span>
+              </h2>
+            </div>
+            <div class="flex gap-4 sm:text-right">
+              <div>
+                <p class="label mb-1">Trade Score</p>
+                <div class="text-3xl md:text-5xl font-black mono text-indigo-400 leading-none drop-shadow-[0_0_15px_rgba(99,102,241,0.3)]" id="hero-score">--</div>
+              </div>
+              <div class="w-px bg-slate-800"></div>
+              <div>
+                <p class="label mb-1 text-emerald-500/70">Tradeability</p>
+                <div class="text-3xl md:text-5xl font-black mono text-emerald-400 leading-none drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" id="hero-tradeability">--</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            <div class="box p-4 border-l-2 border-l-indigo-500 bg-indigo-950/10">
+              <p class="label text-indigo-400">Entry Zone Engine</p>
+              <p class="text-lg font-black mono mt-1 text-white" id="hero-entry-zone">--</p>
+              <p class="text-[10px] font-bold text-slate-400 mt-2 flex items-center gap-1.5"><i data-lucide="zap" class="w-3 h-3 text-amber-400"></i> Trigger: <span id="hero-trigger" class="text-amber-400/90">Awaiting...</span></p>
+            </div>
+            <div class="box p-4 border-l-2 border-l-slate-700">
+              <p class="label">Time Engine</p>
+              <div class="flex justify-between mt-1">
+                <div>
+                  <span class="text-[10px] text-slate-500 font-bold block">Exp. Hold</span>
+                  <span class="text-sm font-black mono text-white" id="hero-hold-time">--</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-500 font-bold block">Time Stop</span>
+                  <span class="text-sm font-black mono text-rose-400" id="hero-time-stop">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1">
+            <div class="box p-3 flex flex-col justify-center"><p class="label">Stop Loss</p><p class="text-sm font-black mono text-rose-400 mt-1" id="hero-stop">--</p></div>
+            <div class="box p-3 flex flex-col justify-center"><p class="label">Take Profit 1</p><p class="text-sm font-black mono text-emerald-400 mt-1" id="hero-tp1">--</p></div>
+            <div class="box p-3 flex flex-col justify-center"><p class="label">Take Profit 2</p><p class="text-sm font-black mono text-emerald-500 mt-1" id="hero-tp2">--</p></div>
+            <div class="box p-3 flex flex-col justify-center bg-indigo-950/20"><p class="label text-indigo-400">Risk/Reward</p><p class="text-sm font-black mono mt-1 text-white" id="hero-rr">--</p></div>
+          </div>
+        </div>
       </div>
-      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 relative z-10">
-        <div class="flex-1 min-w-0">
-          <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-start mb-3">
-            <div class="min-w-0">
-              <p class="label text-indigo-400">Best Trade Today</p>
-              <h2 class="text-[clamp(2rem,11vw,4.5rem)] font-extrabold tracking-normal mt-2 mono leading-none truncate text-white" id="hero-asset">--</h2>
-            </div>
-            <div class="text-right shrink-0">
-              <p class="label">Trade Score</p>
-              <div class="text-[clamp(2.4rem,12vw,5rem)] font-extrabold mono text-indigo-300 leading-none" id="hero-score">--</div>
-            </div>
-          </div>
 
-          <div class="flex flex-wrap items-center gap-2 mb-4">
-            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-extrabold mono" id="hero-direction">--</span>
-            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold mono value" id="hero-regime">COMPUTING</span>
-            <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold mono whitespace-nowrap text-indigo-300" id="hero-hold">1H MATRIX</span>
+      <div class="lg:col-span-4 flex flex-col gap-3 md:gap-4">
+        
+        <div class="panel flex flex-col h-64">
+          <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/40">
+            <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center">
+              <i data-lucide="bar-chart-2" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Composite Ranking
+            </h2>
           </div>
+          <div id="rankings-root" class="divide-y divide-slate-800/50 overflow-y-auto scroller-clean flex-1">
+            </div>
+        </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <div class="box p-3"><p class="label">Entry Zone</p><p class="text-sm md:text-base font-bold mono mt-2 value text-white" id="hero-entry">--</p></div>
-            <div class="box p-3"><p class="label">Stop Loss</p><p class="text-sm md:text-base font-bold mono text-rose-400 mt-2 value" id="hero-stop">--</p></div>
-            <div class="box p-3"><p class="label">Take Profit 1</p><p class="text-sm md:text-base font-bold mono text-emerald-400 mt-2 value" id="hero-tp1">--</p></div>
-            <div class="box p-3"><p class="label">Take Profit 2</p><p class="text-sm md:text-base font-bold mono text-emerald-500 mt-2 value" id="hero-tp2">--</p></div>
-            <div class="box p-3"><p class="label">Risk Reward</p><p class="text-sm md:text-base font-bold mono mt-2 value text-indigo-200" id="hero-rr">--</p></div>
-            <div class="box p-3"><p class="label">Suggested Size</p><p class="text-sm md:text-base font-bold mono mt-2 value text-slate-200" id="hero-size">--</p></div>
+        <div class="panel p-4 flex-1">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center">
+              <i data-lucide="activity" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Asset Health Panel
+            </h2>
+            <span class="text-[9px] font-bold mono text-slate-500 uppercase px-2 py-0.5 bg-slate-900 rounded" id="health-asset">--</span>
+          </div>
+          
+          <div class="space-y-3 mt-2">
+            <div>
+              <div class="flex justify-between text-[9px] font-bold mono mb-1"><span class="text-slate-400 uppercase tracking-wider">Trend Align</span><span class="text-white" id="bar-val-trend">0</span></div>
+              <div class="progress-bg"><div class="progress-bar bg-blue-500" id="bar-trend" style="width: 0%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[9px] font-bold mono mb-1"><span class="text-slate-400 uppercase tracking-wider">Momentum</span><span class="text-white" id="bar-val-mom">0</span></div>
+              <div class="progress-bg"><div class="progress-bar bg-indigo-500" id="bar-mom" style="width: 0%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[9px] font-bold mono mb-1"><span class="text-slate-400 uppercase tracking-wider">Volatility</span><span class="text-white" id="bar-val-vol">0</span></div>
+              <div class="progress-bg"><div class="progress-bar bg-purple-500" id="bar-vol" style="width: 0%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[9px] font-bold mono mb-1"><span class="text-slate-400 uppercase tracking-wider">Open Interest</span><span class="text-white" id="bar-val-oi">0</span></div>
+              <div class="progress-bg"><div class="progress-bar bg-amber-500" id="bar-oi" style="width: 0%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[9px] font-bold mono mb-1"><span class="text-slate-400 uppercase tracking-wider">Funding</span><span class="text-white" id="bar-val-fund">0</span></div>
+              <div class="progress-bg"><div class="progress-bar bg-emerald-500" id="bar-fund" style="width: 0%"></div></div>
+            </div>
           </div>
         </div>
 
-        <div class="lg:w-64 w-full flex flex-col gap-2 shrink-0">
-          <button id="btn-log-hero" class="touch min-h-12 w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-extrabold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/30 cursor-pointer">
-            <i data-lucide="book-plus" class="h-4 w-4"></i><span>Log Best Setup</span>
-          </button>
-          <div class="box p-3">
-            <p class="label text-indigo-300">Live Components</p>
-            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 mt-3 text-[11px] mono">
-              <span class="text-slate-400 truncate">Trend</span><span class="text-right font-bold text-white" id="score-trend">--</span>
-              <span class="text-slate-400 truncate">Momentum</span><span class="text-right font-bold text-white" id="score-momentum">--</span>
-              <span class="text-slate-400 truncate">Volatility</span><span class="text-right font-bold text-white" id="score-volatility">--</span>
-              <span class="text-slate-400 truncate">Sentiment</span><span class="text-right font-bold text-white" id="score-sentiment">--</span>
-              <span class="text-slate-400 truncate">Risk/Reward</span><span class="text-right font-bold text-white" id="score-riskreward">--</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
       
-      <!-- LEFT COLUMN -->
-      <div class="lg:col-span-4 space-y-3 md:space-y-4 flex flex-col">
-        
-        <!-- RANKINGS -->
-        <section class="panel flex flex-col max-h-[350px]">
-          <div class="px-3 py-2.5 border-b border-slate-900 flex items-center justify-between gap-2 shrink-0 bg-slate-950/50">
-            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center min-w-0">
-              <i data-lucide="list-ordered" class="h-3.5 w-3.5 mr-1.5 text-indigo-400 shrink-0"></i><span class="truncate">Opportunity Rankings</span>
-            </h2>
-            <span class="text-[9px] mono text-slate-500 whitespace-nowrap bg-slate-900 px-1.5 py-0.5 rounded">OKX SWAP</span>
-          </div>
-          <div id="rankings-root" class="divide-y divide-slate-900/60 overflow-y-auto scroller-clean flex-1 pb-1">
-            <!-- Populated by JS -->
-          </div>
-        </section>
-
-        <!-- TRADE THESIS -->
-        <section class="panel p-3">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center min-w-0">
-              <i data-lucide="check-circle-2" class="h-3.5 w-3.5 mr-1.5 text-indigo-400 shrink-0"></i><span class="truncate">Why This Trade</span>
-            </h2>
-            <span class="text-[9px] font-bold mono text-indigo-300 truncate px-2 py-0.5 bg-indigo-500/10 rounded" id="thesis-asset">--</span>
-          </div>
-          <div id="trade-thesis-root" class="space-y-2.5">
-            <!-- Populated by JS -->
-          </div>
-        </section>
-
-        <!-- MARKET ANALYSIS -->
-        <section class="panel p-3 flex-1">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center min-w-0">
-              <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 mr-1.5 text-indigo-400 shrink-0"></i><span class="truncate">Market Analysis</span>
-            </h2>
-            <span class="text-[9px] font-bold mono text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 whitespace-nowrap" id="ui-setup-rank">SCORE --</span>
-          </div>
-          <div class="box text-[11px] mono bg-transparent border-none">
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Market Regime</span><span class="text-right font-bold uppercase text-white truncate" id="ui-metric-regime">COMPUTING</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Volatility Z-Score</span><span class="text-right font-bold text-white" id="ui-metric-zscore">--</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Fear & Greed</span><span class="text-right font-bold text-white" id="ui-fng-line">--</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">USD/INR</span><span class="text-right font-bold text-indigo-300" id="ui-fx-rate">SYNCING</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Feed Status</span><span class="text-right font-bold text-emerald-400" id="ui-feed-status">CONNECTING</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Order Book Spread</span><span class="text-right font-bold text-white" id="ui-book-spread">--</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Confidence</span><span class="text-right font-bold text-white" id="ui-confidence">--</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 border-b border-slate-900/70"><span class="text-slate-500">Trend State</span><span class="text-right font-bold uppercase text-white truncate" id="ui-trend-state">--</span></div>
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-2 pt-3 mt-1"><span class="text-indigo-400 font-extrabold uppercase tracking-wider">Tactical Verdict</span><span class="text-right font-extrabold uppercase text-indigo-400 truncate" id="ui-metric-verdict">--</span></div>
-          </div>
-        </section>
-
+      <div class="lg:col-span-8 panel chart-wrap bg-[#05070a]" data-html2canvas-ignore>
+        <div id="tradingview-canvas-target" class="w-full h-full"></div>
       </div>
 
-      <!-- RIGHT COLUMN -->
-      <div class="lg:col-span-8 space-y-3 md:space-y-4 flex flex-col">
+      <div class="lg:col-span-4 flex flex-col gap-3 md:gap-4">
         
-        <!-- CHART -->
-        <section class="panel chart-wrap relative w-full bg-[#0a0e17]">
-          <div id="tradingview-canvas-target" class="w-full h-full"></div>
-        </section>
+        <div class="panel p-4">
+          <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center mb-3">
+            <i data-lucide="layers" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>MTF Trend Engine
+          </h2>
+          <div class="grid grid-cols-4 gap-2">
+            <div class="box p-2 text-center">
+              <span class="label">15M</span>
+              <div class="text-sm font-black mono mt-1" id="mtf-15m">--</div>
+            </div>
+            <div class="box p-2 text-center">
+              <span class="label">1H</span>
+              <div class="text-sm font-black mono mt-1" id="mtf-1h">--</div>
+            </div>
+            <div class="box p-2 text-center">
+              <span class="label">4H</span>
+              <div class="text-sm font-black mono mt-1" id="mtf-4h">--</div>
+            </div>
+            <div class="box p-2 text-center">
+              <span class="label">1D</span>
+              <div class="text-sm font-black mono mt-1" id="mtf-1d">--</div>
+            </div>
+          </div>
+          <div class="mt-3 flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded">
+            <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Trend Alignment Score</span>
+            <span class="text-sm font-black mono text-indigo-400" id="mtf-align">--/100</span>
+          </div>
+        </div>
 
-        <!-- RISK ENGINE -->
-        <section class="panel p-3 md:p-4">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center">
-              <i data-lucide="shield-check" class="h-3.5 w-3.5 mr-1.5 text-indigo-400"></i>Risk Engine & Sizing
+        <div class="panel p-4 flex-1 flex flex-col">
+          <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center mb-4">
+            <i data-lucide="file-text" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Enhanced Trade Thesis
+          </h2>
+          
+          <div class="grid grid-cols-1 gap-4 flex-1">
+            <div>
+              <p class="label text-emerald-400 mb-2 border-b border-emerald-900/50 pb-1">Strengths</p>
+              <ul class="space-y-1.5" id="thesis-strengths"></ul>
+            </div>
+            <div>
+              <p class="label text-amber-400 mb-2 border-b border-amber-900/50 pb-1">Risks & Warnings</p>
+              <ul class="space-y-1.5" id="thesis-risks"></ul>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-800/60">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Liquidation Risk</span>
+              <span class="text-[10px] font-black mono px-2 py-0.5 rounded uppercase" id="liq-risk-meter">--</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[9px] mono font-bold">
+              <div class="bg-slate-900 px-2 py-1.5 rounded flex justify-between"><span class="text-slate-500 uppercase">Funding</span><span id="oi-funding-state" class="text-white">--</span></div>
+              <div class="bg-slate-900 px-2 py-1.5 rounded flex justify-between"><span class="text-slate-500 uppercase">Open Int.</span><span id="oi-trend-state" class="text-white">--</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
+      
+      <div class="lg:col-span-3 flex flex-col gap-3 md:gap-4">
+        
+        <div class="panel p-4">
+          <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center mb-4">
+            <i data-lucide="pie-chart" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Setup Quality Stats
+          </h2>
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="box py-3"><p class="text-xl font-black mono text-white leading-none" id="stat-winrate">--%</p><p class="label mt-1">Win Rate</p></div>
+            <div class="box py-3"><p class="text-xl font-black mono text-emerald-400 leading-none" id="stat-pf">--</p><p class="label mt-1">Profit Factor</p></div>
+            <div class="box py-3"><p class="text-xl font-black mono text-indigo-300 leading-none" id="stat-avgscore">--</p><p class="label mt-1">Avg Score</p></div>
+            <div class="box py-3"><p class="text-xl font-black mono text-white leading-none" id="stat-avgtrade">--</p><p class="label mt-1">Avg T-Ability</p></div>
+          </div>
+        </div>
+
+        <div class="panel p-4 flex-1">
+          <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center mb-3">
+            <i data-lucide="wallet" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Exposure Monitor
+          </h2>
+          <div class="text-2xl font-black mono text-white mb-1" id="port-total-exp">0%</div>
+          <p class="label mb-4 text-slate-500">Capital Deployed</p>
+          <div id="port-assets" class="space-y-2">
+            <p class="text-[10px] text-slate-500 mono font-bold">No active positions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-9 flex flex-col gap-3 md:gap-4">
+        
+        <div class="panel p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center">
+              <i data-lucide="shield-alert" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Risk Engine & Sizing
             </h2>
-            <div class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 text-[9px] font-bold mono text-slate-400 w-fit max-w-full shadow-inner">
-              <span>ATR (14)</span><span class="text-indigo-300 uppercase font-extrabold value" id="ui-atr-basis-value">LOADING</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-bold text-slate-400 mono px-2 py-1 bg-slate-900 rounded">ATR: <span id="ui-atr-val" class="text-indigo-300 ml-1">--</span></span>
             </div>
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Portfolio Equity (INR)</label>
-              <input type="number" id="risk-equity" value="830000" class="px-3 py-2 text-sm font-bold mono min-h-10 transition-colors">
+              <label class="block text-[9px] font-black text-slate-400 uppercase mb-1.5 pl-1 tracking-widest">Equity (INR)</label>
+              <input type="number" id="risk-equity" value="830000" class="px-3 py-2.5 text-sm font-bold mono transition-colors">
             </div>
             <div>
-              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Capital Risk %</label>
-              <input type="number" id="risk-percent" value="1.0" step="0.25" class="px-3 py-2 text-sm font-bold mono min-h-10 transition-colors">
+              <label class="block text-[9px] font-black text-slate-400 uppercase mb-1.5 pl-1 tracking-widest">Risk %</label>
+              <input type="number" id="risk-percent" value="1.0" step="0.25" class="px-3 py-2.5 text-sm font-bold mono transition-colors">
             </div>
             <div>
-              <div class="flex justify-between items-center gap-2 mb-1.5 pl-1 pr-1">
-                <label class="block text-[9px] font-extrabold text-slate-400 uppercase truncate">Stop (INR)</label>
-                <button id="btn-trigger-volstop" class="text-[9px] font-extrabold text-indigo-400 hover:text-indigo-300 uppercase bg-transparent border-none whitespace-nowrap cursor-pointer transition-colors">Auto Vol-Stop</button>
+              <div class="flex justify-between items-center mb-1.5 pl-1 pr-1">
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Stop (INR)</label>
+                <button id="btn-auto-stop" class="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest transition-colors cursor-pointer">Auto Vol</button>
               </div>
-              <input type="number" id="risk-stop" value="0" class="px-3 py-2 text-sm font-bold mono min-h-10 text-rose-300 transition-colors">
+              <input type="number" id="risk-stop" value="0" class="px-3 py-2.5 text-sm font-bold mono text-rose-300 transition-colors bg-rose-950/10 border-rose-900/30 focus:border-rose-500">
             </div>
             <div>
-              <label class="block text-[9px] font-extrabold text-slate-400 uppercase mb-1.5 pl-1">Target (INR)</label>
-              <input type="number" id="risk-take" value="0" class="px-3 py-2 text-sm font-bold mono min-h-10 text-emerald-300 transition-colors">
+              <label class="block text-[9px] font-black text-slate-400 uppercase mb-1.5 pl-1 tracking-widest">Target (INR)</label>
+              <input type="number" id="risk-take" value="0" class="px-3 py-2.5 text-sm font-bold mono text-emerald-300 transition-colors bg-emerald-950/10 border-emerald-900/30 focus:border-emerald-500">
             </div>
           </div>
 
-          <div class="mt-4 pt-3 border-t border-slate-900/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="box px-4 py-3 bg-indigo-950/20 border-indigo-900/30">
-              <span class="text-[9px] uppercase text-indigo-400 font-extrabold block tracking-widest">Position Size (INR)</span>
-              <span class="text-sm md:text-base font-extrabold text-white mono mt-1.5 block value" id="out-size">--</span>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="box px-4 py-3 bg-indigo-900/20 border-indigo-500/30">
+              <span class="label text-indigo-300 block mb-1">Position Size (INR)</span>
+              <span class="text-lg font-black text-white mono drop-shadow" id="out-size">--</span>
             </div>
             <div class="box px-4 py-3 bg-slate-900/50">
-              <span class="text-[9px] uppercase text-emerald-400 font-extrabold block tracking-widest">Risk / Reward</span>
-              <span class="text-sm md:text-base font-bold text-white mono mt-1.5 block value" id="out-rr">--</span>
+              <span class="label block mb-1">Risk / Reward</span>
+              <span class="text-lg font-black text-white mono" id="out-rr">--</span>
             </div>
             <div class="box px-4 py-3 bg-slate-900/50">
-              <span class="text-[9px] uppercase text-slate-400 font-extrabold block tracking-widest">Calculated Vol-Stop</span>
-              <span class="text-sm md:text-base font-bold text-white mono mt-1.5 block value" id="out-volstop">--</span>
+              <span class="label block mb-1">Margin Requirement</span>
+              <span class="text-lg font-black text-white mono" id="out-margin">--</span>
             </div>
           </div>
-        </section>
+        </div>
 
-        <!-- TRADE JOURNAL -->
-        <section class="panel p-3 md:p-4 flex-1 flex flex-col">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 flex items-center shrink-0">
-              <i data-lucide="book-open" class="h-3.5 w-3.5 mr-1.5 text-indigo-400"></i>Trade Journal
+        <div class="panel p-4 flex-1 flex flex-col" data-html2canvas-ignore>
+          <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-4">
+            <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center shrink-0">
+              <i data-lucide="book-open-check" class="h-3.5 w-3.5 mr-2 text-indigo-400"></i>Snapshot Journal & Review
             </h2>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <input type="text" id="journal-notes" placeholder="Setup thesis/notes..." class="px-3 py-2 text-xs mono min-h-10 w-full sm:w-56 bg-slate-950">
-              <div class="flex items-center gap-2">
-                <select id="journal-grade" class="px-3 py-2 text-xs mono font-bold min-h-10 bg-slate-950 flex-1 sm:w-auto text-slate-300 cursor-pointer">
-                    <option value="OPEN" class="text-indigo-400">OPEN</option>
-                    <option value="A" class="text-emerald-400">GRADE A</option>
-                    <option value="B" class="text-emerald-300">GRADE B</option>
-                    <option value="C" class="text-amber-400">GRADE C</option>
-                    <option value="WIN" class="text-green-500">WIN</option>
-                    <option value="LOSS" class="text-rose-500">LOSS</option>
-                    <option value="F" class="text-rose-600">GRADE F</option>
-                </select>
-                <button id="btn-commit-ledger" class="touch min-h-10 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-xs px-5 rounded-lg transition-all whitespace-nowrap shadow-md cursor-pointer">
-                    Log Active
-                </button>
-              </div>
+            
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full xl:w-auto">
+              <input type="text" id="journal-notes" placeholder="Setup thesis/notes..." class="px-3 py-2 text-xs mono w-full sm:w-64 bg-slate-950/50">
+              <select id="journal-review" class="px-3 py-2 text-xs mono font-bold bg-slate-950/50 text-slate-300 cursor-pointer sm:w-40">
+                  <option value="OPEN" class="text-indigo-400">STATUS: OPEN</option>
+                  <option value="PERFECT">Perfect Execution</option>
+                  <option value="GOOD">Good Trade</option>
+                  <option value="BAD_EXEC">Bad Execution</option>
+                  <option value="BAD_SETUP">Bad Setup</option>
+                  <option value="EMOTIONAL">Emotional Trade</option>
+                  <option value="MISSED_STOP">Missed Stop</option>
+              </select>
+              <button id="btn-log-trade" class="touch min-h-[38px] bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-black text-xs px-5 rounded transition-all whitespace-nowrap shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                <i data-lucide="camera" class="h-3.5 w-3.5"></i> Log & Snap
+              </button>
             </div>
           </div>
           
-          <div class="overflow-x-auto w-full flex-1 min-h-[150px] scroller-clean border border-slate-900 rounded-lg bg-slate-950/30">
-              <table class="w-full text-left border-collapse min-w-[650px]">
-                  <thead class="sticky top-0 bg-slate-950 z-10 shadow-sm">
-                      <tr class="text-[9px] uppercase tracking-wider text-slate-500 font-extrabold border-b border-slate-800">
-                          <th class="py-3 px-4">Asset</th>
-                          <th class="py-3 px-4">Grade</th>
-                          <th class="py-3 px-4">Pos Size (INR)</th>
-                          <th class="py-3 px-4">Target (INR)</th>
-                          <th class="py-3 px-4">Notes</th>
-                          <th class="py-3 px-4 text-right">Time</th>
-                      </tr>
-                  </thead>
-                  <tbody id="ledger-rows-target" class="divide-y divide-slate-800/40 text-[11px] text-slate-300 mono bg-transparent">
-                      <!-- Populated via JS -->
+          <div class="overflow-x-auto w-full flex-1 min-h-[180px] scroller-clean rounded-lg bg-slate-950/40 border border-slate-800">
+            <table class="w-full text-left border-collapse min-w-[900px]">
+              <thead class="sticky top-0 bg-slate-900 z-10 shadow-sm border-b border-slate-800">
+                <tr class="text-[9px] uppercase tracking-widest text-slate-500 font-black">
+                  <th class="py-3 px-4">Asset</th>
+                  <th class="py-3 px-3">Scores</th>
+                  <th class="py-3 px-3">Review</th>
+                  <th class="py-3 px-3">Pos (INR)</th>
+                  <th class="py-3 px-3">Regime</th>
+                  <th class="py-3 px-4">Notes</th>
+                  <th class="py-3 px-4 text-right">Time</th>
+                  <th class="py-3 px-4 text-center">Snap</th>
+                </tr>
+              </thead>
+              <tbody id="ledger-rows" class="divide-y divide-slate-800/50 text-[11px] text-slate-300 mono bg-transparent">
                   </tbody>
-              </table>
+            </table>
           </div>
           <div class="mt-3 text-right">
-              <button id="btn-flush-ledger" class="text-[9px] text-slate-600 font-extrabold uppercase tracking-widest hover:text-rose-400 transition-colors bg-transparent border-none cursor-pointer px-2 py-1">Purge Journal</button>
+              <button id="btn-purge-journal" class="text-[9px] text-slate-600 font-black uppercase tracking-widest hover:text-rose-500 transition-colors bg-transparent border-none cursor-pointer">Purge History</button>
           </div>
-        </section>
+        </div>
 
       </div>
     </section>
   </main>
 
-  <script src="https://s3.tradingview.com/tv.js"></script>
   <script>
     const CONFIG = {
         assets: ['BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP', 'AVAX-USDT-SWAP', 'DOGE-USDT-SWAP', 'XRP-USDT-SWAP'], 
-        wsEndpoint: 'wss://wspap.okx.com:443/ws/v5/public',
-        restBase: 'https://www.okx.com',
-        fngEndpoint: 'https://api.alternative.me/fng/?limit=1',
-        fxEndpoint: 'https://open.er-api.com/v6/latest/USD'
+        ws: 'wss://wspap.okx.com:443/ws/v5/public',
+        rest: 'https://www.okx.com',
+        fng: 'https://api.alternative.me/fng/?limit=1',
+        fx: 'https://open.er-api.com/v6/latest/USD'
     };
 
-    let AppState = {
-        activeAsset: 'BTC-USDT-SWAP',
-        sortedAssets: [],
-        tickerCache: {},
-        ledgerLog: [],
-        isDirty: false,
-        renderLock: false,
-        fngValue: 50,
-        fngText: 'NEUTRAL',
-        fxRate: 83.50, // Reactive fallback value dynamically syncs over REST API
-        loopCounter: 0
+    let State = {
+        active: 'BTC-USDT-SWAP',
+        sorted: [],
+        cache: {},
+        ledger: [],
+        dirty: false,
+        lock: false,
+        fng: 50,
+        fxRate: 83.50,
+        loop: 0
     };
 
-    let DOM = {
-        headerActiveAsset: null, headerFeedAge: null, headerFng: null,
-        connDot: null, connStatus: null,
-        heroAsset: null, heroScore: null, heroDir: null, heroRegime: null, 
-        heroEntry: null, heroStop: null, heroTp1: null, heroTp2: null, heroRr: null, heroSize: null, heroHold: null,
-        scoreTrend: null, scoreMom: null, scoreVol: null, scoreSent: null, scoreRr: null,
-        rankingsRoot: null, thesisRoot: null, thesisAsset: null,
-        uiMetricRegime: null, uiMetricZScore: null, uiMetricVerdict: null, uiAtrBasisValue: null,
-        uiFngLine: null, uiFxRate: null, uiFeedStatus: null, uiBookSpread: null, uiConfidence: null, uiTrendState: null,
-        riskEquity: null, riskPercent: null, riskStop: null, riskTake: null,
-        outSize: null, outRr: null, outVolstop: null,
-        journalNotes: null, journalGrade: null, ledgerTarget: null,
-        rankingNodes: {}
-    };
+    let D = {};
+    let ChartWidget = null;
 
-    let ActiveChartWidget = null;
+    const _el = id => document.getElementById(id);
+    const _fetch = (url) => Promise.race([fetch(url), new Promise((_, r) => setTimeout(() => r(new Error('T/O')), 5000))]);
 
-    function fetchWithTimeout(url, options = {}, timeout = 5000) {
-        return Promise.race([
-            fetch(url, options),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
-        ]);
-    }
+    function init() {
+        D = {
+            hAsset: _el('header-active-asset'), hAge: _el('header-feed-age'), hFng: _el('header-fng'), hFx: _el('header-fx'),
+            cDot: _el('connection-dot'), cStat: _el('connection-status'),
+            heroAsset: _el('hero-asset'), heroScore: _el('hero-score'), heroTability: _el('hero-tradeability'),
+            heroDirTxt: _el('hero-direction-text'), heroRegime: _el('hero-regime'), heroEntry: _el('hero-entry-zone'),
+            heroTrig: _el('hero-trigger'), heroHold: _el('hero-hold-time'), heroTStop: _el('hero-time-stop'),
+            heroStop: _el('hero-stop'), heroTp1: _el('hero-tp1'), heroTp2: _el('hero-tp2'), heroRr: _el('hero-rr'),
+            rankRoot: _el('rankings-root'), healthAsset: _el('health-asset'),
+            bars: { trend: _el('bar-trend'), mom: _el('bar-mom'), vol: _el('bar-vol'), oi: _el('bar-oi'), fund: _el('bar-fund') },
+            barV: { trend: _el('bar-val-trend'), mom: _el('bar-val-mom'), vol: _el('bar-val-vol'), oi: _el('bar-val-oi'), fund: _el('bar-val-fund') },
+            mtf15: _el('mtf-15m'), mtf1h: _el('mtf-1h'), mtf4h: _el('mtf-4h'), mtf1d: _el('mtf-1d'), mtfAlign: _el('mtf-align'),
+            thStr: _el('thesis-strengths'), thRsk: _el('thesis-risks'), liqRisk: _el('liq-risk-meter'),
+            oiFundSt: _el('oi-funding-state'), oiTrndSt: _el('oi-trend-state'),
+            sWin: _el('stat-winrate'), sPf: _el('stat-pf'), sAvgS: _el('stat-avgscore'), sAvgT: _el('stat-avgtrade'),
+            pTotExp: _el('port-total-exp'), pAssets: _el('port-assets'),
+            atrVal: _el('ui-atr-val'), rEq: _el('risk-equity'), rPct: _el('risk-percent'), rStp: _el('risk-stop'), rTk: _el('risk-take'),
+            oSz: _el('out-size'), oRr: _el('out-rr'), oMar: _el('out-margin'),
+            jNotes: _el('journal-notes'), jRev: _el('journal-review'), ledg: _el('ledger-rows'),
+            nodes: {}
+        };
 
-    document.addEventListener("DOMContentLoaded", () => {
-        lucide.createIcons();
-        cacheDOM();
-        initializeStructures();
-        
-        setTimeout(() => { mountChartCanvas(AppState.activeAsset); }, 400);
-        seedHistoricalKLines();
-        SocketTransportManager.initializeConnection();
-        pullExternalMetrics();
-        syncLocalLedger();
-        mountHooks();
-        
-        setInterval(() => {
-            AppState.loopCounter++;
-            if (AppState.loopCounter % 2 === 0 && DOM.headerFeedAge) {
-                DOM.headerFeedAge.innerText = `${Math.floor(Math.random() * 5 + 28)} HZ`;
-            }
-            if (AppState.isDirty && !AppState.renderLock) executeRenderPipeline();
-        }, 250);
-    });
-
-    function cacheDOM() {
-        DOM.headerActiveAsset = document.getElementById('header-active-asset');
-        DOM.headerFeedAge = document.getElementById('header-feed-age');
-        DOM.headerFng = document.getElementById('header-fng');
-        DOM.connDot = document.getElementById('connection-dot');
-        DOM.connStatus = document.getElementById('connection-status');
-        
-        DOM.heroAsset = document.getElementById('hero-asset');
-        DOM.heroScore = document.getElementById('hero-score');
-        DOM.heroDir = document.getElementById('hero-direction');
-        DOM.heroRegime = document.getElementById('hero-regime');
-        DOM.heroHold = document.getElementById('hero-hold');
-        DOM.heroEntry = document.getElementById('hero-entry');
-        DOM.heroStop = document.getElementById('hero-stop');
-        DOM.heroTp1 = document.getElementById('hero-tp1');
-        DOM.heroTp2 = document.getElementById('hero-tp2');
-        DOM.heroRr = document.getElementById('hero-rr');
-        DOM.heroSize = document.getElementById('hero-size');
-        
-        DOM.scoreTrend = document.getElementById('score-trend');
-        DOM.scoreMom = document.getElementById('score-momentum');
-        DOM.scoreVol = document.getElementById('score-volatility');
-        DOM.scoreSent = document.getElementById('score-sentiment');
-        DOM.scoreRr = document.getElementById('score-riskreward');
-        
-        DOM.rankingsRoot = document.getElementById('rankings-root');
-        DOM.thesisRoot = document.getElementById('trade-thesis-root');
-        DOM.thesisAsset = document.getElementById('thesis-asset');
-        
-        DOM.uiMetricRegime = document.getElementById('ui-metric-regime');
-        DOM.uiMetricZScore = document.getElementById('ui-metric-zscore');
-        DOM.uiMetricVerdict = document.getElementById('ui-metric-verdict');
-        DOM.uiAtrBasisValue = document.getElementById('ui-atr-basis-value');
-        DOM.uiFngLine = document.getElementById('ui-fng-line');
-        DOM.uiFxRate = document.getElementById('ui-fx-rate');
-        DOM.uiFeedStatus = document.getElementById('ui-feed-status');
-        DOM.uiBookSpread = document.getElementById('ui-book-spread');
-        DOM.uiConfidence = document.getElementById('ui-confidence');
-        DOM.uiTrendState = document.getElementById('ui-trend-state');
-        
-        DOM.riskEquity = document.getElementById('risk-equity');
-        DOM.riskPercent = document.getElementById('risk-percent');
-        DOM.riskStop = document.getElementById('risk-stop');
-        DOM.riskTake = document.getElementById('risk-take');
-        DOM.outSize = document.getElementById('out-size');
-        DOM.outRr = document.getElementById('out-rr');
-        DOM.outVolstop = document.getElementById('out-volstop');
-        
-        DOM.journalNotes = document.getElementById('journal-notes');
-        DOM.journalGrade = document.getElementById('journal-grade');
-        DOM.ledgerTarget = document.getElementById('ledger-rows-target');
-    }
-
-    function initializeStructures() {
-        CONFIG.assets.forEach(symbol => {
-            AppState.tickerCache[symbol] = { 
-                price: 0, change: 0, prevPrice: 0, high: 0, low: 0, ask: 0, bid: 0,
-                atr14Mean: 0, atr14StdDev: 1.0, currentTrueRange: 0,
-                metrics: { regime: 'WAITING', zscore: 0, verdict: 'OBSERVE', spread: '0.00%' },
-                scores: { trend: 0, momentum: 0, volatility: 0, sentiment: 0, rr: 0, total: 0 }
+        CONFIG.assets.forEach(a => {
+            State.cache[a] = {
+                price:0, chg:0, h:0, l:0, prev:0, atrM:0, atrS:1, tr:0,
+                fund:0, oi:0, oiChg:0,
+                sc: { trd:0, mom:0, vol:0, sent:0, fund:0, oi:0, rr:0, tScore:0, tAbility:0, comp:0 },
+                reg: 'WAITING', trg: 'OBSERVE', liq: 'LOW'
             };
         });
-        AppState.sortedAssets = [...CONFIG.assets];
-        buildRankingsDOM();
+        State.sorted = [...CONFIG.assets];
+        
+        buildRanks();
+        setTimeout(() => setChart(State.active), 400);
+        
+        loadKLines();
+        loadRestData(); 
+        WS.init();
+        loadMacro();
+        syncStore();
+        setupHooks();
+
+        setInterval(() => {
+            State.loop++;
+            if(State.loop % 2 === 0 && D.hAge) D.hAge.innerText = `${Math.floor(Math.random()*6+25)} HZ`;
+            if(State.dirty && !State.lock) render();
+        }, 300);
+        
+        // Slower rest polling for Funding/OI
+        setInterval(loadRestData, 15000); 
     }
 
-    function buildRankingsDOM() {
-        if(!DOM.rankingsRoot) return;
-        DOM.rankingsRoot.innerHTML = '';
-
-        AppState.sortedAssets.forEach((symbol, index) => {
+    function buildRanks() {
+        if(!D.rankRoot) return;
+        D.rankRoot.innerHTML = '';
+        State.sorted.forEach((sym, i) => {
             const el = document.createElement('div');
-            el.id = `rank-row-${symbol}`;
-            el.className = `rank-row p-3 flex items-center justify-between cursor-pointer ${AppState.activeAsset === symbol ? 'rank-active' : ''}`;
-            el.onclick = () => setAssetContext(symbol);
-            
-            const displaySymbol = symbol.replace('-SWAP', '');
-            
+            el.className = `rank-row p-3 flex items-center justify-between cursor-pointer ${State.active===sym?'rank-active':''}`;
+            el.onclick = () => {
+                if(State.active === sym) return;
+                D.nodes[State.active].c.classList.remove('rank-active');
+                State.active = sym;
+                D.nodes[sym].c.classList.add('rank-active');
+                setChart(sym);
+                State.dirty = true;
+            };
             el.innerHTML = `
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="text-[10px] font-black text-slate-600 mono w-4 shrink-0 text-center" id="rank-num-${symbol}">${index + 1}</div>
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="text-[10px] font-black text-slate-600 mono w-4 shrink-0 text-center" id="rnk-n-${sym}">${i+1}</div>
                     <div class="min-w-0">
-                        <h4 class="text-sm font-extrabold text-slate-200 tracking-wider mono truncate">${displaySymbol}</h4>
-                        <span class="text-[9px] font-bold text-slate-500 tracking-wide uppercase truncate block" id="rank-regime-${symbol}">--</span>
+                        <h4 class="text-sm font-black text-slate-200 tracking-wider mono truncate">${sym.replace('-SWAP','')}</h4>
+                        <span class="text-[9px] font-bold text-slate-500 tracking-widest uppercase truncate block" id="rnk-r-${sym}">--</span>
                     </div>
                 </div>
                 <div class="text-right shrink-0">
-                    <p class="text-base font-black mono text-indigo-300" id="rank-score-${symbol}">--</p>
-                    <p class="text-[10px] font-bold mono mt-0.5" id="rank-change-${symbol}">--</p>
+                    <p class="text-lg font-black mono text-indigo-300" id="rnk-s-${sym}">--</p>
+                    <p class="text-[9px] font-bold mono mt-0.5 text-emerald-500/70" id="rnk-a-${sym}">--</p>
                 </div>
             `;
-            DOM.rankingsRoot.appendChild(el);
-            
-            DOM.rankingNodes[symbol] = {
-                container: el,
-                num: document.getElementById(`rank-num-${symbol}`),
-                regime: document.getElementById(`rank-regime-${symbol}`),
-                score: document.getElementById(`rank-score-${symbol}`),
-                change: document.getElementById(`rank-change-${symbol}`)
-            };
+            D.rankRoot.appendChild(el);
+            D.nodes[sym] = { c:el, n:_el(`rnk-n-${sym}`), r:_el(`rnk-r-${sym}`), s:_el(`rnk-s-${sym}`), a:_el(`rnk-a-${sym}`) };
         });
     }
 
-    function setAssetContext(symbol) {
-        if (AppState.activeAsset === symbol) return;
-        
-        if(DOM.rankingNodes[AppState.activeAsset]) {
-            DOM.rankingNodes[AppState.activeAsset].container.classList.remove('rank-active');
-        }
-        
-        AppState.activeAsset = symbol;
-        
-        if(DOM.rankingNodes[symbol]) {
-            DOM.rankingNodes[symbol].container.classList.add('rank-active');
-        }
-
-        mountChartCanvas(symbol);
-        AppState.isDirty = true;
-    }
-
-    function mountChartCanvas(symbol) {
-        const container = document.getElementById('tradingview-canvas-target');
-        if(!container) return;
-
-        if (ActiveChartWidget && typeof ActiveChartWidget.remove === 'function') {
-            try { ActiveChartWidget.remove(); } catch(e) {}
-            ActiveChartWidget = null;
-        }
-        
-        container.innerHTML = '';
-        const mappedSymbol = `OKX:${symbol.replace('-USDT-SWAP', 'USDT.P')}`;
-
-        ActiveChartWidget = new TradingView.widget({
-            "autosize": true,
-            "symbol": mappedSymbol,
-            "interval": "60",
-            "timezone": "Etc/UTC",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "hide_side_toolbar": true,
-            "allow_symbol_change": false,
-            "container_id": "tradingview-canvas-target",
-            "studies": ["RSI@tv-basicstudies", "VWAP@tv-basicstudies"],
-            "toolbar_bg": "#020305",
-            "backgroundColor": "#07090e"
+    function setChart(sym) {
+        const tgt = _el('tradingview-canvas-target');
+        if(!tgt) return;
+        if(ChartWidget && ChartWidget.remove) { try{ChartWidget.remove()}catch(e){} }
+        tgt.innerHTML = '';
+        ChartWidget = new TradingView.widget({
+            autosize: true, symbol: `OKX:${sym.replace('-USDT-SWAP','USDT.P')}`, interval: "60",
+            theme: "dark", style: "1", locale: "en", hide_side_toolbar: true, allow_symbol_change: false,
+            container_id: "tradingview-canvas-target", studies: ["RSI@tv-basicstudies", "VWAP@tv-basicstudies"],
+            toolbar_bg: "#06080c", backgroundColor: "#06080c"
         });
     }
 
-    function seedHistoricalKLines() {
-        CONFIG.assets.forEach(symbol => {
-            fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/history-candles?instId=${symbol}&bar=1H&limit=30`)
-                .then(res => res.json())
-                .then(pack => {
-                    if(pack && pack.data && pack.data.length >= 15) {
-                        let trArr = [];
-                        for(let i = 0; i < pack.data.length - 1; i++) {
-                            const h = parseFloat(pack.data[i][2]), l = parseFloat(pack.data[i][3]), pc = parseFloat(pack.data[i+1][4]);
-                            trArr.push(Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc)));
-                        }
-                        const slice = trArr.slice(0, 14);
-                        const mean = slice.reduce((a,b)=>a+b,0)/14;
-                        const stdDev = Math.sqrt(slice.map(x=>Math.pow(x-mean,2)).reduce((a,b)=>a+b,0)/13) || 1.0;
-                        
-                        const t = AppState.tickerCache[symbol];
-                        if(t) { t.atr14Mean = mean; t.atr14StdDev = stdDev; AppState.isDirty = true; }
+    function loadKLines() {
+        CONFIG.assets.forEach(s => {
+            _fetch(`${CONFIG.rest}/api/v5/market/history-candles?instId=${s}&bar=1H&limit=30`).then(r=>r.json()).then(p => {
+                if(p?.data?.length > 14) {
+                    let trArr = [];
+                    for(let i=0; i<p.data.length-1; i++) {
+                        const h = parseFloat(p.data[i][2]), l = parseFloat(p.data[i][3]), pc = parseFloat(p.data[i+1][4]);
+                        trArr.push(Math.max(h-l, Math.abs(h-pc), Math.abs(l-pc)));
                     }
-                }).catch(()=>{});
+                    const sl = trArr.slice(0,14), m = sl.reduce((a,b)=>a+b,0)/14;
+                    const sd = Math.sqrt(sl.map(x=>Math.pow(x-m,2)).reduce((a,b)=>a+b,0)/13) || 1;
+                    const t = State.cache[s];
+                    t.atrM = m; t.atrS = sd; State.dirty = true;
+                }
+            }).catch(()=>{});
         });
     }
 
-    function pullExternalMetrics() {
-        fetchWithTimeout(CONFIG.fngEndpoint).then(r=>r.json()).then(d=>{
-            if(d?.data?.[0]) {
-                AppState.fngValue = parseInt(d.data[0].value);
-                AppState.fngText = d.data[0].value_classification;
-                AppState.isDirty = true;
-            }
-        }).catch(()=>{});
+    function loadRestData() {
+        CONFIG.assets.forEach(s => {
+            _fetch(`${CONFIG.rest}/api/v5/public/funding-rate?instId=${s}`).then(r=>r.json()).then(d=>{
+                if(d?.data?.[0]) { State.cache[s].fund = parseFloat(d.data[0].fundingRate); State.dirty=true; }
+            }).catch(()=>{});
+            _fetch(`${CONFIG.rest}/api/v5/public/open-interest?instType=SWAP&instId=${s}`).then(r=>r.json()).then(d=>{
+                if(d?.data?.[0]) { 
+                    const cur = parseFloat(d.data[0].oi);
+                    State.cache[s].oiChg = State.cache[s].oi > 0 ? ((cur - State.cache[s].oi)/State.cache[s].oi)*100 : 0;
+                    State.cache[s].oi = cur; State.dirty=true; 
+                }
+            }).catch(()=>{});
+        });
+    }
 
-        fetchWithTimeout(CONFIG.fxEndpoint).then(r=>r.json()).then(d=>{
-            if(d?.rates?.INR) {
-                AppState.fxRate = parseFloat(d.rates.INR);
-                AppState.isDirty = true;
-            }
+    function loadMacro() {
+        _fetch(CONFIG.fng).then(r=>r.json()).then(d=>{
+            if(d?.data?.[0]) { State.fng = parseInt(d.data[0].value); State.dirty=true; }
+        }).catch(()=>{});
+        _fetch(CONFIG.fx).then(r=>r.json()).then(d=>{
+            if(d?.rates?.INR) { State.fxRate = parseFloat(d.rates.INR); State.dirty=true; }
         }).catch(()=>{});
     }
 
-    const SocketTransportManager = {
-        instance: null, attempts: 0, fallback: false, pollId: null,
-
-        initializeConnection: function() {
+    const WS = {
+        i: null, a: 0, f: false, p: null,
+        init: function() {
             this.kill();
-            if (this.fallback) return this.startRest();
-
+            if(this.f) return this.poll();
             try {
-                this.instance = new WebSocket(CONFIG.wsEndpoint);
-                this.instance.onopen = () => {
-                    this.attempts = 0;
-                    updateConnStatus("CONNECTED", "bg-emerald-400", "text-emerald-400");
-                    const args = CONFIG.assets.map(a => ({ channel: "tickers", instId: a }));
-                    this.instance.send(JSON.stringify({ op: "subscribe", args: args }));
+                this.i = new WebSocket(CONFIG.ws);
+                this.i.onopen = () => {
+                    this.a = 0; uiConn("CONNECTED", "bg-emerald-400", "text-emerald-400");
+                    this.i.send(JSON.stringify({ op: "subscribe", args: CONFIG.assets.map(a=>({channel:"tickers",instId:a})) }));
                 };
-                this.instance.onmessage = (e) => {
-                    if (e.data === "pong") return;
-                    try {
-                        const p = JSON.parse(e.data);
-                        if (p?.data?.[0]) processTick(p.data[0]);
-                    } catch(err) {}
-                };
-                this.instance.onclose = () => this.reconnect();
-                this.instance.onerror = () => {
-                    if(this.attempts === 0) { this.fallback = true; this.startRest(); }
-                    else { try{this.instance.close()}catch(err){} }
-                };
-            } catch (e) {
-                this.fallback = true;
-                this.startRest();
-            }
+                this.i.onmessage = (e) => { if(e.data!=="pong") { try{const p=JSON.parse(e.data); if(p?.data?.[0]) procTick(p.data[0]);}catch(er){} } };
+                this.i.onclose = () => this.recon();
+                this.i.onerror = () => { if(this.a===0){this.f=true; this.poll();} else {try{this.i.close()}catch(er){}} };
+            } catch(e) { this.f = true; this.poll(); }
         },
-        
-        startRest: function() {
-            updateConnStatus("REST POLLING", "bg-amber-400", "text-amber-400");
+        poll: function() {
+            uiConn("REST POLLING", "bg-amber-400", "text-amber-400");
             const fetcher = () => {
-                fetchWithTimeout(`${CONFIG.restBase}/api/v5/market/tickers?instType=SWAP`)
-                    .then(r=>r.json())
-                    .then(p => {
-                        if (p?.data) {
-                            p.data.forEach(raw => { if(CONFIG.assets.includes(raw.instId)) processTick(raw); });
-                        }
-                    }).catch(()=>{ updateConnStatus("OFFLINE", "bg-rose-500", "text-rose-500"); });
+                _fetch(`${CONFIG.rest}/api/v5/market/tickers?instType=SWAP`).then(r=>r.json()).then(p=>{
+                    if(p?.data) p.data.forEach(r => { if(CONFIG.assets.includes(r.instId)) procTick(r); });
+                }).catch(()=>uiConn("OFFLINE", "bg-rose-500", "text-rose-500"));
             };
-            fetcher();
-            this.pollId = setInterval(fetcher, 3000);
+            fetcher(); this.p = setInterval(fetcher, 3000);
         },
-
-        reconnect: function() {
-            if (this.fallback) return;
-            updateConnStatus("RECONNECTING", "bg-amber-500 animate-pulse", "text-amber-400");
-            const wait = Math.min(30000, Math.pow(2, this.attempts) * 2000);
-            this.attempts++;
-            setTimeout(() => this.initializeConnection(), wait);
+        recon: function() {
+            if(this.f) return;
+            uiConn("RECONNECTING", "bg-amber-500 animate-pulse", "text-amber-400");
+            const w = Math.min(30000, Math.pow(2, this.a)*2000); this.a++;
+            setTimeout(()=>this.init(), w);
         },
-        
         kill: function() {
-            clearInterval(this.pollId);
-            if (this.instance) {
-                this.instance.onopen = this.instance.onmessage = this.instance.onclose = this.instance.onerror = null;
-                try{this.instance.close()}catch(e){}
-                this.instance = null;
-            }
+            clearInterval(this.p);
+            if(this.i) { this.i.onopen=this.i.onmessage=this.i.onclose=this.i.onerror=null; try{this.i.close()}catch(e){} this.i=null; }
         }
     };
 
-    function updateConnStatus(text, dotCls, textCls) {
-        if(DOM.connStatus) { DOM.connStatus.innerText = text; DOM.connStatus.className = `mono truncate ${textCls}`; }
-        if(DOM.connDot) DOM.connDot.className = `h-1.5 w-1.5 rounded-full shrink-0 ${dotCls}`;
-        if(DOM.uiFeedStatus) { DOM.uiFeedStatus.innerText = text; DOM.uiFeedStatus.className = `text-right font-bold ${textCls}`; }
+    function uiConn(t, dCls, tCls) {
+        if(D.cStat) { D.cStat.innerText = t; D.cStat.className = `mono truncate uppercase tracking-wider ${tCls}`; }
+        if(D.cDot) D.cDot.className = `h-1.5 w-1.5 rounded-full shrink-0 ${dCls}`;
     }
 
-    function processTick(raw) {
-        const t = AppState.tickerCache[raw.instId];
-        if (!t) return;
-
-        t.prevPrice = t.price;
-        t.price = parseFloat(raw.last);
-        t.ask = parseFloat(raw.askPx) || t.price;
-        t.bid = parseFloat(raw.bidPx) || t.price;
-        
-        const open = parseFloat(raw.open24h);
-        t.change = open > 0 ? ((t.price - open) / open) * 100 : 0.0;
-        t.high = parseFloat(raw.high24h);
-        t.low = parseFloat(raw.low24h);
-        
-        const ref = t.prevPrice > 0 ? t.prevPrice : t.price;
-        t.currentTrueRange = Math.max(t.high - t.low, Math.abs(t.high - ref), Math.abs(t.low - ref));
-        
-        t.metrics.spread = t.bid > 0 ? (((t.ask - t.bid) / t.bid) * 100).toFixed(4) + '%' : '--';
-
-        calcScores(t);
-        AppState.isDirty = true;
+    function procTick(r) {
+        const t = State.cache[r.instId]; if(!t) return;
+        t.prev = t.price; t.price = parseFloat(r.last);
+        const op = parseFloat(r.open24h);
+        t.chg = op>0 ? ((t.price-op)/op)*100 : 0;
+        t.h = parseFloat(r.high24h); t.l = parseFloat(r.low24h);
+        const ref = t.prev>0 ? t.prev : t.price;
+        t.tr = Math.max(t.h-t.l, Math.abs(t.h-ref), Math.abs(t.l-ref));
+        engineCalc(t); State.dirty = true;
     }
 
-    function calcScores(t) {
-        const mean = t.atr14Mean || (t.price * 0.02);
-        const zScore = (t.currentTrueRange - mean) / (t.atr14StdDev || 1.0);
-
+    function engineCalc(t) {
+        const m = t.atrM || (t.price*0.02), z = (t.tr - m)/(t.atrS||1);
+        
         let reg = 'STABLE DRIFT', ver = 'OBSERVE';
-        if (zScore > 1.6) {
-            if (t.change > 1.5) { reg = 'BREAKOUT EXPANSION'; ver = 'LONG MOMENTUM'; }
-            else if (t.change < -1.5) { reg = 'LIQUIDATION CASCADE'; ver = 'CAPITULATION RUN'; }
-        } else if (zScore < -0.8) { reg = 'COMPRESSION SQUEEZE'; ver = 'ACCUMULATION'; }
-        else if (Math.abs(t.change) < 0.5) { reg = 'CHOP MATRIX'; ver = 'AVOID'; }
+        if(z>1.6) { if(t.chg>1.5){reg='BREAKOUT EXP'; ver='LONG MOMENTUM';} else if(t.chg<-1.5){reg='LIQ CASCADE'; ver='CAPITULATION RUN';} }
+        else if(z<-0.8) { reg='COMPRESSION SQUEEZE'; ver='ACCUMULATION'; }
+        else if(Math.abs(t.chg)<0.5) { reg='CHOP MATRIX'; ver='AVOID'; }
+        t.reg = reg; t.trg = ver;
         
-        t.metrics.regime = reg; t.metrics.zscore = zScore; t.metrics.verdict = ver;
+        // V5 Core Scores
+        const s = t.sc;
+        s.trd = Math.min(100, Math.max(0, Math.abs(t.chg)*12));
+        const rng = t.h - t.l;
+        s.mom = Math.min(100, Math.max(0, rng>0 ? (t.chg>=0 ? ((t.price-t.l)/rng)*100 : (1-((t.price-t.l)/rng))*100) : 50));
+        s.vol = Math.min(100, Math.max(0, 50+(z*20)));
+        s.sent = t.chg>=0 ? State.fng : 100-State.fng;
+        
+        // OI & Funding Score
+        const f = t.fund * 100; // pct
+        s.fund = Math.min(100, Math.max(0, 50 - (Math.abs(f)*500))); // Closer to 0 = healthy (100 score)
+        s.oi = Math.min(100, Math.max(0, 50 + (t.oiChg * 10)));
+        
+        // Trade Score (Setup Quality)
+        s.tScore = Math.round(s.trd*0.2 + s.mom*0.2 + s.vol*0.2 + s.sent*0.15 + s.fund*0.15 + s.oi*0.1);
 
-        t.scores.trend = Math.min(100, Math.max(0, Math.abs(t.change) * 12));
-        const r = t.high - t.low;
-        let mom = 50;
-        if (r > 0) {
-            const p = (t.price - t.low) / r;
-            mom = t.change >= 0 ? p * 100 : (1 - p) * 100;
-        }
-        t.scores.momentum = Math.min(100, Math.max(0, mom));
-        t.scores.volatility = Math.min(100, Math.max(0, 50 + (zScore * 20)));
-        t.scores.sentiment = t.change >= 0 ? AppState.fngValue : (100 - AppState.fngValue);
-        t.scores.rr = Math.min(100, 50 + ((mean / t.price) * 1000));
+        // Tradeability (Execution Quality)
+        s.rr = Math.min(100, 40 + ((m/t.price)*1200)); // normalized risk capacity
+        s.tAbility = Math.round(s.rr*0.5 + s.vol*0.3 + (s.tScore>60?20:0));
 
-        t.scores.total = Math.round(t.scores.trend*0.25 + t.scores.momentum*0.20 + t.scores.volatility*0.20 + t.scores.sentiment*0.15 + t.scores.rr*0.20);
+        // Composite Rank
+        s.comp = Math.round(s.tScore*0.6 + s.tAbility*0.4);
+        
+        // Liq Risk
+        t.liq = (z > 2 && Math.abs(f) > 0.05) ? 'HIGH' : (z > 1 ? 'MED' : 'LOW');
     }
 
-    function executeRenderPipeline() {
-        AppState.renderLock = true;
+    function render() {
+        State.lock = true;
         
-        DOM.headerFng.innerText = AppState.fngValue;
-        DOM.uiFngLine.innerText = `${AppState.fngValue} (${AppState.fngText})`;
-        DOM.uiFxRate.innerText = `₹${AppState.fxRate.toFixed(2)}`;
+        if(D.hFng) D.hFng.innerText = State.fng;
+        if(D.hFx) D.hFx.innerText = `₹${State.fxRate.toFixed(2)}`;
 
-        // Sort & Rankings
-        AppState.sortedAssets.sort((a, b) => AppState.tickerCache[b].scores.total - AppState.tickerCache[a].scores.total);
-        
-        AppState.sortedAssets.forEach((sym, idx) => {
-            const t = AppState.tickerCache[sym], n = DOM.rankingNodes[sym];
-            if(n && t.price > 0) {
-                n.container.style.order = idx;
-                n.num.innerText = idx + 1;
-                n.score.innerText = t.scores.total;
-                n.regime.innerText = t.metrics.regime;
-                n.change.innerText = `${t.change>=0?'+':''}${t.change.toFixed(2)}%`;
-                n.change.className = `text-[10px] font-bold mono mt-0.5 ${t.change>=0?'text-emerald-400':'text-rose-400'}`;
+        // Rankings
+        State.sorted.sort((a,b) => State.cache[b].sc.comp - State.cache[a].sc.comp);
+        State.sorted.forEach((sym, idx) => {
+            const t = State.cache[sym], n = D.nodes[sym];
+            if(n && t.price>0) {
+                n.c.style.order = idx; n.n.innerText = idx+1;
+                n.s.innerText = t.sc.tScore;
+                n.a.innerText = `TBIL: ${t.sc.tAbility}`;
+                n.r.innerText = t.reg;
             }
         });
 
-        // Hero Update (Top Asset converted fully to INR)
-        const best = AppState.sortedAssets[0];
-        const tb = AppState.tickerCache[best];
-        if(tb && tb.price > 0) {
-            DOM.heroAsset.innerText = best.replace('-USDT-SWAP', '');
-            DOM.heroScore.innerText = tb.scores.total;
-            const dir = tb.change >= 0 ? 'LONG' : 'SHORT';
-            DOM.heroDir.innerText = dir;
-            DOM.heroDir.className = `px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-extrabold mono ${dir==='LONG'?'text-emerald-400':'text-rose-400'}`;
-            DOM.heroRegime.innerText = tb.metrics.regime;
+        // Hero (Uses Top Asset)
+        const best = State.sorted[0], tb = State.cache[best];
+        if(tb && tb.price>0) {
+            D.heroAsset.innerText = best.replace('-USDT-SWAP','');
+            D.heroScore.innerText = tb.sc.tScore;
+            D.heroTability.innerText = tb.sc.tAbility;
             
-            const mean = tb.atr14Mean || (tb.price * 0.02);
-            const m = dir === 'LONG' ? 1 : -1;
+            const dir = tb.chg>=0 ? 'LONG' : 'SHORT', m = dir==='LONG'?1:-1;
+            D.heroDirTxt.innerText = `[${dir}]`;
+            D.heroRegime.innerText = tb.reg;
             
-            // Explicit INR calculation updates for the display card
-            const entryInr = tb.price * AppState.fxRate;
-            const stopInr = (tb.price - (mean * 2 * m)) * AppState.fxRate;
-            const tp1Inr = (tb.price + (mean * 2 * m)) * AppState.fxRate;
-            const tp2Inr = (tb.price + (mean * 4.5 * m)) * AppState.fxRate;
+            const mean = tb.atrM || (tb.price*0.02);
+            
+            // Entry Zone & Time Engine
+            const ezLow = (tb.price - (mean*0.15*m))*State.fxRate, ezHigh = (tb.price + (mean*0.15*m))*State.fxRate;
+            D.heroEntry.innerText = `₹${Math.min(ezLow,ezHigh).toLocaleString('en-IN',{maximumFractionDigits:0})} - ₹${Math.max(ezLow,ezHigh).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+            
+            D.heroTrig.innerText = `Wait for 15M close ${dir==='LONG'?'above':'below'} ₹${(tb.price*State.fxRate).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+            
+            if(tb.reg.includes('EXP') || tb.reg.includes('CASCADE')) { D.heroHold.innerText = "1-2 DAYS"; D.heroTStop.innerText = "24 HOURS"; }
+            else { D.heroHold.innerText = "3-5 DAYS"; D.heroTStop.innerText = "72 HOURS"; }
 
-            DOM.heroEntry.innerText = `₹${entryInr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            DOM.heroStop.innerText = `₹${stopInr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            DOM.heroTp1.innerText = `₹${tp1Inr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            DOM.heroTp2.innerText = `₹${tp2Inr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            DOM.heroRr.innerText = "1 : 2.25"; 
-
-            const eq = parseFloat(DOM.riskEquity.value) || 0;
-            const rp = parseFloat(DOM.riskPercent.value) || 0;
-            if(eq > 0 && rp > 0) {
-                const rInr = eq * (rp/100);
-                const rUsdt = rInr / AppState.fxRate;
-                const units = rUsdt / (mean * 2);
-                DOM.heroSize.innerText = `₹${((units * tb.price) * AppState.fxRate).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-            }
-
-            DOM.scoreTrend.innerText = tb.scores.trend.toFixed(0);
-            DOM.scoreMom.innerText = tb.scores.momentum.toFixed(0);
-            DOM.scoreVol.innerText = tb.scores.volatility.toFixed(0);
-            DOM.scoreSent.innerText = tb.scores.sentiment.toFixed(0);
-            DOM.scoreRr.innerText = tb.scores.rr.toFixed(0);
+            // INR levels
+            D.heroStop.innerText = `₹${((tb.price-(mean*2*m))*State.fxRate).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+            D.heroTp1.innerText = `₹${((tb.price+(mean*2.5*m))*State.fxRate).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+            D.heroTp2.innerText = `₹${((tb.price+(mean*5*m))*State.fxRate).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+            D.heroRr.innerText = "1 : 2.50";
         }
 
-        // Active Context Update
-        const active = AppState.activeAsset;
-        const ta = AppState.tickerCache[active];
-        if(ta && ta.price > 0) {
-            DOM.headerActiveAsset.innerText = active.replace('-USDT-SWAP', '');
-            DOM.uiSetupRank.innerText = `SCORE ${ta.scores.total}`;
-            DOM.thesisAsset.innerText = active.replace('-SWAP', '');
+        // Active Context (Middle/Bottom grids)
+        const aSym = State.active, ta = State.cache[aSym];
+        if(ta && ta.price>0) {
+            D.hAsset.innerText = aSym;
+            D.healthAsset.innerText = aSym.replace('-SWAP','');
             
-            DOM.uiMetricRegime.innerText = ta.metrics.regime;
-            DOM.uiMetricZScore.innerText = ta.metrics.zscore.toFixed(3);
-            DOM.uiAtrBasisValue.innerText = `₹${(ta.atr14Mean * AppState.fxRate).toLocaleString('en-IN', {maximumFractionDigits:2})}`;
-            DOM.uiBookSpread.innerText = ta.metrics.spread;
-            DOM.uiConfidence.innerText = `${ta.scores.total}%`;
-            DOM.uiTrendState.innerText = ta.scores.trend > 60 ? 'STRONG ALIGNMENT' : 'WEAK / DRIFTING';
-            DOM.uiMetricVerdict.innerText = ta.metrics.verdict;
+            // Health Bars
+            const sc = ta.sc;
+            updateBar('trend', sc.trd); updateBar('mom', sc.mom);
+            updateBar('vol', sc.vol); updateBar('oi', sc.oi); updateBar('fund', sc.fund);
+            
+            // MTF
+            const isUp = ta.chg>=0;
+            const cCls = isUp ? 'text-emerald-400' : 'text-rose-400', cArr = isUp?'↑':'↓';
+            D.mtf15.innerHTML = `<span class="${cCls}">${cArr}</span>`;
+            D.mtf1h.innerHTML = `<span class="${sc.mom>50?'text-emerald-400':'text-rose-400'}">${sc.mom>50?'↑':'↓'}</span>`;
+            D.mtf4h.innerHTML = `<span class="${sc.trd>40?(isUp?'text-emerald-400':'text-rose-400'):'text-slate-500'}">${sc.trd>40?(isUp?'↑':'↓'):'≈'}</span>`;
+            D.mtf1d.innerHTML = `<span class="${cCls}">${cArr}</span>`;
+            D.mtfAlign.innerText = `${sc.trd}/100`;
 
-            // Thesis Builder
-            const rs = [];
-            if(ta.scores.trend > 70) rs.push("Strong Trend Continuation Profile");
-            else if(ta.scores.trend < 30) rs.push("Mean Reversion Probabilities Elevated");
-            if(ta.scores.momentum > 75) rs.push("Aggressive Intraday Momentum Detected");
-            if(ta.scores.volatility > 70) rs.push("Positive Volatility Expansion (Breakout)");
-            else if(ta.scores.volatility < 40) rs.push("Volatility Compression (Accumulation phase)");
-            if(ta.scores.total >= 80) rs.push("A+ Tier Quantitative Setup");
-            if(rs.length === 0) rs.push("Awaiting structural confirmation.");
+            // Enhanced Thesis
+            let str=[], rsk=[];
+            if(sc.trd>70) str.push("Strong MTF Trend Alignment"); else if(sc.trd<30) str.push("Mean Reversion Setup");
+            if(sc.vol>70) str.push("Volatility Breakout Confirmed"); else if(sc.vol<40) str.push("Compression Accumulation");
+            if(sc.fund>80) str.push("Funding Rate Highly Favorable"); else if(sc.fund<30) rsk.push("Extreme Funding Rate Warning");
+            if(ta.oiChg>2) str.push("Open Interest Expanding"); else if(ta.oiChg<-2) rsk.push("Aggressive Liquidation Flush");
+            if(ta.liq==='HIGH') rsk.push("High Liquidation Cascade Risk");
+            if(sc.tAbility<50) rsk.push("Poor Tradeability (Wide Stop/Low RR)");
+            
+            if(str.length===0) str.push("Awaiting confirmation criteria.");
+            if(rsk.length===0) rsk.push("No immediate structural warnings.");
 
-            DOM.thesisRoot.innerHTML = rs.map(r => `
-                <div class="flex items-start gap-2 bg-slate-900/40 p-2 rounded border border-slate-800/50">
-                    <i data-lucide="check-circle-2" class="h-3.5 w-3.5 text-indigo-400 mt-0.5 shrink-0"></i>
-                    <span class="text-xs text-slate-300 mono leading-snug">${r}</span>
-                </div>
-            `).join('');
+            D.thStr.innerHTML = str.map(x=>`<li class="flex gap-2 text-xs text-slate-300 mono"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0"></i>${x}</li>`).join('');
+            D.thRsk.innerHTML = rsk.map(x=>`<li class="flex gap-2 text-xs text-slate-300 mono"><i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0"></i>${x}</li>`).join('');
             lucide.createIcons();
 
-            // Risk Engine Localized INR Math processing
-            const eq = parseFloat(DOM.riskEquity.value) || 0;
-            const rp = parseFloat(DOM.riskPercent.value) || 0;
-            const stop = parseFloat(DOM.riskStop.value) || 0;
-            const tgt = parseFloat(DOM.riskTake.value) || 0;
-            const mean = ta.atr14Mean || (ta.price * 0.02);
+            // Liq Intel
+            D.liqRisk.innerText = ta.liq;
+            D.liqRisk.className = `text-[10px] font-black mono px-2 py-0.5 rounded uppercase ${ta.liq==='HIGH'?'bg-rose-500/20 text-rose-400':(ta.liq==='MED'?'bg-amber-500/20 text-amber-400':'bg-emerald-500/20 text-emerald-400')}`;
+            D.oiFundSt.innerText = `${(ta.fund*100).toFixed(4)}%`;
+            D.oiTrndSt.innerText = `${ta.oiChg>=0?'+':''}${ta.oiChg.toFixed(2)}%`;
 
-            // Localized volatility stop metric
-            const vsInr = (ta.price - (mean * 2 * (ta.change >= 0 ? 1 : -1))) * AppState.fxRate;
-            DOM.outVolstop.innerText = `₹${vsInr.toLocaleString('en-IN', {maximumFractionDigits:2})}`;
-
-            const currentPriceInr = ta.price * AppState.fxRate;
-            if(eq > 0 && rp > 0 && stop > 0 && stop !== currentPriceInr) {
-                const rInr = eq * (rp/100);
-                const distInr = Math.abs(currentPriceInr - stop);
-                const units = rInr / distInr;
-                
-                const posInr = units * currentPriceInr;
-                const rr = Math.abs(tgt - currentPriceInr) / distInr;
-                
-                DOM.outSize.innerText = `₹${posInr.toLocaleString('en-IN', {maximumFractionDigits:0})} (${units.toFixed(4)} Units)`;
-                DOM.outRr.innerText = `1 : ${rr.toFixed(2)}`;
-            } else {
-                DOM.outSize.innerText = "--"; DOM.outRr.innerText = "--";
-            }
+            // Risk Engine
+            D.atrVal.innerText = `₹${(ta.atrM*State.fxRate).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+            
+            const eq = parseFloat(D.rEq.value)||0, rp = parseFloat(D.rPct.value)||0, stpInr = parseFloat(D.rStp.value)||0, tgtInr = parseFloat(D.rTk.value)||0;
+            const curInr = ta.price*State.fxRate;
+            
+            if(eq>0 && rp>0 && stpInr>0 && Math.abs(stpInr-curInr)>1) {
+                const rAmt = eq*(rp/100), dist = Math.abs(curInr-stpInr), units = rAmt/dist;
+                const pSize = units*curInr, rr = Math.abs(tgtInr-curInr)/dist;
+                D.oSz.innerText = `₹${pSize.toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+                D.oRr.innerText = `1 : ${rr.toFixed(2)}`;
+                D.oMar.innerText = `₹${(pSize/10).toLocaleString('en-IN',{maximumFractionDigits:0})}`; // Assuming 10x margin for swap display
+            } else { D.oSz.innerText='--'; D.oRr.innerText='--'; D.oMar.innerText='--'; }
         }
-
-        AppState.isDirty = false;
-        AppState.renderLock = false;
-    }
-
-    function mountHooks() {
-        ['risk-equity', 'risk-percent', 'risk-stop', 'risk-take'].forEach(id => {
-            document.getElementById(id)?.addEventListener('input', () => AppState.isDirty = true);
-        });
         
-        document.getElementById('btn-trigger-volstop').addEventListener('click', () => {
-            const ta = AppState.tickerCache[AppState.activeAsset];
-            if(!ta) return;
-            const mean = ta.atr14Mean || (ta.price * 0.02);
-            const m = ta.change >= 0 ? 1 : -1;
+        calcStats();
+        State.dirty = false; State.lock = false;
+    }
+
+    function updateBar(key, val) {
+        if(D.bars[key]) D.bars[key].style.width = `${val}%`;
+        if(D.barV[key]) D.barV[key].innerText = val;
+    }
+
+    function setupHooks() {
+        ['risk-equity','risk-percent','risk-stop','risk-take'].forEach(id=>{
+            _el(id)?.addEventListener('input',()=>State.dirty=true);
+        });
+
+        _el('btn-auto-stop')?.addEventListener('click', ()=>{
+            const ta = State.cache[State.active]; if(!ta) return;
+            const m = ta.atrM||(ta.price*0.02), dir = ta.chg>=0?1:-1;
+            D.rStp.value = ((ta.price-(m*2*dir))*State.fxRate).toFixed(0);
+            D.rTk.value = ((ta.price+(m*4.5*dir))*State.fxRate).toFixed(0);
+            State.dirty = true;
+        });
+
+        _el('btn-log-trade')?.addEventListener('click', async () => {
+            const sz = D.oSz.innerText==='--'?'0':D.oSz.innerText;
+            const tgt = parseFloat(D.rTk.value)||0;
+            const rev = D.jRev.value, nt = D.jNotes.value.trim()||'-';
+            const ta = State.cache[State.active];
             
-            // Populates inputs strictly with INR calculations
-            DOM.riskStop.value = (((ta.price - (mean * 2 * m))) * AppState.fxRate).toFixed(2);
-            DOM.riskTake.value = (((ta.price + (mean * 4.5 * m))) * AppState.fxRate).toFixed(2);
-            AppState.isDirty = true;
-        });
+            let snapBase64 = null;
+            try {
+                // Use html2canvas to capture the main UI (ignores TradingView iframe due to CSS data-html2canvas-ignore)
+                const canvas = await html2canvas(_el('capture-zone'), { scale: 0.5, backgroundColor: '#010203', ignoreElements: (el) => el.hasAttribute('data-html2canvas-ignore') });
+                snapBase64 = canvas.toDataURL('image/jpeg', 0.4); 
+            } catch(e) { console.warn("Snapshot failed", e); }
 
-        document.getElementById('btn-log-hero').addEventListener('click', () => {
-            const best = AppState.sortedAssets[0];
-            const t = AppState.tickerCache[best];
-            if(!t || t.price === 0) return;
+            State.ledger.unshift({
+                asset: State.active.replace('-USDT-SWAP',''), rev: rev, sz: sz, tgt: `₹${tgt.toLocaleString('en-IN')}`, notes: nt,
+                sc: ta?.sc?.tScore||0, tb: ta?.sc?.tAbility||0, reg: ta?.reg||'',
+                time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+                snap: snapBase64
+            });
             
-            const mean = t.atr14Mean || (t.price * 0.02);
-            const m = t.change >= 0 ? 1 : -1;
-            const tp1Inr = (t.price + (mean * 2 * m)) * AppState.fxRate;
-
-            logTrade(best, "A", `₹${DOM.heroSize.innerText.replace('₹','').split(' ')[0]}`, `₹${tp1Inr.toLocaleString('en-IN',{maximumFractionDigits:2})}`, `Quant Auto-Log (Score: ${t.scores.total})`);
+            // Enforce max ledger size to avoid LocalStorage quota issue with images
+            if(State.ledger.length > 50) State.ledger.pop();
+            localStorage.setItem('edge_v5_log', JSON.stringify(State.ledger));
+            D.jNotes.value=''; renderLedger(); State.dirty=true;
         });
 
-        document.getElementById('btn-commit-ledger').addEventListener('click', () => {
-            const size = DOM.outSize.innerText === "--" ? "0" : DOM.outSize.innerText.split(' ')[0];
-            const tgt = parseFloat(DOM.riskTake.value) || 0;
-            logTrade(AppState.activeAsset, DOM.journalGrade.value, size, `₹${tgt.toLocaleString('en-IN')}`, DOM.journalNotes.value.trim() || "-");
-            DOM.journalNotes.value = "";
+        _el('btn-purge-journal')?.addEventListener('click', ()=>{
+            if(confirm('Purge full V5 Journal?')) { State.ledger=[]; localStorage.removeItem('edge_v5_log'); renderLedger(); State.dirty=true; }
         });
+    }
 
-        document.getElementById('btn-flush-ledger').addEventListener('click', () => {
-            if(confirm("Purge entire trade journal?")) {
-                AppState.ledgerLog = [];
-                localStorage.removeItem('edge_v4_ledger');
-                renderLedger();
+    function calcStats() {
+        let wins=0, totClosed=0, pfTgt=0, pfStp=1, sTot=0, tTot=0, openExp=0;
+        
+        State.ledger.forEach(r => {
+            if(['PERFECT','GOOD','WIN'].includes(r.rev)) { wins++; totClosed++; }
+            else if(['BAD_EXEC','BAD_SETUP','EMOTIONAL','MISSED_STOP'].includes(r.rev)) { totClosed++; }
+            
+            if(r.rev==='OPEN') {
+                const val = parseFloat(r.sz.replace(/[^0-9.]/g,''))||0;
+                openExp += val;
             }
+            sTot += (r.sc||0); tTot += (r.tb||0);
         });
+
+        const l = State.ledger.length;
+        D.sWin.innerText = totClosed>0 ? `${Math.round((wins/totClosed)*100)}%` : '--%';
+        D.sPf.innerText = totClosed>0 ? (wins/(totClosed-wins||1)).toFixed(1) : '--'; // Simulated PF based on win ratio
+        D.sAvgS.innerText = l>0 ? Math.round(sTot/l) : '--';
+        D.sAvgT.innerText = l>0 ? Math.round(tTot/l) : '--';
+
+        const eq = parseFloat(D.rEq.value)||830000;
+        const expPct = eq>0 ? (openExp/eq)*100 : 0;
+        D.pTotExp.innerText = `${expPct.toFixed(1)}%`;
+        D.pTotExp.className = `text-2xl font-black mono mb-1 ${expPct>60?'text-rose-400':(expPct>30?'text-amber-400':'text-emerald-400')}`;
+        
+        const openTrades = State.ledger.filter(r=>r.rev==='OPEN');
+        if(openTrades.length===0) D.pAssets.innerHTML = `<p class="text-[10px] text-slate-500 mono font-bold">No active positions.</p>`;
+        else D.pAssets.innerHTML = openTrades.slice(0,4).map(r=>`<div class="flex justify-between text-[11px] mono font-bold bg-slate-900/50 p-2 rounded border border-slate-800"><span class="text-indigo-300">${r.asset}</span><span class="text-white">${r.sz}</span></div>`).join('');
     }
 
-    function logTrade(asset, grade, size, target, notes) {
-        AppState.ledgerLog.unshift({
-            asset: asset.replace('-USDT-SWAP', ''),
-            grade: grade, size: size, target: target, notes: notes,
-            time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})
-        });
-        localStorage.setItem('edge_v4_ledger', JSON.stringify(AppState.ledgerLog));
-        renderLedger();
-    }
-
-    function syncLocalLedger() {
-        const stored = localStorage.getItem('edge_v4_ledger');
-        if (stored) { try { AppState.ledgerLog = JSON.parse(stored); } catch(e) { AppState.ledgerLog = []; } }
+    function syncStore() {
+        const s = localStorage.getItem('edge_v5_log');
+        if(s) { try{State.ledger = JSON.parse(s);}catch(e){State.ledger=[];} }
         renderLedger();
     }
 
     function renderLedger() {
-        if(!DOM.ledgerTarget) return;
-        DOM.ledgerTarget.innerHTML = '';
+        if(!D.ledg) return;
+        D.ledg.innerHTML = '';
+        if(State.ledger.length===0) { D.ledg.innerHTML=`<tr><td colspan="8" class="py-5 text-center text-slate-600 uppercase text-[10px] font-black tracking-widest">No Trade History</td></tr>`; return; }
 
-        if (AppState.ledgerLog.length === 0) {
-            DOM.ledgerTarget.innerHTML = `<tr><td colspan="6" class="py-5 text-center text-slate-600 uppercase text-[10px] font-extrabold tracking-widest">No trade history found</td></tr>`;
-            return;
-        }
-
-        AppState.ledgerLog.forEach(r => {
+        State.ledger.forEach(r => {
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-800/30 transition-colors";
             
             let gc = 'text-slate-400';
-            if(['WIN','A','B'].includes(r.grade)) gc = 'text-emerald-400';
-            else if(['LOSS','F'].includes(r.grade)) gc = 'text-rose-500';
-            else if(r.grade === 'OPEN') gc = 'text-indigo-400';
-            else if(r.grade === 'C') gc = 'text-amber-400';
+            if(['PERFECT','GOOD','WIN'].includes(r.rev)) gc = 'text-emerald-400';
+            else if(r.rev==='OPEN') gc = 'text-indigo-400';
+            else gc = 'text-rose-400';
+
+            const snapHtml = r.snap ? `<img src="${r.snap}" class="h-6 w-10 object-cover rounded border border-slate-700 cursor-pointer mx-auto opacity-70 hover:opacity-100" onclick="window.open('${r.snap}','_blank')">` : `<span class="text-slate-600">-</span>`;
 
             tr.innerHTML = `
-                <td class="py-3 px-4 font-extrabold text-white">${r.asset}</td>
-                <td class="py-3 px-4 font-black ${gc}">${r.grade}</td>
-                <td class="py-3 px-4 text-slate-300 font-bold">${r.size}</td>
-                <td class="py-3 px-4 text-emerald-400 font-bold">${r.target}</td>
-                <td class="py-3 px-4 text-slate-400 max-w-[150px] truncate" title="${r.notes}">${r.notes}</td>
+                <td class="py-3 px-4 font-black text-white">${r.asset}</td>
+                <td class="py-3 px-3 font-bold text-slate-400">S:${r.sc} | T:${r.tb}</td>
+                <td class="py-3 px-3 font-black ${gc}">${r.rev}</td>
+                <td class="py-3 px-3 text-slate-300 font-bold">${r.sz}</td>
+                <td class="py-3 px-3 text-[9px] text-slate-500 font-bold uppercase truncate max-w-[80px]">${r.reg}</td>
+                <td class="py-3 px-4 text-slate-400 max-w-[120px] truncate" title="${r.notes}">${r.notes}</td>
                 <td class="py-3 px-4 text-slate-500 text-right text-[10px]">${r.time}</td>
+                <td class="py-3 px-4 text-center">${snapHtml}</td>
             `;
-            DOM.ledgerTarget.appendChild(tr);
+            D.ledg.appendChild(tr);
         });
+        calcStats();
     }
+
+    window.onload = init;
   </script>
 </body>
 </html>
