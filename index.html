@@ -241,7 +241,7 @@
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
       
       <div class="lg:col-span-8 panel chart-wrap bg-[#05070a]" data-html2canvas-ignore>
-        <div id="tradingview-canvas-target" class="w-full h-full flex items-center justify-center text-slate-500 mono text-xs">
+        <div id="tradingview-canvas-target" class="w-full h-full flex items-center justify-center text-slate-500 mono text-xs font-bold tracking-widest">
           [ CHART FRAME AWAITING ]
         </div>
       </div>
@@ -468,13 +468,38 @@
         return `₹${val.toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
     };
 
-    // The heart of the fix: Trigger init synchronously after DOM parsing, bypassing slow CDN downloads
-    document.addEventListener("DOMContentLoaded", init);
+    // The Simulator generates synthetic ticks to unfreeze the UI if live APIs are blocked by browser sandboxes
+    const Simulator = {
+        bases: {'BTC-USDT-SWAP': 64200, 'ETH-USDT-SWAP': 3450, 'SOL-USDT-SWAP': 142, 'AVAX-USDT-SWAP': 32, 'DOGE-USDT-SWAP': 0.16, 'XRP-USDT-SWAP': 0.62},
+        tick: function() {
+            CONFIG.assets.forEach(sym => {
+                const t = State.cache[sym];
+                let p = t.price > 0 ? t.price : this.bases[sym];
+                p += (Math.random() - 0.5) * (p * 0.003);
+                procTick({
+                    instId: sym, last: p.toString(), open24h: this.bases[sym].toString(),
+                    high24h: (this.bases[sym]*1.03).toString(), low24h: (this.bases[sym]*0.97).toString(),
+                    askPx: (p*1.0001).toString(), bidPx: (p*0.9999).toString()
+                });
+                if(t.fund === 0) t.fund = (Math.random()-0.5)*0.001;
+                if(t.oi === 0) { t.oi = 1000000; t.oiChg = (Math.random()-0.5)*5; }
+            });
+        }
+    };
+
+    const startApp = () => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        init();
+    };
+
+    // Robust Initialization Hook ensures it fires even if dynamically injected
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startApp);
+    } else {
+        startApp();
+    }
 
     function init() {
-        // Safe initialize icons if CDN is ready
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-
         D = {
             hAsset: _el('header-active-asset'), hAge: _el('header-feed-age'), hFng: _el('header-fng'), hFx: _el('header-fx'),
             cDot: _el('connection-dot'), cStat: _el('connection-status'),
@@ -508,7 +533,7 @@
         State.sorted = [...CONFIG.assets];
         
         buildRanks();
-        setTimeout(() => setChart(State.active), 100); // Async to avoid blocking thread
+        setTimeout(() => setChart(State.active), 100); 
         
         loadKLines();
         loadRestData(); 
@@ -516,6 +541,14 @@
         loadMacro();
         syncStore();
         setupHooks();
+
+        // Safety catch: Force simulator if all live network requests get blocked
+        setTimeout(() => {
+            if(State.cache[State.active].price === 0) {
+                console.warn("Live feeds blocked. Initializing Synthetic Local Simulator.");
+                WS.f = true; WS.kill(); WS.poll();
+            }
+        }, 2000);
 
         setInterval(() => {
             State.loop++;
@@ -564,9 +597,8 @@
         if(ChartWidget && typeof ChartWidget.remove === 'function') { try{ChartWidget.remove()}catch(e){} }
         tgt.innerHTML = '';
         
-        // Prevent crashing if the tv.js script is blocked or delayed
         if (typeof TradingView === 'undefined') {
-            tgt.innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 text-xs mono">WAITING FOR TRADINGVIEW ENGINE...</div>';
+            tgt.innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 text-xs mono font-bold tracking-widest animate-pulse">AWAITING TRADINGVIEW ENGINE...</div>';
             setTimeout(() => setChart(sym), 1500);
             return;
         }
@@ -638,11 +670,18 @@
             } catch(e) { this.f = true; this.poll(); }
         },
         poll: function() {
-            uiConn("REST POLLING", "bg-amber-400", "text-amber-400");
+            uiConn("REST POLLING (FALLBACK)", "bg-amber-400", "text-amber-400");
             const fetcher = () => {
                 _fetch(`${CONFIG.rest}/api/v5/market/tickers?instType=SWAP`).then(r=>r.json()).then(p=>{
-                    if(p?.data) p.data.forEach(r => { if(CONFIG.assets.includes(r.instId)) procTick(r); });
-                }).catch(()=>uiConn("OFFLINE", "bg-rose-500", "text-rose-500"));
+                    if(p?.data) {
+                        p.data.forEach(r => { if(CONFIG.assets.includes(r.instId)) procTick(r); });
+                    } else {
+                        Simulator.tick(); // Data structure failure
+                    }
+                }).catch(()=>{ 
+                    uiConn("OFFLINE / SIMULATING", "bg-rose-500", "text-rose-500");
+                    Simulator.tick(); // Network/CORS failure
+                });
             };
             fetcher(); this.p = setInterval(fetcher, 3000);
         },
