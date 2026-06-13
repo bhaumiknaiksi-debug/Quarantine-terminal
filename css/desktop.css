@@ -1,0 +1,278 @@
+/* ==========================================================================
+   @file /css/desktop.css
+   @description Desktop-responsive layout overrides for EDGE V6.
+                Transforms the mobile-first linear layout into a high-density,
+                Bloomberg-style 3-column quantitative matrix.
+   @performance-considerations Uses CSS Grid with fractional units to prevent
+                               sub-pixel rendering recalculations. Hardware 
+                               accelerates the side-rail navigation transitions.
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+    /* ==========================================================================
+       APP SHELL & VIEWPORT CONSTRAINTS (DESKTOP TWEAKS)
+       ========================================================================== */
+
+    .app-layout-wrapper {
+        /* Introduce desktop sidebar gap */
+        padding-left: 72px; 
+        background: var(--bg-core);
+    }
+
+    /* ==========================================================================
+       GLOBAL TELEMETRY HEADER
+       ========================================================================== */
+
+    .telemetry-header {
+        /* Align with the side navigation rail offset */
+        padding: var(--space-3) var(--space-6);
+        background: transparent;
+        border-bottom: 1px solid var(--border-light);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .brand-matrix {
+        font-size: var(--text-lg);
+    }
+
+    .telemetry-metric {
+        gap: var(--space-2);
+    }
+
+    .telemetry-label {
+        font-size: 0.65rem;
+    }
+
+    .telemetry-value {
+        font-size: var(--text-sm);
+    }
+
+    /* ==========================================================================
+       WORKSPACE ROUTING & GRID STRUCTURE (DESKTOP 3-COLUMN)
+       ========================================================================== */
+
+    .workspace-grid {
+        padding: var(--space-4) var(--space-6) var(--space-6);
+        overflow: hidden; /* Lock main body, allow columns to scroll independently if needed */
+    }
+
+    .workspace-view {
+        height: 100%;
+    }
+
+    .workspace-view.active {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--space-5);
+        align-items: stretch;
+    }
+
+    /* Architectural Column Definition:
+       Primary: 3/12 (Left) - Command & Execution
+       Secondary: 6/12 (Center) - High-Density Matrix / Charting
+       Tertiary: 3/12 (Right) - Risk & Macro Environment
+    */
+    .layout-primary {
+        grid-column: span 3;
+        height: 100%;
+        overflow-y: auto;
+        padding-right: var(--space-2); /* Scroller clearance */
+    }
+
+    .layout-secondary {
+        grid-column: span 6;
+        height: 100%;
+        overflow-y: auto;
+        padding-right: var(--space-2);
+    }
+
+    .layout-tertiary {
+        grid-column: span 3;
+        height: 100%;
+        overflow-y: auto;
+        padding-right: var(--space-2);
+    }
+
+    /* Column Scrollbars for High-Density Data Targets */
+    .workspace-column::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .workspace-column::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .workspace-column::-webkit-scrollbar-thumb {
+        background: var(--surface-highlight);
+        border-radius: var(--radius-pill);
+    }
+
+    .workspace-column::-webkit-scrollbar-thumb:hover {
+        background: var(--text-tertiary);
+    }
+
+    /* Deep Execution Market View Override */
+    #view-market.active {
+        grid-template-columns: 1fr;
+    }
+
+    .market-split-workspace {
+        display: grid;
+        grid-template-columns: 3fr 1fr; /* 75% Chart, 25% Orderbook/Execution */
+        gap: var(--space-5);
+        height: 100%;
+    }
+
+    /* ==========================================================================
+       SYSTEM NAVIGATION BAR (DESKTOP SIDE RAIL)
+       ========================================================================== */
+
+    .system-navigation-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 72px;
+        height: 100vh;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--space-6);
+        padding: var(--space-6) 0;
+        border-top: none;
+        border-right: 1px solid var(--border-light);
+        background: rgba(6, 8, 12, 0.4);
+        z-index: var(--z-nav);
+    }
+
+    .nav-item {
+        width: 100%;
+        height: auto;
+        padding: var(--space-3) 0;
+        gap: var(--space-2);
+        cursor: pointer;
+    }
+
+    .nav-item:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .nav-item-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .nav-item-label {
+        font-size: 0.65rem;
+    }
+
+    /* Active Indicator Line for Side Nav */
+    .nav-item.active {
+        background: rgba(99, 102, 241, 0.05);
+        position: relative;
+    }
+
+    .nav-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent-primary);
+        border-radius: 0 4px 4px 0;
+        box-shadow: 0 0 10px var(--accent-primary-glow);
+    }
+
+    /* ==========================================================================
+       COMPONENT CARDS & INTERACTION (DESKTOP SPECIFIC)
+       ========================================================================== */
+
+    .component-card {
+        padding: var(--space-5);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .component-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .full-width-component-wrapper {
+        /* Reset mobile edge-to-edge hacks */
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
+
+    .full-height-card {
+        height: calc(100vh - 120px);
+        min-height: auto;
+    }
+
+    /* Desk settings grid */
+    .settings-control-grid {
+        flex-direction: row;
+        grid-template-columns: repeat(2, 1fr);
+        display: grid;
+    }
+
+    /* Cursor optimizations for desktop */
+    button, 
+    .rank-row,
+    select,
+    .toast-close {
+        cursor: pointer;
+    }
+
+    /* ==========================================================================
+       NOTIFICATION CENTER (DESKTOP RE-ROUTING)
+       ========================================================================== */
+
+    .notification-overlay-layer {
+        top: auto;
+        bottom: var(--space-6);
+        right: var(--space-6);
+        left: auto;
+        align-items: flex-end;
+    }
+
+    .system-toast {
+        max-width: 350px;
+        backdrop-filter: var(--blur-glass);
+        -webkit-backdrop-filter: var(--blur-glass);
+    }
+
+    /* Desktop-specific toast animations */
+    @keyframes slide-in-bottom-right {
+        from { transform: translateX(120%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slide-out-bottom-right {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(120%); opacity: 0; }
+    }
+
+    .toast-enter {
+        animation: slide-in-bottom-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .toast-exit {
+        animation: slide-out-bottom-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+}
+
+/* Ultra-wide Display Handling (>1600px) */
+@media (min-width: 1600px) {
+    .app-layout-wrapper {
+        align-items: center;
+    }
+
+    #global-telemetry-header,
+    .workspace-grid {
+        max-width: 1800px;
+        width: 100%;
+    }
+}
