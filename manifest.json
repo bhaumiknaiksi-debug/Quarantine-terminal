@@ -1,8 +1,53 @@
 {
-"name":"EDGE V6",
-"short_name":"EDGE",
-"display":"standalone",
-"start_url":".",
-"background_color":"#010203",
-"theme_color":"#010203"
+  "name": "EDGE V6 Quantitative Trading OS",
+  "short_name": "EDGE V6",
+  "description": "Personal ultra-high density quantitative crypto trading terminal and sovereign portfolio execution engine.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#010203",
+  "theme_color": "#010203",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./assets/icons/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Command Center",
+      "short_name": "Command",
+      "description": "Open EDGE V6 Command Center",
+      "url": "./index.html?view=home",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Alpha Hot List",
+      "short_name": "Hot List",
+      "description": "View top actionable setups",
+      "url": "./index.html?view=hotlist",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
