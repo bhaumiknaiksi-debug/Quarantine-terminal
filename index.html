@@ -1,18 +1,138 @@
-<!doctype html>
-<html><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EDGE V6</title>
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/theme.css">
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>EDGE V6 // Quantitative Trading OS</title>
+    <meta name="description" content="Personal ultra-high density quantitative crypto trading terminal and sovereign portfolio execution engine.">
+    <meta name="theme-color" content="#010203">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EDGE V6">
+    <meta name="format-detection" content="telephone=no">
+    
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/icon-16.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/theme.css">
+    <link rel="stylesheet" href="./css/animations.css">
+    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="./css/desktop.css">
 </head>
 <body>
-<div id="app">
-<section id="command-center"></section>
-<section id="alpha-hot-list"></section>
-<section id="market-regime"></section>
-<section id="risk-radar"></section>
-<section id="capital"></section>
-</div>
-<script type="module" src="js/app.js"></script>
-</body></html>
+    <div id="app-shell" class="app-layout-wrapper">
+        
+        <header id="global-telemetry-header" class="telemetry-header">
+            <div class="system-branding">
+                <span class="brand-matrix">EDGE</span>
+                <span class="brand-version">V6.0.0</span>
+                <div class="system-pulse-indicator" id="system-pulse" aria-hidden="true"></div>
+            </div>
+            <div class="engine-performance-telemetry">
+                <div class="telemetry-metric">
+                    <span class="telemetry-label">FPS</span>
+                    <span id="telemetry-fps" class="telemetry-value text-mono">120</span>
+                </div>
+                <div class="telemetry-metric">
+                    <span class="telemetry-label">LATENCY</span>
+                    <span id="telemetry-latency" class="telemetry-value text-mono">--ms</span>
+                </div>
+                <div class="telemetry-metric">
+                    <span class="telemetry-label">WS</span>
+                    <span id="telemetry-ws-status" class="telemetry-status-badge status-disconnected">DISCONNECTED</span>
+                </div>
+            </div>
+        </header>
+
+        <main id="workspace-container" class="workspace-grid" data-active-view="home">
+            
+            <section id="view-home" class="workspace-view active" aria-live="polite">
+                <div class="workspace-column layout-primary">
+                    <div id="command-center-root" class="component-card hardware-accelerated"></div>
+                    <div id="capital-card-root" class="component-card hardware-accelerated"></div>
+                </div>
+
+                <div class="workspace-column layout-secondary">
+                    <div id="alpha-hot-list-root" class="component-card hardware-accelerated"></div>
+                </div>
+
+                <div class="workspace-column layout-tertiary">
+                    <div id="market-regime-card-root" class="component-card hardware-accelerated"></div>
+                    <div id="risk-radar-card-root" class="component-card hardware-accelerated"></div>
+                </div>
+            </section>
+
+            <section id="view-hotlist" class="workspace-view" aria-live="polite">
+                <div class="view-header-container">
+                    <h1 class="view-title">ALPHA HOT LIST MATRIX</h1>
+                    <p class="view-subtitle">Real-time parametric qualification & technical cross-filtering layers</p>
+                </div>
+                <div id="view-hotlist-matrix-root" class="full-width-component-wrapper"></div>
+            </section>
+
+            <section id="view-market" class="workspace-view" aria-live="polite">
+                <div class="market-split-workspace">
+                    <div id="chart-card-root" class="component-card hardware-accelerated full-height-card"></div>
+                </div>
+            </section>
+
+            <section id="view-journal" class="workspace-view" aria-live="polite">
+                <div id="journal-card-root" class="component-card hardware-accelerated full-width-card"></div>
+            </section>
+
+            <section id="view-settings" class="workspace-view" aria-live="polite">
+                <div class="settings-control-grid">
+                    <div class="component-card settings-panel">
+                        <h2 class="panel-section-title">API CORE TOPOGRAPHY</h2>
+                        <form id="api-configuration-form" autocomplete="off" onsubmit="return false;">
+                            <div class="input-control-group">
+                                <label for="api-endpoint-okx" class="control-label">OKX V5 WS ENDPOINT</label>
+                                <input type="text" id="api-endpoint-okx" class="text-input-field text-mono" value="wss://wspap.okx.com:443/ws/v5/public" required>
+                            </div>
+                            <div class="input-control-group">
+                                <label for="currency-fx-rate" class="control-label">USD / INR BASE FX MULTIPLIER</label>
+                                <input type="number" id="currency-fx-rate" class="text-input-field text-mono" step="0.01" value="84.50" required>
+                            </div>
+                            <div class="control-actions-row">
+                                <button type="button" id="save-api-settings-btn" class="action-btn-primary">COMMIT CORE PROFILE</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="component-card settings-panel">
+                        <h2 class="panel-section-title">VOLATILITY ENGINE PARAMETERS</h2>
+                        <div class="parameter-tuning-row">
+                            <span class="param-descriptor">ATR Window Allocation</span>
+                            <span class="param-value-badge text-mono">14 Periods</span>
+                        </div>
+                        <div class="parameter-tuning-row">
+                            <span class="param-descriptor">Z-Score Sensitivity Envelope</span>
+                            <span class="param-value-badge text-mono">±2.00 σ</span>
+                        </div>
+                        <div class="parameter-tuning-row">
+                            <span class="param-descriptor">Target Risk Multiplier</span>
+                            <span class="param-value-badge text-mono">2.50x R</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <div id="notification-center-root" class="notification-overlay-layer" aria-live="assertive"></div>
+
+        <nav id="bottom-nav-root" class="system-navigation-bar" aria-label="Primary Workspace Navigation"></nav>
+
+    </div>
+
+    <script type="module" src="./js/bootstrap.js"></script>
+</body>
+</html>
