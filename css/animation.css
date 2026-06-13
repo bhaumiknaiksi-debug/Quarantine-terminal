@@ -1,0 +1,160 @@
+/* ==========================================================================
+   @file /css/animations.css
+   @description GPU-accelerated animation keyframes and transition utilities.
+                Strictly limits animations to compositing properties (opacity, transform)
+                to maintain 120Hz render cycles without triggering layout paints.
+   ========================================================================== */
+
+/* Core Transition Utilities */
+.transition-all {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-transform {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-opacity {
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-colors {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ==========================================================================
+   KEYFRAMES: SYSTEM TELEMETRY & STATUS INDICATORS
+   ========================================================================== */
+
+@keyframes system-pulse-green {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes system-pulse-red {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.animate-pulse-active {
+    animation: system-pulse-green 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    background-color: var(--signal-long);
+    border-radius: 50%;
+}
+
+.animate-pulse-offline {
+    animation: system-pulse-red 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    background-color: var(--signal-short);
+    border-radius: 50%;
+}
+
+/* ==========================================================================
+   KEYFRAMES: DOM MOUNTING & ENTRANCE
+   ========================================================================== */
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slide-up-fade {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+    animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered Rendering for List/Grid Components */
+.stagger-1 { animation-delay: 40ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 120ms; }
+.stagger-4 { animation-delay: 160ms; }
+.stagger-5 { animation-delay: 200ms; }
+
+/* ==========================================================================
+   KEYFRAMES: REAL-TIME TICK DATA FLASHING (STATE MUTATION)
+   ========================================================================== */
+
+@keyframes flash-bg-green {
+    0% { background-color: var(--signal-long-bg); color: var(--signal-long); }
+    100% { background-color: transparent; color: inherit; }
+}
+
+@keyframes flash-bg-red {
+    0% { background-color: var(--signal-short-bg); color: var(--signal-short); }
+    100% { background-color: transparent; color: inherit; }
+}
+
+@keyframes flash-text-green {
+    0% { color: var(--signal-long); text-shadow: 0 0 8px var(--signal-long-glow); }
+    100% { color: inherit; text-shadow: none; }
+}
+
+@keyframes flash-text-red {
+    0% { color: var(--signal-short); text-shadow: 0 0 8px var(--signal-short-glow); }
+    100% { color: inherit; text-shadow: none; }
+}
+
+.data-tick-up-bg {
+    animation: flash-bg-green 0.6s ease-out forwards;
+}
+
+.data-tick-down-bg {
+    animation: flash-bg-red 0.6s ease-out forwards;
+}
+
+.data-tick-up-text {
+    animation: flash-text-green 0.6s ease-out forwards;
+}
+
+.data-tick-down-text {
+    animation: flash-text-red 0.6s ease-out forwards;
+}
+
+/* ==========================================================================
+   KEYFRAMES: NOTIFICATION & OVERLAY ROUTING
+   ========================================================================== */
+
+@keyframes slide-in-right {
+    from { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateX(0); 
+        opacity: 1; 
+    }
+}
+
+@keyframes slide-out-right {
+    from { 
+        transform: translateX(0); 
+        opacity: 1; 
+    }
+    to { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+}
+
+.toast-enter {
+    animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-exit {
+    animation: slide-out-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
