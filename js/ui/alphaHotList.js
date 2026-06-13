@@ -1,0 +1,1 @@
+export function renderHotList(state){document.getElementById('alpha-hot-list').innerHTML='<h2>🔥 Alpha Hot List</h2>'; }

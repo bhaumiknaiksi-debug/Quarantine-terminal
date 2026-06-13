@@ -1,0 +1,1 @@
+export function renderCommandCenter(state){document.getElementById('command-center').innerHTML='<h2>🎯 Command Center</h2><p>Best Trade coming soon</p>'; }

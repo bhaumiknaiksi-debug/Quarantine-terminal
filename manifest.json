@@ -1,0 +1,8 @@
+{
+"name":"EDGE V6",
+"short_name":"EDGE",
+"display":"standalone",
+"start_url":".",
+"background_color":"#010203",
+"theme_color":"#010203"
+}

@@ -1,0 +1,1 @@
+export const state={bestTrade:null,hotList:[],marketQuality:0};
