@@ -1,1 +1,248 @@
-body{margin:0;background:#010203;color:#e5e7eb;font-family:system-ui}section{padding:16px;border-bottom:1px solid #222}
+/* ==========================================================================
+   @file /css/theme.css
+   @description Centralized Design Tokens & Theming Engine for EDGE V6.
+                Implements a premium, high-density dark mode glassmorphism UI 
+                system inspired by modern quant terminals and Apple Human Interface.
+   @performance-considerations Utilizes native CSS variables (--var) for layout 
+                               recalculations without deep reflows. Avoids complex 
+                               box-shadows on animating elements.
+   ========================================================================== */
+
+:root {
+    /* --- COLOR PALETTE: CORE --- */
+    --bg-core: #010203;
+    --bg-radial-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+    
+    /* --- COLOR PALETTE: SURFACES (Glassmorphism Base) --- */
+    --surface-base: rgba(6, 8, 12, 0.4);
+    --surface-elevated: rgba(15, 20, 28, 0.6);
+    --surface-highlight: rgba(30, 41, 59, 0.8);
+    --surface-active: rgba(45, 55, 72, 0.9);
+    
+    /* --- COLOR PALETTE: BORDERS --- */
+    --border-faint: rgba(255, 255, 255, 0.03);
+    --border-light: rgba(255, 255, 255, 0.08);
+    --border-focus: rgba(99, 102, 241, 0.5);
+    
+    /* --- COLOR PALETTE: TYPOGRAPHY --- */
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-tertiary: #475569;
+    --text-inverse: #010203;
+
+    /* --- COLOR PALETTE: SYSTEM SEMANTICS --- */
+    --accent-primary: #6366F1;       /* Indigo: Primary Actions, Selection */
+    --accent-primary-glow: rgba(99, 102, 241, 0.25);
+    
+    --signal-long: #10B981;          /* Emerald: Buy, Long, Positive, Profit */
+    --signal-long-glow: rgba(16, 185, 129, 0.15);
+    --signal-long-bg: rgba(16, 185, 129, 0.1);
+    
+    --signal-short: #EF4444;         /* Rose: Sell, Short, Negative, Loss, Stop */
+    --signal-short-glow: rgba(239, 68, 68, 0.15);
+    --signal-short-bg: rgba(239, 68, 68, 0.1);
+    
+    --signal-warn: #F59E0B;          /* Amber: Warnings, Neutral, Time Horizons */
+    --signal-info: #3B82F6;          /* Blue: Informational, Secondary metrics */
+
+    /* --- TYPOGRAPHY ENGINE --- */
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    
+    --text-xs: 0.65rem;    /* 10.4px - Dense Data */
+    --text-sm: 0.75rem;    /* 12px   - Secondary Labels */
+    --text-base: 0.875rem; /* 14px   - Primary Readability */
+    --text-lg: 1rem;       /* 16px   - Section Headers */
+    --text-xl: 1.25rem;    /* 20px   - Key Metrics */
+    --text-2xl: 1.75rem;   /* 28px   - Hero Data */
+    --text-3xl: 2.5rem;    /* 40px   - CommandCenter Focus */
+    
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --weight-black: 800;
+
+    /* --- SPACING & LAYOUT METRICS --- */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-pill: 9999px;
+
+    /* --- VISUAL EFFECTS --- */
+    --blur-glass: blur(20px);
+    --blur-overlay: blur(8px);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+    --shadow-md: 0 8px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 16px 32px rgba(0,0,0,0.6);
+    --shadow-glow: 0 0 20px var(--accent-primary-glow);
+
+    /* --- Z-INDEX ARCHITECTURE --- */
+    --z-base: 1;
+    --z-elevated: 10;
+    --z-header: 50;
+    --z-nav: 100;
+    --z-overlay: 500;
+    --z-modal: 1000;
+    --z-toast: 9999;
+}
+
+/* ==========================================================================
+   GLOBAL BASE INJECTIONS
+   ========================================================================== */
+
+body {
+    background: var(--bg-core);
+    background-image: var(--bg-radial-glow);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   TYPOGRAPHY UTILITIES
+   ========================================================================== */
+
+.text-mono {
+    font-family: var(--font-mono);
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums; /* Critical for lining up pricing/metrics */
+}
+
+/* Color Semantics */
+.text-long { color: var(--signal-long); }
+.text-short { color: var(--signal-short); }
+.text-warn { color: var(--signal-warn); }
+.text-info { color: var(--signal-info); }
+.text-accent { color: var(--accent-primary); }
+.text-muted { color: var(--text-secondary); }
+
+/* Structural Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+/* ==========================================================================
+   HARDWARE ACCELERATION & PERFORMANCE UTILITIES
+   ========================================================================== */
+
+.hardware-accelerated {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* ==========================================================================
+   SURFACE COMPONENT BASE CLASSES
+   ========================================================================== */
+
+.glass-panel {
+    background: var(--surface-elevated);
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.data-box {
+    background: var(--surface-base);
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+}
+
+.data-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: var(--space-1);
+}
+
+.data-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-black);
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   INTERACTIVE ELEMENTS UTILITIES
+   ========================================================================== */
+
+.btn-primary {
+    background: var(--accent-primary);
+    color: var(--text-primary);
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.btn-primary:hover {
+    background: #4F46E5; /* Slightly darker indigo */
+    box-shadow: 0 0 15px var(--accent-primary-glow);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.input-field {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-field:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-primary-glow);
+}
+
+/* Custom Scrollbar for inner components (WebKit) */
+.scroller-clean::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.scroller-clean::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroller-clean::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: var(--radius-pill);
+}
+
+.scroller-clean::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
