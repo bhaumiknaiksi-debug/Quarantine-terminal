@@ -1,121 +1,147 @@
 /**
- * @file /engines/presentationEngine.js
- * @description Translates raw quantitative state data into decorative View Models.
- * Decouples styling, grading, and badging logic from UI rendering components.
- * @version 6.0.0
- * @module presentationEngine
+ * @file /engines/presentationEngine.js (Extensions)
+ * @description Added mappers for Market Regime, Network Status, and Capital Allocation.
  */
 
-import { formatter } from '../utils/formatter.js';
+// ... (previous Alpha & Heat mappers remain) ...
 
-class PresentationEngine {
-    
     /* ==========================================================================
-       GRADING & STYLING MAPPERS
+       NETWORK & TELEMETRY MAPPERS
        ========================================================================== */
 
-    getAlphaGrade(score) {
-        if (score >= 98) return { label: 'S+', colorClass: 'text-accent', glow: true };
-        if (score >= 95) return { label: 'S',  colorClass: 'text-accent', glow: true };
-        if (score >= 90) return { label: 'A+', colorClass: 'text-long', glow: false };
-        if (score >= 85) return { label: 'A',  colorClass: 'text-long', glow: false };
-        if (score >= 80) return { label: 'B+', colorClass: 'text-primary', glow: false };
-        if (score >= 70) return { label: 'B',  colorClass: 'text-primary', glow: false };
-        if (score >= 60) return { label: 'C',  colorClass: 'text-warn', glow: false };
-        return { label: 'D', colorClass: 'text-short', glow: false };
-    }
-
-    getHeatStyle(score) {
-        if (score > 75) return { label: 'CRITICAL', colorClass: 'text-short', bgClass: 'bg-short-dim', glow: true };
-        if (score > 50) return { label: 'HIGH', colorClass: 'text-warn', bgClass: 'bg-warn-dim', glow: false };
-        if (score > 25) return { label: 'ELEVATED', colorClass: 'text-primary', bgClass: 'bg-surface-elevated', glow: false };
-        return { label: 'LOW', colorClass: 'text-long', bgClass: 'bg-long-dim', glow: false };
-    }
-
-    getProbabilityStyle(pctLabel) {
-        const pct = parseInt(pctLabel, 10);
-        if (pct >= 75) return 'text-long';
-        if (pct >= 50) return 'text-warn';
-        return 'text-short';
-    }
-
-    formatHoldTime(holdTimeLabel) {
+    getNetworkStatus(wsStatus) {
         const map = {
-            '8-24H': '⚡ Intraday',
-            '1-3D': '🌙 Overnight',
-            '3-7D': '📅 Swing',
-            '1W+': '📈 Position'
+            'CONNECTED': { label: 'LIVE', colorClass: 'text-long', glow: true },
+            'CONNECTING': { label: 'SYNCING', colorClass: 'text-warn', glow: true },
+            'RECONNECTING': { label: 'SYNCING', colorClass: 'text-warn', glow: true },
+            'DISCONNECTED': { label: 'OFFLINE', colorClass: 'text-short', glow: false }
         };
-        return map[holdTimeLabel] || `🕒 ${holdTimeLabel}`;
-    }
-
-    getDirectionStyle(direction) {
-        if (direction === 'LONG') return { label: 'LONG', icon: '↗', colorClass: 'text-long' };
-        if (direction === 'SHORT') return { label: 'SHORT', icon: '↘', colorClass: 'text-short' };
-        return { label: 'STAY IN CASH', icon: '🛡', colorClass: 'text-accent' };
+        return map[wsStatus] || map['DISCONNECTED'];
     }
 
     /* ==========================================================================
-       VIEW MODEL FACTORIES
+       MACRO REGIME MAPPERS
        ========================================================================== */
 
-    /**
-     * Constructs the complete View Model for the Command Center UI Component.
-     * @param {Object} state - The global state tree slice
-     * @returns {Object} Ready-to-render View Model
-     */
-    buildCommandCenterViewModel(state) {
-        const { alpha, portfolio } = state;
-        const bestTrade = alpha.bestTrade;
+    buildMarketRegimeViewModel(state) {
+        const { alpha, performance } = state;
+        const pulse = alpha.marketPulse;
 
-        // Failsafe for missing data
-        if (!bestTrade || bestTrade.direction === 'STAY_IN_CASH') {
-            return {
-                isActive: false,
-                title: 'SYSTEM PROTECTIVE MODE',
-                badge: { label: 'N/A', colorClass: 'text-muted' },
-                narrative: bestTrade?.narrative || 'Awaiting structural market alignment.',
-                direction: this.getDirectionStyle('STAY_IN_CASH')
-            };
+        if (!pulse || pulse.status === 'AWAITING_DATA') {
+            return { isReady: false };
         }
 
-        const grade = this.getAlphaGrade(bestTrade.alphaScore);
-        const dir = this.getDirectionStyle(bestTrade.direction);
-        const sizing = portfolio.executionPlan;
+        // Structural Color Mappings
+        const getBias = (bias) => {
+            if (bias.includes('BULLISH')) return { label: bias.replace('_', ' '), color: 'text-long' };
+            if (bias.includes('BEARISH')) return { label: bias.replace('_', ' '), color: 'text-short' };
+            return { label: 'NEUTRAL', color: 'text-info' };
+        };
+
+        const getVol = (vol) => {
+            if (vol === 'EXTREME') return { label: vol, color: 'text-short' };
+            if (vol === 'EXPANDING') return { label: vol, color: 'text-long' };
+            return { label: vol, color: 'text-info' };
+        };
+
+        const getPart = (part) => {
+            if (part.includes('SURGING')) return { label: part, color: 'text-long' };
+            if (part.includes('LIQUIDATIONS')) return { label: part, color: 'text-short' };
+            if (part.includes('DECREASING')) return { label: part, color: 'text-warn' };
+            return { label: 'FLAT', color: 'text-muted' };
+        };
+
+        const getRisk = (state) => {
+            const map = { 'ON': 'text-long', 'CAUTION': 'text-warn', 'NEUTRAL': 'text-info', 'OFF': 'text-short' };
+            const bgMap = { 'ON': 'bg-long', 'CAUTION': 'bg-warn', 'NEUTRAL': 'bg-info', 'OFF': 'bg-short' };
+            return { colorClass: map[state], bgClass: bgMap[state] };
+        };
+
+        // Narrative Generation
+        let narrative = `Broad participation and standard variance.`;
+        if (pulse.status === 'TREND_EXPANSION') narrative = `Broad participation with expanding volatility confirms a healthy trend regime. Risk allocation can remain elevated.`;
+        if (pulse.status === 'COMPRESSION_SQUEEZE') narrative = `Volatility is highly compressed. The market is coiling for a major directional expansion. Avoid overtrading chop.`;
+        if (pulse.status === 'LIQUIDATION_CASCADE') narrative = `Violent liquidation event in progress. Open interest is plummeting. Capital preservation is the absolute priority.`;
+
+        const riskTheme = getRisk(pulse.riskState);
 
         return {
-            isActive: true,
-            title: `${bestTrade.assetName} ${dir.label}`,
-            direction: dir,
-            grade: grade,
-            convictionScore: bestTrade.alphaScore,
-            
-            // Decorative Labels
-            probability: {
-                label: bestTrade.probability,
-                colorClass: this.getProbabilityStyle(bestTrade.probability)
+            isReady: true,
+            network: this.getNetworkStatus(performance.wsStatus),
+            regime: {
+                label: pulse.status.replace('_', ' '),
+                colorClass: riskTheme.colorClass,
+                progressClass: riskTheme.bgClass
             },
-            expectedValueLabel: bestTrade.expectedValue,
-            holdTimeLabel: this.formatHoldTime(bestTrade.execution.holdTime),
-            narrative: bestTrade.narrative,
-
-            // Execution Formatting (Pre-formatted Strings)
-            execution: {
-                entryZoneLabel: `${formatter.price(bestTrade.execution.entryZone[0])} - ${formatter.price(bestTrade.execution.entryZone[1])}`,
-                stopLossLabel: formatter.price(bestTrade.execution.stopLoss),
-                takeProfitLabel: formatter.price(bestTrade.execution.takeProfit),
-                rrLabel: bestTrade.execution.riskReward
+            narrative: narrative,
+            confidence: {
+                value: pulse.confidence,
+                label: `${pulse.confidence}%`,
+                scale: pulse.confidence / 100 // 0.0 to 1.0 for GPU scaling
             },
-
-            // Sizing Integration (If Portfolio Engine has calculated it)
-            sizing: sizing ? {
-                riskLabel: formatter.currencyINR(sizing.riskAmount),
-                marginLabel: formatter.currencyINR(sizing.requiredMargin),
-                coinQuantity: sizing.coinQuantity
-            } : null
+            metrics: [
+                { title: 'BREADTH BIAS', ...getBias(pulse.bias) },
+                { title: 'VOLATILITY', ...getVol(pulse.volatility) },
+                { title: 'PARTICIPATION', ...getPart(pulse.participation) }
+            ]
         };
     }
-}
 
-// Freeze singleton to prevent runtime mutations
-export const presentationEngine = Object.freeze(new PresentationEngine());
+    /* ==========================================================================
+       CAPITAL & PORTFOLIO MAPPERS
+       ========================================================================== */
+
+    buildCapitalViewModel(state) {
+        const { portfolio } = state;
+        
+        // Failsafe / Skeleton
+        if (!portfolio || portfolio.totalEquity === undefined) {
+            return { isReady: false };
+        }
+
+        const equity = portfolio.totalEquity;
+        const margin = portfolio.availableMargin;
+        const exposure = portfolio.openExposure;
+        
+        // Calculate health (Margin usage)
+        const marginUsagePct = equity > 0 ? ((equity - margin) / equity) : 0;
+        let healthColor = 'text-long';
+        let healthBg = 'bg-long';
+        if (marginUsagePct > 0.8) { healthColor = 'text-short'; healthBg = 'bg-short'; }
+        else if (marginUsagePct > 0.5) { healthColor = 'text-warn'; healthBg = 'bg-warn'; }
+
+        // Process Target Allocations from Capital Allocator Engine
+        const allocations = portfolio.targetAllocations || { CASH: 100 };
+        const allocationList = Object.entries(allocations).map(([asset, pct]) => {
+            return {
+                asset,
+                percentageLabel: `${pct}%`,
+                scale: pct / 100,
+                colorClass: asset === 'CASH' ? 'text-info' : 'text-primary',
+                bgClass: asset === 'CASH' ? 'bg-info' : 'bg-primary'
+            };
+        });
+
+        // Sort: Cash always first, then largest to smallest
+        allocationList.sort((a, b) => {
+            if (a.asset === 'CASH') return -1;
+            if (b.asset === 'CASH') return 1;
+            return b.scale - a.scale;
+        });
+
+        return {
+            isReady: true,
+            metrics: {
+                equity: formatter.currencyINR(equity, true),
+                margin: formatter.currencyINR(margin, true),
+                exposure: formatter.currencyINR(exposure, true)
+            },
+            health: {
+                label: formatter.percentage(marginUsagePct, false) + ' USED',
+                colorClass: healthColor,
+                bgClass: healthBg,
+                scale: Math.min(marginUsagePct, 1.0)
+            },
+            allocations: allocationList
+        };
+    }
