@@ -1,0 +1,128 @@
+/* ==========================================================================
+   @file /css/reset.css
+   @description Professional, low-overhead resets tailored for high-density, 
+                high-performance web trading platforms (EDGE V6).
+   @performance-considerations Disables aggressive text rendering bottlenecks,
+                               forces border-box sizing, eliminates mobile elastic 
+                               overscroll fields on outer viewports, and primes 
+                               the DOM tree for GPU-accelerated layout transitions.
+   ========================================================================== */
+
+/* Core Box-Sizing Configuration */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Base HTML Document Optimization */
+html {
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    font-size: 16px;
+    height: 100%;
+    overflow: hidden; /* Lock root viewport scrolling to eliminate PWA content drag bugs */
+    background-color: #010203;
+    color: #ffffff;
+    scrollbar-width: none; /* Hide standard modern scrollbars globally */
+}
+
+html::-webkit-scrollbar {
+    display: none; /* Webkit browser scrollbar removal */
+}
+
+/* Body Architecture Layer */
+body {
+    height: 100%;
+    width: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available; /* Lock mobile safari rendering frame */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none; /* Critical PWA constraint: stops stretch bounce */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+/* Interactive Elements Normalization */
+input,
+button,
+textarea,
+select {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+button {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+button:disabled,
+input:disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Links & Hypertext Typography Baseline */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Structural Block Elements Reset */
+ol, ul {
+    list-style: none;
+}
+
+img,
+canvas,
+svg,
+video {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Table Mechanics Alignment */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+}
+
+/* Semantic Content Group Resets */
+blockquote, q {
+    quotes: none;
+}
+
+blockquote::before,
+blockquote::after,
+q::before,
+q::after {
+    content: '';
+    content: none;
+}
+
+/* Accessible Visibility Controls without layout reflows */
+[hidden] {
+    display: none !important;
+}
+
+/* ARIA / Accessibility Structural Alignment */
+[aria-disabled="true"] {
+    cursor: not-allowed;
+    pointer-events: none;
+}
